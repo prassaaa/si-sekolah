@@ -344,6 +344,32 @@ class RoleSeeder extends Seeder
             'RestoreAny:Pembayaran',
             'Replicate:Pembayaran',
             'Reorder:Pembayaran',
+            // Akun permissions
+            'ViewAny:Akun',
+            'View:Akun',
+            'Create:Akun',
+            'Update:Akun',
+            'Delete:Akun',
+            'DeleteAny:Akun',
+            'ForceDelete:Akun',
+            'ForceDeleteAny:Akun',
+            'Restore:Akun',
+            'RestoreAny:Akun',
+            'Replicate:Akun',
+            'Reorder:Akun',
+            // JurnalUmum permissions
+            'ViewAny:JurnalUmum',
+            'View:JurnalUmum',
+            'Create:JurnalUmum',
+            'Update:JurnalUmum',
+            'Delete:JurnalUmum',
+            'DeleteAny:JurnalUmum',
+            'ForceDelete:JurnalUmum',
+            'ForceDeleteAny:JurnalUmum',
+            'Restore:JurnalUmum',
+            'RestoreAny:JurnalUmum',
+            'Replicate:JurnalUmum',
+            'Reorder:JurnalUmum',
         ];
 
         foreach ($permissions as $permission) {
@@ -443,6 +469,14 @@ class RoleSeeder extends Seeder
             'View:Pembayaran',
             'Create:Pembayaran',
             'Update:Pembayaran',
+            'ViewAny:Akun',
+            'View:Akun',
+            'Create:Akun',
+            'Update:Akun',
+            'ViewAny:JurnalUmum',
+            'View:JurnalUmum',
+            'Create:JurnalUmum',
+            'Update:JurnalUmum',
         ]);
     }
 }
