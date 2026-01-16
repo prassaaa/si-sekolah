@@ -201,6 +201,32 @@ class RoleSeeder extends Seeder
             'RestoreAny:Tahfidz',
             'Replicate:Tahfidz',
             'Reorder:Tahfidz',
+            // IzinKeluar permissions
+            'ViewAny:IzinKeluar',
+            'View:IzinKeluar',
+            'Create:IzinKeluar',
+            'Update:IzinKeluar',
+            'Delete:IzinKeluar',
+            'DeleteAny:IzinKeluar',
+            'ForceDelete:IzinKeluar',
+            'ForceDeleteAny:IzinKeluar',
+            'Restore:IzinKeluar',
+            'RestoreAny:IzinKeluar',
+            'Replicate:IzinKeluar',
+            'Reorder:IzinKeluar',
+            // IzinPulang permissions
+            'ViewAny:IzinPulang',
+            'View:IzinPulang',
+            'Create:IzinPulang',
+            'Update:IzinPulang',
+            'Delete:IzinPulang',
+            'DeleteAny:IzinPulang',
+            'ForceDelete:IzinPulang',
+            'ForceDeleteAny:IzinPulang',
+            'Restore:IzinPulang',
+            'RestoreAny:IzinPulang',
+            'Replicate:IzinPulang',
+            'Reorder:IzinPulang',
         ];
 
         foreach ($permissions as $permission) {
@@ -256,6 +282,14 @@ class RoleSeeder extends Seeder
             'View:Tahfidz',
             'Create:Tahfidz',
             'Update:Tahfidz',
+            'ViewAny:IzinKeluar',
+            'View:IzinKeluar',
+            'Create:IzinKeluar',
+            'Update:IzinKeluar',
+            'ViewAny:IzinPulang',
+            'View:IzinPulang',
+            'Create:IzinPulang',
+            'Update:IzinPulang',
         ]);
     }
 }
