@@ -188,6 +188,19 @@ class RoleSeeder extends Seeder
             'RestoreAny:JadwalPelajaran',
             'Replicate:JadwalPelajaran',
             'Reorder:JadwalPelajaran',
+            // Tahfidz permissions
+            'ViewAny:Tahfidz',
+            'View:Tahfidz',
+            'Create:Tahfidz',
+            'Update:Tahfidz',
+            'Delete:Tahfidz',
+            'DeleteAny:Tahfidz',
+            'ForceDelete:Tahfidz',
+            'ForceDeleteAny:Tahfidz',
+            'Restore:Tahfidz',
+            'RestoreAny:Tahfidz',
+            'Replicate:Tahfidz',
+            'Reorder:Tahfidz',
         ];
 
         foreach ($permissions as $permission) {
@@ -239,6 +252,10 @@ class RoleSeeder extends Seeder
             'View:JadwalPelajaran',
             'Create:JadwalPelajaran',
             'Update:JadwalPelajaran',
+            'ViewAny:Tahfidz',
+            'View:Tahfidz',
+            'Create:Tahfidz',
+            'Update:Tahfidz',
         ]);
     }
 }
