@@ -13,21 +13,35 @@ class RoleSeeder extends Seeder
         // Create roles
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
         $admin = Role::firstOrCreate(['name' => 'admin']);
-        $user = Role::firstOrCreate(['name' => 'user']);
 
         // Create all permissions for User resource
         $permissions = [
-            'ViewAny:Users',
-            'View:Users',
-            'Create:Users',
-            'Update:Users',
-            'Delete:Users',
-            'DeleteAny:Users',
-            'ForceDelete:Users',
-            'ForceDeleteAny:Users',
-            'Restore:Users',
-            'RestoreAny:Users',
-            'Replicate:Users',
+            // User permissions (singular - based on model name)
+            'ViewAny:User',
+            'View:User',
+            'Create:User',
+            'Update:User',
+            'Delete:User',
+            'DeleteAny:User',
+            'ForceDelete:User',
+            'ForceDeleteAny:User',
+            'Restore:User',
+            'RestoreAny:User',
+            'Replicate:User',
+            'Reorder:User',
+            // Role permissions
+            'ViewAny:Role',
+            'View:Role',
+            'Create:Role',
+            'Update:Role',
+            'Delete:Role',
+            'DeleteAny:Role',
+            'ForceDelete:Role',
+            'ForceDeleteAny:Role',
+            'Restore:Role',
+            'RestoreAny:Role',
+            'Replicate:Role',
+            'Reorder:Role',
         ];
 
         foreach ($permissions as $permission) {
@@ -39,10 +53,12 @@ class RoleSeeder extends Seeder
 
         // Give limited permissions to admin
         $admin->syncPermissions([
-            'ViewAny:Users',
-            'View:Users',
-            'Create:Users',
-            'Update:Users',
+            'ViewAny:User',
+            'View:User',
+            'Create:User',
+            'Update:User',
+            'ViewAny:Role',
+            'View:Role',
         ]);
     }
 }
