@@ -42,6 +42,9 @@ class RoleSeeder extends Seeder
             'RestoreAny:Role',
             'Replicate:Role',
             'Reorder:Role',
+            // Activity Log permissions
+            'ViewAny:Activity',
+            'View:Activity',
         ];
 
         foreach ($permissions as $permission) {
@@ -58,6 +61,9 @@ class RoleSeeder extends Seeder
             'Create:User',
             'Update:User',
             'ViewAny:Role',
+            'View:Role',
+            'ViewAny:Activity',
+            'View:Activity',
             'View:Role',
         ]);
     }
