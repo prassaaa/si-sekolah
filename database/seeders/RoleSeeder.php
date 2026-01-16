@@ -175,6 +175,19 @@ class RoleSeeder extends Seeder
             'RestoreAny:Siswa',
             'Replicate:Siswa',
             'Reorder:Siswa',
+            // JadwalPelajaran permissions
+            'ViewAny:JadwalPelajaran',
+            'View:JadwalPelajaran',
+            'Create:JadwalPelajaran',
+            'Update:JadwalPelajaran',
+            'Delete:JadwalPelajaran',
+            'DeleteAny:JadwalPelajaran',
+            'ForceDelete:JadwalPelajaran',
+            'ForceDeleteAny:JadwalPelajaran',
+            'Restore:JadwalPelajaran',
+            'RestoreAny:JadwalPelajaran',
+            'Replicate:JadwalPelajaran',
+            'Reorder:JadwalPelajaran',
         ];
 
         foreach ($permissions as $permission) {
@@ -222,6 +235,10 @@ class RoleSeeder extends Seeder
             'View:Siswa',
             'Create:Siswa',
             'Update:Siswa',
+            'ViewAny:JadwalPelajaran',
+            'View:JadwalPelajaran',
+            'Create:JadwalPelajaran',
+            'Update:JadwalPelajaran',
         ]);
     }
 }
