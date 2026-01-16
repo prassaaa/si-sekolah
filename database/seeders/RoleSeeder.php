@@ -136,6 +136,19 @@ class RoleSeeder extends Seeder
             'RestoreAny:MataPelajaran',
             'Replicate:MataPelajaran',
             'Reorder:MataPelajaran',
+            // JamPelajaran permissions
+            'ViewAny:JamPelajaran',
+            'View:JamPelajaran',
+            'Create:JamPelajaran',
+            'Update:JamPelajaran',
+            'Delete:JamPelajaran',
+            'DeleteAny:JamPelajaran',
+            'ForceDelete:JamPelajaran',
+            'ForceDeleteAny:JamPelajaran',
+            'Restore:JamPelajaran',
+            'RestoreAny:JamPelajaran',
+            'Replicate:JamPelajaran',
+            'Reorder:JamPelajaran',
         ];
 
         foreach ($permissions as $permission) {
@@ -173,6 +186,8 @@ class RoleSeeder extends Seeder
             'View:Semester',
             'ViewAny:MataPelajaran',
             'View:MataPelajaran',
+            'ViewAny:JamPelajaran',
+            'View:JamPelajaran',
         ]);
     }
 }
