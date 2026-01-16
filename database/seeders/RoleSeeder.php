@@ -45,6 +45,19 @@ class RoleSeeder extends Seeder
             // Activity Log permissions
             'ViewAny:Activity',
             'View:Activity',
+            // Sekolah permissions
+            'ViewAny:Sekolah',
+            'View:Sekolah',
+            'Create:Sekolah',
+            'Update:Sekolah',
+            'Delete:Sekolah',
+            'DeleteAny:Sekolah',
+            'ForceDelete:Sekolah',
+            'ForceDeleteAny:Sekolah',
+            'Restore:Sekolah',
+            'RestoreAny:Sekolah',
+            'Replicate:Sekolah',
+            'Reorder:Sekolah',
         ];
 
         foreach ($permissions as $permission) {
@@ -64,7 +77,8 @@ class RoleSeeder extends Seeder
             'View:Role',
             'ViewAny:Activity',
             'View:Activity',
-            'View:Role',
+            'ViewAny:Sekolah',
+            'View:Sekolah',
         ]);
     }
 }
