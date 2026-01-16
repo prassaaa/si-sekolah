@@ -71,6 +71,19 @@ class RoleSeeder extends Seeder
             'RestoreAny:Informasi',
             'Replicate:Informasi',
             'Reorder:Informasi',
+            // JabatanPegawai permissions
+            'ViewAny:JabatanPegawai',
+            'View:JabatanPegawai',
+            'Create:JabatanPegawai',
+            'Update:JabatanPegawai',
+            'Delete:JabatanPegawai',
+            'DeleteAny:JabatanPegawai',
+            'ForceDelete:JabatanPegawai',
+            'ForceDeleteAny:JabatanPegawai',
+            'Restore:JabatanPegawai',
+            'RestoreAny:JabatanPegawai',
+            'Replicate:JabatanPegawai',
+            'Reorder:JabatanPegawai',
         ];
 
         foreach ($permissions as $permission) {
@@ -96,6 +109,8 @@ class RoleSeeder extends Seeder
             'View:Informasi',
             'Create:Informasi',
             'Update:Informasi',
+            'ViewAny:JabatanPegawai',
+            'View:JabatanPegawai',
         ]);
     }
 }
