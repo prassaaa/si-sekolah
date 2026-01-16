@@ -97,6 +97,19 @@ class RoleSeeder extends Seeder
             'RestoreAny:Pegawai',
             'Replicate:Pegawai',
             'Reorder:Pegawai',
+            // TahunAjaran permissions
+            'ViewAny:TahunAjaran',
+            'View:TahunAjaran',
+            'Create:TahunAjaran',
+            'Update:TahunAjaran',
+            'Delete:TahunAjaran',
+            'DeleteAny:TahunAjaran',
+            'ForceDelete:TahunAjaran',
+            'ForceDeleteAny:TahunAjaran',
+            'Restore:TahunAjaran',
+            'RestoreAny:TahunAjaran',
+            'Replicate:TahunAjaran',
+            'Reorder:TahunAjaran',
         ];
 
         foreach ($permissions as $permission) {
@@ -128,6 +141,8 @@ class RoleSeeder extends Seeder
             'View:Pegawai',
             'Create:Pegawai',
             'Update:Pegawai',
+            'ViewAny:TahunAjaran',
+            'View:TahunAjaran',
         ]);
     }
 }
