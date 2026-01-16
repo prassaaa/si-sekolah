@@ -58,6 +58,19 @@ class RoleSeeder extends Seeder
             'RestoreAny:Sekolah',
             'Replicate:Sekolah',
             'Reorder:Sekolah',
+            // Informasi permissions
+            'ViewAny:Informasi',
+            'View:Informasi',
+            'Create:Informasi',
+            'Update:Informasi',
+            'Delete:Informasi',
+            'DeleteAny:Informasi',
+            'ForceDelete:Informasi',
+            'ForceDeleteAny:Informasi',
+            'Restore:Informasi',
+            'RestoreAny:Informasi',
+            'Replicate:Informasi',
+            'Reorder:Informasi',
         ];
 
         foreach ($permissions as $permission) {
@@ -79,6 +92,10 @@ class RoleSeeder extends Seeder
             'View:Activity',
             'ViewAny:Sekolah',
             'View:Sekolah',
+            'ViewAny:Informasi',
+            'View:Informasi',
+            'Create:Informasi',
+            'Update:Informasi',
         ]);
     }
 }
