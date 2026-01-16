@@ -18,7 +18,7 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
         $totalSiswa = Siswa::count();
         $siswaAktif = Siswa::where('status', 'aktif')->count();
         $totalPegawai = Pegawai::count();
-        $pegawaiAktif = Pegawai::where('status', 'aktif')->count();
+        $pegawaiAktif = Pegawai::where('is_active', true)->count();
 
         $totalTagihan = TagihanSiswa::where('status', '!=', 'batal')->sum('total_tagihan');
         $totalTerbayar = TagihanSiswa::where('status', '!=', 'batal')->sum('total_terbayar');
