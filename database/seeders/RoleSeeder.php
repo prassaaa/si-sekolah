@@ -110,6 +110,19 @@ class RoleSeeder extends Seeder
             'RestoreAny:TahunAjaran',
             'Replicate:TahunAjaran',
             'Reorder:TahunAjaran',
+            // Semester permissions
+            'ViewAny:Semester',
+            'View:Semester',
+            'Create:Semester',
+            'Update:Semester',
+            'Delete:Semester',
+            'DeleteAny:Semester',
+            'ForceDelete:Semester',
+            'ForceDeleteAny:Semester',
+            'Restore:Semester',
+            'RestoreAny:Semester',
+            'Replicate:Semester',
+            'Reorder:Semester',
         ];
 
         foreach ($permissions as $permission) {
@@ -143,6 +156,8 @@ class RoleSeeder extends Seeder
             'Update:Pegawai',
             'ViewAny:TahunAjaran',
             'View:TahunAjaran',
+            'ViewAny:Semester',
+            'View:Semester',
         ]);
     }
 }

@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Filament\Resources\Semesters\Schemas;
+
+use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
+
+class SemesterInfolist
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Informasi Semester')
+                    ->icon('heroicon-o-calendar')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            TextEntry::make('tahunAjaran.nama')
+                                ->label('Tahun Ajaran'),
+                            TextEntry::make('semester_label')
+                                ->label('Semester')
+                                ->badge()
+                                ->color(fn ($record): string => $record->semester === 1 ? 'info' : 'success'),
+                        ]),
+                        TextEntry::make('nama')
+                            ->label('Nama Semester')
+                            ->weight(FontWeight::Bold),
+                        Grid::make(2)->schema([
+                            TextEntry::make('tanggal_mulai')
+                                ->label('Tanggal Mulai')
+                                ->date('d F Y'),
+                            TextEntry::make('tanggal_selesai')
+                                ->label('Tanggal Selesai')
+                                ->date('d F Y'),
+                        ]),
+                        TextEntry::make('is_active')
+                            ->label('Status')
+                            ->badge()
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Aktif' : 'Non-Aktif')
+                            ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
+                        TextEntry::make('keterangan')
+                            ->label('Keterangan')
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Informasi Sistem')
+                    ->collapsed()
+                    ->schema([
+                        Grid::make(2)->schema([
+                            TextEntry::make('created_at')
+                                ->label('Dibuat')
+                                ->dateTime('d M Y H:i'),
+                            TextEntry::make('updated_at')
+                                ->label('Diperbarui')
+                                ->dateTime('d M Y H:i'),
+                        ]),
+                    ]),
+            ]);
+    }
+}
