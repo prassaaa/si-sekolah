@@ -162,6 +162,19 @@ class RoleSeeder extends Seeder
             'RestoreAny:Kelas',
             'Replicate:Kelas',
             'Reorder:Kelas',
+            // Siswa permissions
+            'ViewAny:Siswa',
+            'View:Siswa',
+            'Create:Siswa',
+            'Update:Siswa',
+            'Delete:Siswa',
+            'DeleteAny:Siswa',
+            'ForceDelete:Siswa',
+            'ForceDeleteAny:Siswa',
+            'Restore:Siswa',
+            'RestoreAny:Siswa',
+            'Replicate:Siswa',
+            'Reorder:Siswa',
         ];
 
         foreach ($permissions as $permission) {
@@ -205,6 +218,10 @@ class RoleSeeder extends Seeder
             'View:Kelas',
             'Create:Kelas',
             'Update:Kelas',
+            'ViewAny:Siswa',
+            'View:Siswa',
+            'Create:Siswa',
+            'Update:Siswa',
         ]);
     }
 }
