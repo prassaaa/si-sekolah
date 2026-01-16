@@ -266,6 +266,32 @@ class RoleSeeder extends Seeder
             'RestoreAny:Konseling',
             'Replicate:Konseling',
             'Reorder:Konseling',
+            // KenaikanKelas permissions
+            'ViewAny:KenaikanKelas',
+            'View:KenaikanKelas',
+            'Create:KenaikanKelas',
+            'Update:KenaikanKelas',
+            'Delete:KenaikanKelas',
+            'DeleteAny:KenaikanKelas',
+            'ForceDelete:KenaikanKelas',
+            'ForceDeleteAny:KenaikanKelas',
+            'Restore:KenaikanKelas',
+            'RestoreAny:KenaikanKelas',
+            'Replicate:KenaikanKelas',
+            'Reorder:KenaikanKelas',
+            // Kelulusan permissions
+            'ViewAny:Kelulusan',
+            'View:Kelulusan',
+            'Create:Kelulusan',
+            'Update:Kelulusan',
+            'Delete:Kelulusan',
+            'DeleteAny:Kelulusan',
+            'ForceDelete:Kelulusan',
+            'ForceDeleteAny:Kelulusan',
+            'Restore:Kelulusan',
+            'RestoreAny:Kelulusan',
+            'Replicate:Kelulusan',
+            'Reorder:Kelulusan',
         ];
 
         foreach ($permissions as $permission) {
@@ -341,6 +367,14 @@ class RoleSeeder extends Seeder
             'View:Konseling',
             'Create:Konseling',
             'Update:Konseling',
+            'ViewAny:KenaikanKelas',
+            'View:KenaikanKelas',
+            'Create:KenaikanKelas',
+            'Update:KenaikanKelas',
+            'ViewAny:Kelulusan',
+            'View:Kelulusan',
+            'Create:Kelulusan',
+            'Update:Kelulusan',
         ]);
     }
 }
