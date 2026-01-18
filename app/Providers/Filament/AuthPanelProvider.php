@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Enums\DatabaseNotificationsPosition;
+use Filament\Enums\UserMenuPosition;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -29,8 +31,21 @@ class AuthPanelProvider extends PanelProvider
             ->path('auth')
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Green,
             ])
+            // Logo Configuration
+            ->brandLogo(url('/images/logo.png'))
+            ->brandLogoHeight('3.5rem')
+            // Sidebar Configuration
+            ->sidebarCollapsibleOnDesktop()
+            // User Menu di Sidebar
+            ->userMenu(position: UserMenuPosition::Sidebar)
+            // Profile Page dengan Sidebar
+            ->profile(isSimple: false)
+            // Global Search
+            ->globalSearch(true)
+            // Navigation Groups (akan diatur di Resources)
+            ->collapsibleNavigationGroups(true) // Groups bisa di-collapse
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
