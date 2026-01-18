@@ -35,6 +35,17 @@ class TagihanSiswaResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nomor_tagihan';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('status', 'belum_lunas')->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        $count = static::getModel()::where('status', 'belum_lunas')->count();
+        return $count > 10 ? 'danger' : ($count > 0 ? 'warning' : 'primary');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return TagihanSiswaForm::configure($schema);

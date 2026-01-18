@@ -31,6 +31,16 @@ class BuktiTransferResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Bukti Transfer';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count() > 0 ? 'warning' : 'primary';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return BuktiTransferForm::configure($schema);

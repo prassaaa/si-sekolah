@@ -35,6 +35,16 @@ class PembayaranResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nomor_transaksi';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count() > 0 ? 'warning' : 'primary';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return PembayaranForm::configure($schema);

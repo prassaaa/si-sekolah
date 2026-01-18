@@ -35,6 +35,16 @@ class PelanggaranResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'jenis_pelanggaran';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::where('status', 'pending')->count() > 0 ? 'danger' : 'primary';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return PelanggaranForm::configure($schema);

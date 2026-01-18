@@ -35,6 +35,16 @@ class KonselingResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'permasalahan';
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('perlu_tindak_lanjut', true)->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::where('perlu_tindak_lanjut', true)->count() > 0 ? 'warning' : 'primary';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return KonselingForm::configure($schema);
