@@ -10,7 +10,7 @@ class PembayaranChart extends ChartWidget
 {
     protected ?string $heading = 'Pembayaran per Bulan';
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 5;
 
     protected int|string|array $columnSpan = 'full';
 

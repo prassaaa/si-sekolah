@@ -9,7 +9,7 @@ class SiswaChart extends ChartWidget
 {
     protected ?string $heading = 'Distribusi Status Siswa';
 
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 6;
 
     protected ?string $pollingInterval = null;
 
