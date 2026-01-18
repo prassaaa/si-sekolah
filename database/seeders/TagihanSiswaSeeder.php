@@ -24,9 +24,10 @@ class TagihanSiswaSeeder extends Seeder
             return;
         }
 
+        // Ambil siswa dari semua kelas untuk distribusi merata
         $siswas = Siswa::where('is_active', true)
             ->whereNull('deleted_at')
-            ->take(50)
+            ->whereNotNull('kelas_id')
             ->get();
 
         if ($siswas->isEmpty()) {
