@@ -5,12 +5,12 @@ namespace App\Filament\Pages;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use BackedEnum;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
@@ -39,17 +39,18 @@ class LaporanSiswa extends Page implements HasForms
         $this->loadReport();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Filter')
                     ->schema([
                         Select::make('kelas_id')
                             ->label('Kelas')
                             ->options(Kelas::pluck('nama', 'id'))
                             ->placeholder('Semua Kelas')
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn () => $this->filter()),
                     ])
                     ->columns(1),
             ])

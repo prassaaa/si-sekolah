@@ -6,11 +6,11 @@ use App\Models\Pembayaran;
 use App\Models\TagihanSiswa;
 use BackedEnum;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
 use UnitEnum;
@@ -50,22 +50,24 @@ class LaporanKeuangan extends Page implements HasForms
         $this->loadReport();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Filter Periode')
                     ->schema([
                         DatePicker::make('tanggal_mulai')
                             ->label('Tanggal Mulai')
                             ->required()
                             ->native(false)
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn () => $this->filter()),
                         DatePicker::make('tanggal_akhir')
                             ->label('Tanggal Akhir')
                             ->required()
                             ->native(false)
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn () => $this->filter()),
                     ])
                     ->columns(2),
             ])
