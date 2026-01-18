@@ -81,12 +81,14 @@ class LaporanGaji extends Page implements HasForms
             return;
         }
 
-        $bulanStart = \Carbon\Carbon::parse($this->bulan)->startOfMonth();
-        $bulanEnd = \Carbon\Carbon::parse($this->bulan)->endOfMonth();
+        $carbonDate = \Carbon\Carbon::parse($this->bulan);
+        $tahun = $carbonDate->year;
+        $bulan = $carbonDate->month;
 
         $query = SlipGaji::query()
             ->with('pegawai')
-            ->whereBetween('periode_mulai', [$bulanStart, $bulanEnd]);
+            ->where('tahun', $tahun)
+            ->where('bulan', $bulan);
 
         if ($this->status) {
             $query->where('status', $this->status);
