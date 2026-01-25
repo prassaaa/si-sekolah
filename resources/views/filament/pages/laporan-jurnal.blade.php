@@ -1,66 +1,116 @@
 <x-filament-panels::page>
-    <x-filament::section>
-        <x-slot name="heading">Filter</x-slot>
+    {{-- Filter Section --}}
+    <x-filament::section icon="heroicon-o-funnel" icon-color="primary">
+        <x-slot name="heading">
+            Filter Data
+        </x-slot>
+        <x-slot name="description">
+            Pilih rentang tanggal untuk melihat jurnal umum
+        </x-slot>
+
         {{ $this->filtersForm }}
     </x-filament::section>
 
+    {{-- Stats Cards --}}
     @if($summary)
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <x-filament::section>
-                <x-slot name="heading">Total Transaksi</x-slot>
-                <p class="text-2xl font-bold text-gray-600">{{ $summary['total_transaksi'] ?? 0 }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-500/10">
+                        <x-heroicon-o-document-text class="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Transaksi</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $summary['total_transaksi'] ?? 0 }}</p>
+                    </div>
+                </div>
             </x-filament::section>
+
             <x-filament::section>
-                <x-slot name="heading">Total Debit</x-slot>
-                <p class="text-xl font-bold text-success-600">Rp {{ number_format($summary['total_debit'] ?? 0, 0, ',', '.') }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
+                        <x-heroicon-o-arrow-trending-up class="h-6 w-6 text-success-600 dark:text-success-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Debit</p>
+                        <p class="text-xl font-bold text-success-600 dark:text-success-400">
+                            Rp {{ number_format($summary['total_debit'] ?? 0, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
+
             <x-filament::section>
-                <x-slot name="heading">Total Kredit</x-slot>
-                <p class="text-xl font-bold text-danger-600">Rp {{ number_format($summary['total_kredit'] ?? 0, 0, ',', '.') }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-danger-50 dark:bg-danger-500/10">
+                        <x-heroicon-o-arrow-trending-down class="h-6 w-6 text-danger-600 dark:text-danger-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Kredit</p>
+                        <p class="text-xl font-bold text-danger-600 dark:text-danger-400">
+                            Rp {{ number_format($summary['total_kredit'] ?? 0, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
         </div>
     @endif
 
-    <x-filament::section>
-        <x-slot name="heading">Data Jurnal Umum</x-slot>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b bg-gray-50 dark:bg-gray-800">
-                        <th class="px-4 py-2 text-left">#</th>
-                        <th class="px-4 py-2 text-left">Tanggal</th>
-                        <th class="px-4 py-2 text-left">No. Bukti</th>
-                        <th class="px-4 py-2 text-left">Akun</th>
-                        <th class="px-4 py-2 text-left">Keterangan</th>
-                        <th class="px-4 py-2 text-right">Debit</th>
-                        <th class="px-4 py-2 text-right">Kredit</th>
+    {{-- Data Table --}}
+    <x-filament::section icon="heroicon-o-book-open" icon-color="info">
+        <x-slot name="heading">
+            Data Jurnal Umum
+        </x-slot>
+
+        <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
+            <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
+                <thead class="bg-gray-50 dark:bg-white/5">
+                    <tr>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">#</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Tanggal</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">No. Bukti</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Akun</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Keterangan</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Debit</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Kredit</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-200 whitespace-nowrap dark:divide-white/5">
                     @forelse($data as $index => $item)
-                        <tr class="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-4 py-2">{{ $index + 1 }}</td>
-                            <td class="px-4 py-2">{{ $item['tanggal'] }}</td>
-                            <td class="px-4 py-2">{{ $item['nomor_bukti'] }}</td>
-                            <td class="px-4 py-2 font-medium">{{ $item['akun'] }}</td>
-                            <td class="px-4 py-2">{{ $item['keterangan'] }}</td>
-                            <td class="px-4 py-2 text-right text-success-600">{{ $item['debit'] > 0 ? 'Rp ' . number_format($item['debit'], 0, ',', '.') : '-' }}</td>
-                            <td class="px-4 py-2 text-right text-danger-600">{{ $item['kredit'] > 0 ? 'Rp ' . number_format($item['kredit'], 0, ',', '.') : '-' }}</td>
+                        <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
+                            <td class="fi-ta-cell px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $index + 1 }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-sm text-gray-950 dark:text-white">{{ $item['tanggal'] }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-sm font-mono text-xs text-gray-950 dark:text-white">{{ $item['nomor_bukti'] }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-sm font-medium text-gray-950 dark:text-white">{{ $item['akun'] }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-sm text-gray-950 dark:text-white">{{ $item['keterangan'] }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-end text-sm font-medium text-success-600 dark:text-success-400">
+                                {{ $item['debit'] > 0 ? 'Rp ' . number_format($item['debit'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="fi-ta-cell px-4 py-3 text-end text-sm font-medium text-danger-600 dark:text-danger-400">
+                                {{ $item['kredit'] > 0 ? 'Rp ' . number_format($item['kredit'], 0, ',', '.') : '-' }}
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                Tidak ada data. Silakan pilih rentang tanggal.
+                            <td colspan="7" class="px-4 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                                    <x-heroicon-o-inbox class="h-12 w-12 mb-2" />
+                                    <p class="text-sm">Tidak ada data. Silakan pilih rentang tanggal.</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
                 @if($data->count() > 0)
-                    <tfoot>
-                        <tr class="bg-gray-100 dark:bg-gray-700 font-bold">
-                            <td colspan="5" class="px-4 py-2">Total</td>
-                            <td class="px-4 py-2 text-right">Rp {{ number_format($summary['total_debit'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-4 py-2 text-right">Rp {{ number_format($summary['total_kredit'] ?? 0, 0, ',', '.') }}</td>
+                    <tfoot class="bg-gray-100 dark:bg-white/10">
+                        <tr>
+                            <td colspan="5" class="px-4 py-3 text-sm font-bold text-gray-950 dark:text-white">Total</td>
+                            <td class="px-4 py-3 text-end text-sm font-bold text-success-600 dark:text-success-400">
+                                Rp {{ number_format($summary['total_debit'] ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="px-4 py-3 text-end text-sm font-bold text-danger-600 dark:text-danger-400">
+                                Rp {{ number_format($summary['total_kredit'] ?? 0, 0, ',', '.') }}
+                            </td>
                         </tr>
                     </tfoot>
                 @endif

@@ -1,62 +1,123 @@
 <x-filament-panels::page>
-    <x-filament::section>
-        <x-slot name="heading">Filter</x-slot>
+    {{-- Filter Section --}}
+    <x-filament::section icon="heroicon-o-funnel" icon-color="primary">
+        <x-slot name="heading">
+            Filter Data
+        </x-slot>
+        <x-slot name="description">
+            Pilih semester untuk melihat rekap pembayaran
+        </x-slot>
+
         {{ $this->filtersForm }}
     </x-filament::section>
 
+    {{-- Stats Cards --}}
     @if($summary)
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <x-filament::section>
-                <x-slot name="heading">Total Tagihan</x-slot>
-                <p class="text-2xl font-bold text-gray-600">Rp {{ number_format($summary['total_tagihan'] ?? 0, 0, ',', '.') }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-500/10">
+                        <x-heroicon-o-banknotes class="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tagihan</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white">
+                            Rp {{ number_format($summary['total_tagihan'] ?? 0, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
+
             <x-filament::section>
-                <x-slot name="heading">Total Terbayar</x-slot>
-                <p class="text-2xl font-bold text-success-600">Rp {{ number_format($summary['total_terbayar'] ?? 0, 0, ',', '.') }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
+                        <x-heroicon-o-check-circle class="h-6 w-6 text-success-600 dark:text-success-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Terbayar</p>
+                        <p class="text-xl font-bold text-success-600 dark:text-success-400">
+                            Rp {{ number_format($summary['total_terbayar'] ?? 0, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
+
             <x-filament::section>
-                <x-slot name="heading">Sisa Tagihan</x-slot>
-                <p class="text-2xl font-bold text-danger-600">Rp {{ number_format($summary['total_sisa'] ?? 0, 0, ',', '.') }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-danger-50 dark:bg-danger-500/10">
+                        <x-heroicon-o-exclamation-circle class="h-6 w-6 text-danger-600 dark:text-danger-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sisa Tagihan</p>
+                        <p class="text-xl font-bold text-danger-600 dark:text-danger-400">
+                            Rp {{ number_format($summary['total_sisa'] ?? 0, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
+
             <x-filament::section>
-                <x-slot name="heading">Persentase Terbayar</x-slot>
-                <p class="text-2xl font-bold text-primary-600">{{ $summary['persentase'] ?? 0 }}%</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
+                        <x-heroicon-o-chart-pie class="h-6 w-6 text-primary-600 dark:text-primary-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Persentase Terbayar</p>
+                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400">
+                            {{ $summary['persentase'] ?? 0 }}%
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
         </div>
     @endif
 
-    <x-filament::section>
-        <x-slot name="heading">Rekap Per Jenis Pembayaran</x-slot>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b bg-gray-50 dark:bg-gray-800">
-                        <th class="px-4 py-2 text-left">#</th>
-                        <th class="px-4 py-2 text-left">Jenis Pembayaran</th>
-                        <th class="px-4 py-2 text-right">Jumlah Siswa</th>
-                        <th class="px-4 py-2 text-right">Total Tagihan</th>
-                        <th class="px-4 py-2 text-right">Terbayar</th>
-                        <th class="px-4 py-2 text-right">Sisa</th>
-                        <th class="px-4 py-2 text-right">Lunas</th>
-                        <th class="px-4 py-2 text-right">Belum Lunas</th>
+    {{-- Data Table --}}
+    <x-filament::section icon="heroicon-o-table-cells" icon-color="info">
+        <x-slot name="heading">
+            Rekap Per Jenis Pembayaran
+        </x-slot>
+        <x-slot name="description">
+            Rincian pembayaran berdasarkan jenis pembayaran
+        </x-slot>
+
+        <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
+            <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
+                <thead class="bg-gray-50 dark:bg-white/5">
+                    <tr>
+                        <th class="fi-ta-header-cell px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">#</th>
+                        <th class="fi-ta-header-cell px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Jenis Pembayaran</th>
+                        <th class="fi-ta-header-cell px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Siswa</th>
+                        <th class="fi-ta-header-cell px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Total Tagihan</th>
+                        <th class="fi-ta-header-cell px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Terbayar</th>
+                        <th class="fi-ta-header-cell px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Sisa</th>
+                        <th class="fi-ta-header-cell px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Lunas</th>
+                        <th class="fi-ta-header-cell px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Belum</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-200 whitespace-nowrap dark:divide-white/5">
                     @forelse($data as $index => $item)
-                        <tr class="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-4 py-2">{{ $index + 1 }}</td>
-                            <td class="px-4 py-2 font-medium">{{ $item['jenis'] }}</td>
-                            <td class="px-4 py-2 text-right">{{ $item['jumlah_siswa'] }}</td>
-                            <td class="px-4 py-2 text-right">Rp {{ number_format($item['total_tagihan'], 0, ',', '.') }}</td>
-                            <td class="px-4 py-2 text-right text-success-600">Rp {{ number_format($item['total_terbayar'], 0, ',', '.') }}</td>
-                            <td class="px-4 py-2 text-right text-danger-600">Rp {{ number_format($item['total_sisa'], 0, ',', '.') }}</td>
-                            <td class="px-4 py-2 text-right">{{ $item['lunas'] }}</td>
-                            <td class="px-4 py-2 text-right">{{ $item['belum_lunas'] }}</td>
+                        <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
+                            <td class="fi-ta-cell px-3 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $index + 1 }}</td>
+                            <td class="fi-ta-cell px-3 py-3 text-sm font-medium text-gray-950 dark:text-white">{{ $item['jenis'] }}</td>
+                            <td class="fi-ta-cell px-3 py-3 text-end text-sm text-gray-950 dark:text-white">{{ $item['jumlah_siswa'] }}</td>
+                            <td class="fi-ta-cell px-3 py-3 text-end text-sm text-gray-950 dark:text-white">Rp {{ number_format($item['total_tagihan'], 0, ',', '.') }}</td>
+                            <td class="fi-ta-cell px-3 py-3 text-end text-sm font-medium text-success-600 dark:text-success-400">Rp {{ number_format($item['total_terbayar'], 0, ',', '.') }}</td>
+                            <td class="fi-ta-cell px-3 py-3 text-end text-sm font-medium text-danger-600 dark:text-danger-400">Rp {{ number_format($item['total_sisa'], 0, ',', '.') }}</td>
+                            <td class="fi-ta-cell px-3 py-3 text-end text-sm text-gray-950 dark:text-white">
+                                <x-filament::badge color="success">{{ $item['lunas'] }}</x-filament::badge>
+                            </td>
+                            <td class="fi-ta-cell px-3 py-3 text-end text-sm text-gray-950 dark:text-white">
+                                <x-filament::badge color="danger">{{ $item['belum_lunas'] }}</x-filament::badge>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                                Tidak ada data. Silakan pilih semester.
+                            <td colspan="8" class="px-4 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                                    <x-heroicon-o-inbox class="h-12 w-12 mb-2" />
+                                    <p class="text-sm">Tidak ada data. Silakan pilih semester.</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse

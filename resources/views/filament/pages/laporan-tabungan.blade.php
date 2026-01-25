@@ -1,62 +1,116 @@
 <x-filament-panels::page>
-    <x-filament::section>
-        <x-slot name="heading">Filter</x-slot>
+    {{-- Filter Section --}}
+    <x-filament::section icon="heroicon-o-funnel" icon-color="primary">
+        <x-slot name="heading">
+            Filter Data
+        </x-slot>
+        <x-slot name="description">
+            Pilih kelas untuk melihat data tabungan siswa
+        </x-slot>
+
         {{ $this->filtersForm }}
     </x-filament::section>
 
+    {{-- Stats Cards --}}
     @if($summary)
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <x-filament::section>
-                <x-slot name="heading">Total Siswa</x-slot>
-                <p class="text-2xl font-bold text-gray-600">{{ $summary['total_siswa'] ?? 0 }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-500/10">
+                        <x-heroicon-o-users class="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Siswa</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $summary['total_siswa'] ?? 0 }}</p>
+                    </div>
+                </div>
             </x-filament::section>
+
             <x-filament::section>
-                <x-slot name="heading">Total Setoran</x-slot>
-                <p class="text-xl font-bold text-success-600">Rp {{ number_format($summary['total_setor'] ?? 0, 0, ',', '.') }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
+                        <x-heroicon-o-arrow-down-tray class="h-6 w-6 text-success-600 dark:text-success-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Setoran</p>
+                        <p class="text-xl font-bold text-success-600 dark:text-success-400">
+                            Rp {{ number_format($summary['total_setor'] ?? 0, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
+
             <x-filament::section>
-                <x-slot name="heading">Total Penarikan</x-slot>
-                <p class="text-xl font-bold text-danger-600">Rp {{ number_format($summary['total_tarik'] ?? 0, 0, ',', '.') }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-danger-50 dark:bg-danger-500/10">
+                        <x-heroicon-o-arrow-up-tray class="h-6 w-6 text-danger-600 dark:text-danger-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Penarikan</p>
+                        <p class="text-xl font-bold text-danger-600 dark:text-danger-400">
+                            Rp {{ number_format($summary['total_tarik'] ?? 0, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
+
             <x-filament::section>
-                <x-slot name="heading">Total Saldo</x-slot>
-                <p class="text-xl font-bold text-primary-600">Rp {{ number_format($summary['total_saldo'] ?? 0, 0, ',', '.') }}</p>
+                <div class="flex items-center gap-x-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
+                        <x-heroicon-o-wallet class="h-6 w-6 text-primary-600 dark:text-primary-400" />
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Saldo</p>
+                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400">
+                            Rp {{ number_format($summary['total_saldo'] ?? 0, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
             </x-filament::section>
         </div>
     @endif
 
-    <x-filament::section>
-        <x-slot name="heading">Rekap Tabungan Per Siswa</x-slot>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b bg-gray-50 dark:bg-gray-800">
-                        <th class="px-4 py-2 text-left">#</th>
-                        <th class="px-4 py-2 text-left">NIS</th>
-                        <th class="px-4 py-2 text-left">Nama Siswa</th>
-                        <th class="px-4 py-2 text-left">Kelas</th>
-                        <th class="px-4 py-2 text-right">Setoran</th>
-                        <th class="px-4 py-2 text-right">Penarikan</th>
-                        <th class="px-4 py-2 text-right">Saldo</th>
-                        <th class="px-4 py-2 text-right">Transaksi</th>
+    {{-- Data Table --}}
+    <x-filament::section icon="heroicon-o-banknotes" icon-color="success">
+        <x-slot name="heading">
+            Rekap Tabungan Per Siswa
+        </x-slot>
+
+        <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
+            <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
+                <thead class="bg-gray-50 dark:bg-white/5">
+                    <tr>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">#</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">NIS</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Nama Siswa</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Kelas</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Setoran</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Penarikan</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Saldo</th>
+                        <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Transaksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-200 whitespace-nowrap dark:divide-white/5">
                     @forelse($data as $index => $item)
-                        <tr class="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-4 py-2">{{ $index + 1 }}</td>
-                            <td class="px-4 py-2">{{ $item['nis'] }}</td>
-                            <td class="px-4 py-2 font-medium">{{ $item['nama'] }}</td>
-                            <td class="px-4 py-2">{{ $item['kelas'] }}</td>
-                            <td class="px-4 py-2 text-right text-success-600">Rp {{ number_format($item['total_setor'], 0, ',', '.') }}</td>
-                            <td class="px-4 py-2 text-right text-danger-600">Rp {{ number_format($item['total_tarik'], 0, ',', '.') }}</td>
-                            <td class="px-4 py-2 text-right font-bold">Rp {{ number_format($item['saldo'], 0, ',', '.') }}</td>
-                            <td class="px-4 py-2 text-right">{{ $item['jml_transaksi'] }}</td>
+                        <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
+                            <td class="fi-ta-cell px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $index + 1 }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-sm font-mono text-gray-950 dark:text-white">{{ $item['nis'] }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-sm font-medium text-gray-950 dark:text-white">{{ $item['nama'] }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-sm text-gray-950 dark:text-white">{{ $item['kelas'] }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-end text-sm font-medium text-success-600 dark:text-success-400">Rp {{ number_format($item['total_setor'], 0, ',', '.') }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-end text-sm font-medium text-danger-600 dark:text-danger-400">Rp {{ number_format($item['total_tarik'], 0, ',', '.') }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-end text-sm font-bold text-primary-600 dark:text-primary-400">Rp {{ number_format($item['saldo'], 0, ',', '.') }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-end text-sm text-gray-950 dark:text-white">
+                                <x-filament::badge color="gray">{{ $item['jml_transaksi'] }}</x-filament::badge>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                                Tidak ada data tabungan.
+                            <td colspan="8" class="px-4 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                                    <x-heroicon-o-inbox class="h-12 w-12 mb-2" />
+                                    <p class="text-sm">Tidak ada data tabungan.</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
