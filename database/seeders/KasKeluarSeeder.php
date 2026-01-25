@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Akun;
 use App\Models\KasKeluar;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class KasKeluarSeeder extends Seeder
@@ -11,6 +12,7 @@ class KasKeluarSeeder extends Seeder
     public function run(): void
     {
         $akunKas = Akun::where('kode', '1-1001')->first();
+        $admin = User::first();
 
         if (! $akunKas) {
             $this->command->warn('Akun kas tidak ditemukan.');
@@ -26,6 +28,7 @@ class KasKeluarSeeder extends Seeder
                 'nominal' => 500000,
                 'penerima' => 'Toko ATK Sejahtera',
                 'keterangan' => 'Pembelian ATK untuk kantor',
+                'user_id' => $admin?->id,
             ],
             [
                 'nomor_bukti' => 'KK-'.now()->format('Ymd').'-002',
@@ -34,6 +37,7 @@ class KasKeluarSeeder extends Seeder
                 'nominal' => 1500000,
                 'penerima' => 'PLN',
                 'keterangan' => 'Pembayaran listrik bulan ini',
+                'user_id' => $admin?->id,
             ],
             [
                 'nomor_bukti' => 'KK-'.now()->format('Ymd').'-003',
@@ -42,6 +46,7 @@ class KasKeluarSeeder extends Seeder
                 'nominal' => 300000,
                 'penerima' => 'PDAM',
                 'keterangan' => 'Pembayaran air bulan ini',
+                'user_id' => $admin?->id,
             ],
         ];
 

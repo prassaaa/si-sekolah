@@ -42,6 +42,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 350000,
                 'jenis' => 'bulanan',
                 'deskripsi' => 'SPP bulanan untuk kelas 7',
+                'tanggal_jatuh_tempo' => 10,
                 'is_active' => true,
             ],
             [
@@ -52,6 +53,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 350000,
                 'jenis' => 'bulanan',
                 'deskripsi' => 'SPP bulanan untuk kelas 8',
+                'tanggal_jatuh_tempo' => 10,
                 'is_active' => true,
             ],
             [
@@ -62,6 +64,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 350000,
                 'jenis' => 'bulanan',
                 'deskripsi' => 'SPP bulanan untuk kelas 9',
+                'tanggal_jatuh_tempo' => 10,
                 'is_active' => true,
             ],
             // Uang Gedung (Sekali Bayar)
@@ -73,6 +76,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 2500000,
                 'jenis' => 'sekali_bayar',
                 'deskripsi' => 'Uang gedung untuk siswa baru kelas 7',
+                'tanggal_jatuh_tempo' => 15,
                 'is_active' => true,
             ],
             [
@@ -83,6 +87,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 3000000,
                 'jenis' => 'sekali_bayar',
                 'deskripsi' => 'Uang gedung untuk siswa baru kelas 10',
+                'tanggal_jatuh_tempo' => 15,
                 'is_active' => true,
             ],
             // Seragam (Sekali Bayar)
@@ -94,6 +99,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 500000,
                 'jenis' => 'sekali_bayar',
                 'deskripsi' => 'Seragam pendek',
+                'tanggal_jatuh_tempo' => 20,
                 'is_active' => true,
             ],
             [
@@ -104,6 +110,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 450000,
                 'jenis' => 'sekali_bayar',
                 'deskripsi' => 'Seragam panjang',
+                'tanggal_jatuh_tempo' => 20,
                 'is_active' => true,
             ],
             [
@@ -114,6 +121,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 250000,
                 'jenis' => 'sekali_bayar',
                 'deskripsi' => 'Seragam olahraga',
+                'tanggal_jatuh_tempo' => 20,
                 'is_active' => true,
             ],
             // Buku (Tahunan)
@@ -125,6 +133,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 750000,
                 'jenis' => 'tahunan',
                 'deskripsi' => 'Paket buku pelajaran kelas 7',
+                'tanggal_jatuh_tempo' => 25,
                 'is_active' => true,
             ],
             [
@@ -135,6 +144,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 750000,
                 'jenis' => 'tahunan',
                 'deskripsi' => 'Paket buku pelajaran kelas 8',
+                'tanggal_jatuh_tempo' => 25,
                 'is_active' => true,
             ],
             [
@@ -145,6 +155,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 750000,
                 'jenis' => 'tahunan',
                 'deskripsi' => 'Paket buku pelajaran kelas 9',
+                'tanggal_jatuh_tempo' => 25,
                 'is_active' => true,
             ],
             // Kegiatan (Insidental)
@@ -156,6 +167,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 150000,
                 'jenis' => 'insidental',
                 'deskripsi' => 'Biaya kegiatan Pramuka',
+                'tanggal_jatuh_tempo' => 15,
                 'is_active' => true,
             ],
             [
@@ -166,6 +178,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 150000,
                 'jenis' => 'insidental',
                 'deskripsi' => 'Biaya kegiatan Paskibra',
+                'tanggal_jatuh_tempo' => 15,
                 'is_active' => true,
             ],
             // Ujian
@@ -177,6 +190,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 100000,
                 'jenis' => 'insidental',
                 'deskripsi' => 'Biaya ujian akhir semester',
+                'tanggal_jatuh_tempo' => 10,
                 'is_active' => true,
             ],
             [
@@ -187,6 +201,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 250000,
                 'jenis' => 'insidental',
                 'deskripsi' => 'Biaya ujian nasional',
+                'tanggal_jatuh_tempo' => 10,
                 'is_active' => true,
             ],
             // Wisuda
@@ -198,6 +213,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 500000,
                 'jenis' => 'sekali_bayar',
                 'deskripsi' => 'Biaya wisuda kelas 9',
+                'tanggal_jatuh_tempo' => 20,
                 'is_active' => true,
             ],
             [
@@ -208,6 +224,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 750000,
                 'jenis' => 'sekali_bayar',
                 'deskripsi' => 'Biaya wisuda kelas 12',
+                'tanggal_jatuh_tempo' => 20,
                 'is_active' => true,
             ],
             // Tabungan (Bulanan)
@@ -219,6 +236,7 @@ class JenisPembayaranSeeder extends Seeder
                 'nominal' => 50000,
                 'jenis' => 'bulanan',
                 'deskripsi' => 'Tabungan wajib bulanan',
+                'tanggal_jatuh_tempo' => 10,
                 'is_active' => true,
             ],
         ];

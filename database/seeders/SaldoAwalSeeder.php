@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Akun;
 use App\Models\SaldoAwal;
 use App\Models\TahunAjaran;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class SaldoAwalSeeder extends Seeder
@@ -19,6 +20,7 @@ class SaldoAwalSeeder extends Seeder
         }
 
         $akuns = Akun::where('tipe', 'aset')->where('is_active', true)->get();
+        $admin = User::first();
 
         if ($akuns->isEmpty()) {
             $this->command->warn('Tidak ada akun aset.');
@@ -41,6 +43,7 @@ class SaldoAwalSeeder extends Seeder
                     'saldo' => $saldo,
                     'tanggal' => $tahunAjaran->tanggal_mulai ?? now()->startOfYear(),
                     'keterangan' => 'Saldo awal '.$akun->nama,
+                    'user_id' => $admin?->id,
                 ]
             );
         }

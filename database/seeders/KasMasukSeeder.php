@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Akun;
 use App\Models\KasMasuk;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class KasMasukSeeder extends Seeder
@@ -12,6 +13,7 @@ class KasMasukSeeder extends Seeder
     {
         $akunKas = Akun::where('kode', '1-1001')->first();
         $akunBank = Akun::where('kode', '1-1002')->first();
+        $admin = User::first();
 
         if (! $akunKas) {
             $this->command->warn('Akun kas tidak ditemukan.');
@@ -27,6 +29,7 @@ class KasMasukSeeder extends Seeder
                 'nominal' => 5000000,
                 'sumber' => 'Pembayaran SPP',
                 'keterangan' => 'Pembayaran SPP siswa',
+                'user_id' => $admin?->id,
             ],
             [
                 'nomor_bukti' => 'KM-'.now()->format('Ymd').'-002',
@@ -35,6 +38,7 @@ class KasMasukSeeder extends Seeder
                 'nominal' => 10000000,
                 'sumber' => 'Transfer dari Yayasan',
                 'keterangan' => 'Dana operasional dari yayasan',
+                'user_id' => $admin?->id,
             ],
             [
                 'nomor_bukti' => 'KM-'.now()->format('Ymd').'-003',
@@ -43,6 +47,7 @@ class KasMasukSeeder extends Seeder
                 'nominal' => 2500000,
                 'sumber' => 'Uang Kegiatan',
                 'keterangan' => 'Iuran kegiatan study tour',
+                'user_id' => $admin?->id,
             ],
         ];
 
