@@ -11,87 +11,6 @@
         {{ $this->filtersForm }}
     </x-filament::section>
 
-    {{-- Stats Cards --}}
-    @if($summary && $kelasNama)
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
-                        <x-heroicon-o-academic-cap class="h-6 w-6 text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Kelas</p>
-                        <p class="text-lg font-bold text-primary-600 dark:text-primary-400">{{ $kelasNama }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-500/10">
-                        <x-heroicon-o-users class="h-6 w-6 text-gray-600 dark:text-gray-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Siswa</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $summary['total_siswa'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-500/10">
-                        <x-heroicon-o-banknotes class="h-6 w-6 text-gray-600 dark:text-gray-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tagihan</p>
-                        <p class="text-lg font-bold text-gray-900 dark:text-white">
-                            Rp {{ number_format($summary['total_tagihan'] ?? 0, 0, ',', '.') }}
-                        </p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
-                        <x-heroicon-o-check-circle class="h-6 w-6 text-success-600 dark:text-success-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Terbayar</p>
-                        <p class="text-lg font-bold text-success-600 dark:text-success-400">
-                            Rp {{ number_format($summary['total_terbayar'] ?? 0, 0, ',', '.') }}
-                        </p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
-                        <x-heroicon-o-check-badge class="h-6 w-6 text-success-600 dark:text-success-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Lunas</p>
-                        <p class="text-2xl font-bold text-success-600 dark:text-success-400">{{ $summary['lunas'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-danger-50 dark:bg-danger-500/10">
-                        <x-heroicon-o-exclamation-circle class="h-6 w-6 text-danger-600 dark:text-danger-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Belum Lunas</p>
-                        <p class="text-2xl font-bold text-danger-600 dark:text-danger-400">{{ $summary['belum_lunas'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-        </div>
-    @endif
-
     {{-- Data Table --}}
     <x-filament::section icon="heroicon-o-table-cells" icon-color="info">
         <x-slot name="heading">
@@ -132,7 +51,7 @@
                         <tr>
                             <td colspan="7" class="px-4 py-8 text-center">
                                 <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                                    <x-heroicon-o-inbox class="h-12 w-12 mb-2" />
+                                    <x-filament::icon icon="heroicon-o-inbox" class="h-12 w-12 mb-2" />
                                     <p class="text-sm">Tidak ada data. Silakan pilih semester dan kelas.</p>
                                 </div>
                             </td>

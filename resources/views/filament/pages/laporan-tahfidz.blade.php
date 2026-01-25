@@ -11,71 +11,6 @@
         {{ $this->filtersForm }}
     </x-filament::section>
 
-    {{-- Stats Cards --}}
-    @if($summary)
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
-                        <x-heroicon-o-users class="h-6 w-6 text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Siswa</p>
-                        <p class="text-2xl font-bold text-primary-600 dark:text-primary-400">{{ $summary['total_siswa'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
-                        <x-heroicon-o-book-open class="h-6 w-6 text-success-600 dark:text-success-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Setoran</p>
-                        <p class="text-2xl font-bold text-success-600 dark:text-success-400">{{ $summary['total_setoran'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-info-50 dark:bg-info-500/10">
-                        <x-heroicon-o-arrow-path class="h-6 w-6 text-info-600 dark:text-info-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Muroja'ah</p>
-                        <p class="text-2xl font-bold text-info-600 dark:text-info-400">{{ $summary['total_murojaah'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-warning-50 dark:bg-warning-500/10">
-                        <x-heroicon-o-document-text class="h-6 w-6 text-warning-600 dark:text-warning-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Ayat</p>
-                        <p class="text-2xl font-bold text-warning-600 dark:text-warning-400">{{ $summary['total_ayat'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-500/10">
-                        <x-heroicon-o-academic-cap class="h-6 w-6 text-gray-600 dark:text-gray-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Rata-rata Nilai</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $summary['rata_rata_nilai'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-        </div>
-    @endif
-
     {{-- Data Table --}}
     <x-filament::section icon="heroicon-o-book-open" icon-color="success">
         <x-slot name="heading">
@@ -118,7 +53,7 @@
                         <tr>
                             <td colspan="9" class="px-4 py-8 text-center">
                                 <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                                    <x-heroicon-o-inbox class="h-12 w-12 mb-2" />
+                                    <x-filament::icon icon="heroicon-o-inbox" class="h-12 w-12 mb-2" />
                                     <p class="text-sm">Tidak ada data. Silakan pilih semester.</p>
                                 </div>
                             </td>

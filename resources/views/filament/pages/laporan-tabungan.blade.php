@@ -11,65 +11,6 @@
         {{ $this->filtersForm }}
     </x-filament::section>
 
-    {{-- Stats Cards --}}
-    @if($summary)
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-500/10">
-                        <x-heroicon-o-users class="h-6 w-6 text-gray-600 dark:text-gray-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Siswa</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $summary['total_siswa'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success-50 dark:bg-success-500/10">
-                        <x-heroicon-o-arrow-down-tray class="h-6 w-6 text-success-600 dark:text-success-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Setoran</p>
-                        <p class="text-xl font-bold text-success-600 dark:text-success-400">
-                            Rp {{ number_format($summary['total_setor'] ?? 0, 0, ',', '.') }}
-                        </p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-danger-50 dark:bg-danger-500/10">
-                        <x-heroicon-o-arrow-up-tray class="h-6 w-6 text-danger-600 dark:text-danger-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Penarikan</p>
-                        <p class="text-xl font-bold text-danger-600 dark:text-danger-400">
-                            Rp {{ number_format($summary['total_tarik'] ?? 0, 0, ',', '.') }}
-                        </p>
-                    </div>
-                </div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="flex items-center gap-x-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
-                        <x-heroicon-o-wallet class="h-6 w-6 text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Saldo</p>
-                        <p class="text-xl font-bold text-primary-600 dark:text-primary-400">
-                            Rp {{ number_format($summary['total_saldo'] ?? 0, 0, ',', '.') }}
-                        </p>
-                    </div>
-                </div>
-            </x-filament::section>
-        </div>
-    @endif
-
     {{-- Data Table --}}
     <x-filament::section icon="heroicon-o-banknotes" icon-color="success">
         <x-slot name="heading">
@@ -108,7 +49,7 @@
                         <tr>
                             <td colspan="8" class="px-4 py-8 text-center">
                                 <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                                    <x-heroicon-o-inbox class="h-12 w-12 mb-2" />
+                                    <x-filament::icon icon="heroicon-o-inbox" class="h-12 w-12 mb-2" />
                                     <p class="text-sm">Tidak ada data tabungan.</p>
                                 </div>
                             </td>

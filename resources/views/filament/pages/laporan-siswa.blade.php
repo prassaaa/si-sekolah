@@ -19,51 +19,6 @@
         </form>
     </x-filament::section>
 
-    {{-- Stats Cards --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <x-filament::section>
-            <div class="flex items-center gap-x-3">
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
-                    <x-heroicon-o-users class="h-6 w-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Siswa</p>
-                    <p class="text-3xl font-bold text-primary-600 dark:text-primary-400">
-                        {{ number_format($summary['total_siswa'] ?? 0) }}
-                    </p>
-                </div>
-            </div>
-        </x-filament::section>
-
-        <x-filament::section>
-            <div class="flex items-center gap-x-3">
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-info-50 dark:bg-info-500/10">
-                    <x-heroicon-o-user class="h-6 w-6 text-info-600 dark:text-info-400" />
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Laki-laki</p>
-                    <p class="text-3xl font-bold text-info-600 dark:text-info-400">
-                        {{ number_format($summary['siswa_per_jenis_kelamin']['L'] ?? 0) }}
-                    </p>
-                </div>
-            </div>
-        </x-filament::section>
-
-        <x-filament::section>
-            <div class="flex items-center gap-x-3">
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-pink-50 dark:bg-pink-500/10">
-                    <x-heroicon-o-user class="h-6 w-6 text-pink-600 dark:text-pink-400" />
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Perempuan</p>
-                    <p class="text-3xl font-bold text-pink-600 dark:text-pink-400">
-                        {{ number_format($summary['siswa_per_jenis_kelamin']['P'] ?? 0) }}
-                    </p>
-                </div>
-            </div>
-        </x-filament::section>
-    </div>
-
     {{-- Tables Section --}}
     <div class="grid gap-6 lg:grid-cols-2">
         @if(!empty($summary['siswa_per_status']))
