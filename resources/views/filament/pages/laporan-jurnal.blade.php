@@ -35,7 +35,7 @@
                         <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
                             <td class="fi-ta-cell px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $index + 1 }}</td>
                             <td class="fi-ta-cell px-4 py-3 text-sm text-gray-950 dark:text-white">{{ $item['tanggal'] }}</td>
-                            <td class="fi-ta-cell px-4 py-3 text-sm font-mono text-xs text-gray-950 dark:text-white">{{ $item['nomor_bukti'] }}</td>
+                            <td class="fi-ta-cell px-4 py-3 text-sm font-mono text-gray-950 dark:text-white">{{ $item['nomor_bukti'] }}</td>
                             <td class="fi-ta-cell px-4 py-3 text-sm font-medium text-gray-950 dark:text-white">{{ $item['akun'] }}</td>
                             <td class="fi-ta-cell px-4 py-3 text-sm text-gray-950 dark:text-white">{{ $item['keterangan'] }}</td>
                             <td class="fi-ta-cell px-4 py-3 text-end text-sm font-medium text-success-600 dark:text-success-400">
