@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanTabunganStats;
 use App\Models\Kelas;
 use App\Models\TabunganSiswa;
 use Filament\Forms\Components\DatePicker;
@@ -114,6 +115,15 @@ class LaporanTabungan extends Page implements HasForms
             'total_setor' => $this->data->sum('total_setor'),
             'total_tarik' => $this->data->sum('total_tarik'),
             'total_saldo' => $this->data->sum('saldo'),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanTabunganStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }

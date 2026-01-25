@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanUnitPosStats;
 use App\Models\Pembayaran;
 use App\Models\UnitPos;
 use Filament\Forms\Components\DatePicker;
@@ -138,6 +139,16 @@ class LaporanUnitPos extends Page implements HasForms
             'total_transaksi' => $pembayarans->count(),
             'total_nominal' => $pembayarans->sum('jumlah_bayar'),
             'rata_rata' => $pembayarans->count() > 0 ? $pembayarans->sum('jumlah_bayar') / $pembayarans->count() : 0,
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanUnitPosStats::make([
+                'summary' => $this->summary,
+                'unitPosNama' => $this->unitPosNama,
+            ]),
         ];
     }
 }

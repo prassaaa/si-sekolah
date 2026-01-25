@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanKeuanganStats;
 use App\Models\Pembayaran;
 use App\Models\TagihanSiswa;
 use BackedEnum;
@@ -9,7 +10,6 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
@@ -54,24 +54,30 @@ class LaporanKeuangan extends Page implements HasForms
     {
         return $schema
             ->components([
-                Section::make('Filter Periode')
-                    ->schema([
-                        DatePicker::make('tanggal_mulai')
-                            ->label('Tanggal Mulai')
-                            ->required()
-                            ->native(false)
-                            ->live()
-                            ->afterStateUpdated(fn () => $this->filter()),
-                        DatePicker::make('tanggal_akhir')
-                            ->label('Tanggal Akhir')
-                            ->required()
-                            ->native(false)
-                            ->live()
-                            ->afterStateUpdated(fn () => $this->filter()),
-                    ])
-                    ->columns(2),
+                DatePicker::make('tanggal_mulai')
+                    ->label('Tanggal Mulai')
+                    ->required()
+                    ->native(false)
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->filter()),
+                DatePicker::make('tanggal_akhir')
+                    ->label('Tanggal Akhir')
+                    ->required()
+                    ->native(false)
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->filter()),
             ])
+            ->columns(2)
             ->statePath('data');
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanKeuanganStats::make([
+                'summary' => $this->summary,
+            ]),
+        ];
     }
 
     public function filter(): void

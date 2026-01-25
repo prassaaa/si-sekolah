@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanDebitKreditStats;
 use App\Models\KasKeluar;
 use App\Models\KasMasuk;
 use Filament\Forms\Components\DatePicker;
@@ -140,6 +141,15 @@ class LaporanDebitKredit extends Page implements HasForms
             'selisih' => $totalMasuk - $totalKeluar,
             'jml_masuk' => $this->kasMasukData->count(),
             'jml_keluar' => $this->kasKeluarData->count(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanDebitKreditStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }

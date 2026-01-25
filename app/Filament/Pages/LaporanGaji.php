@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanGajiStats;
 use App\Models\SlipGaji;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -112,6 +113,15 @@ class LaporanGaji extends Page implements HasForms
             'total_tunjangan' => $slips->sum('total_tunjangan'),
             'total_potongan' => $slips->sum('total_potongan'),
             'total_gaji_bersih' => $slips->sum('gaji_bersih'),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanGajiStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }

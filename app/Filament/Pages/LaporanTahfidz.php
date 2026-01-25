@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanTahfidzStats;
 use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\Tahfidz;
@@ -113,6 +114,15 @@ class LaporanTahfidz extends Page implements HasForms
             'total_murojaah' => $this->data->sum('total_muroja\'ah'),
             'total_ayat' => $this->data->sum('total_ayat'),
             'rata_rata_nilai' => round($this->data->avg('rata_rata_nilai'), 1),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanTahfidzStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }

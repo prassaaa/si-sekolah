@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanTagihanSiswaStats;
 use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\TagihanSiswa;
@@ -128,6 +129,15 @@ class LaporanTagihanSiswa extends Page implements HasForms
             'belum_bayar' => $tagihans->where('status', 'belum_bayar')->count(),
             'sebagian' => $tagihans->where('status', 'sebagian')->count(),
             'lunas' => $tagihans->where('status', 'lunas')->count(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanTagihanSiswaStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }

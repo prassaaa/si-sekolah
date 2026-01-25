@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanJurnalStats;
 use App\Models\JurnalUmum;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -95,6 +96,15 @@ class LaporanJurnal extends Page implements HasForms
             'total_debit' => $this->data->sum('debit'),
             'total_kredit' => $this->data->sum('kredit'),
             'total_transaksi' => $this->data->count(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanJurnalStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanPembayaranStats;
 use App\Models\JenisPembayaran;
 use App\Models\Semester;
 use App\Models\TagihanSiswa;
@@ -142,6 +143,15 @@ class LaporanPembayaran extends Page implements HasForms
             'persentase' => $this->data->sum('total_tagihan') > 0
                 ? round(($this->data->sum('total_terbayar') / $this->data->sum('total_tagihan')) * 100, 1)
                 : 0,
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanPembayaranStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }

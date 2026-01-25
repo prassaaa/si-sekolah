@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanPembayaranPerKelasStats;
 use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\TagihanSiswa;
@@ -113,6 +114,16 @@ class LaporanPembayaranPerKelas extends Page implements HasForms
             'total_sisa' => $this->data->sum('sisa'),
             'lunas' => $this->data->where('status', 'Lunas')->count(),
             'belum_lunas' => $this->data->where('status', 'Belum Lunas')->count(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanPembayaranPerKelasStats::make([
+                'summary' => $this->summary,
+                'kelasNama' => $this->kelasNama,
+            ]),
         ];
     }
 }

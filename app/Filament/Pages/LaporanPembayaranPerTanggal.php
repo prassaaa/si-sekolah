@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanPembayaranPerTanggalStats;
 use App\Models\Pembayaran;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -102,6 +103,15 @@ class LaporanPembayaranPerTanggal extends Page implements HasForms
             'total_transfer' => $allPembayarans->where('metode_pembayaran', 'transfer')->sum('jumlah_bayar'),
             'total_lainnya' => $allPembayarans->whereNotIn('metode_pembayaran', ['tunai', 'transfer'])->sum('jumlah_bayar'),
             'grand_total' => $allPembayarans->sum('jumlah_bayar'),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanPembayaranPerTanggalStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }

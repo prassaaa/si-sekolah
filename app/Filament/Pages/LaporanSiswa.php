@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\Laporan\LaporanSiswaStats;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use BackedEnum;
@@ -100,6 +101,15 @@ class LaporanSiswa extends Page implements HasForms
             'siswa_per_status' => $siswaPerStatus,
             'siswa_per_jenis_kelamin' => $siswaPerJenisKelamin,
             'siswa_per_kelas' => $siswaPerKelas,
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            LaporanSiswaStats::make([
+                'summary' => $this->summary,
+            ]),
         ];
     }
 }
