@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\TahunAjarans\Schemas;
 
-use Filament\Infolists\Components\Grid;
-use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 
