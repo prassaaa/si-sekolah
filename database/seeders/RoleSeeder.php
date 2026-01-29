@@ -8,669 +8,317 @@ use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
+    /**
+     * All resources with their permission configurations.
+     *
+     * @var array<string, array<string>>
+     */
+    private array $allResources = [
+        'User', 'Role', 'Activity', 'Sekolah', 'Informasi',
+        'JabatanPegawai', 'Pegawai', 'TahunAjaran', 'Semester',
+        'MataPelajaran', 'JamPelajaran', 'Kelas', 'Siswa',
+        'JadwalPelajaran', 'Tahfidz', 'IzinKeluar', 'IzinPulang',
+        'Prestasi', 'Pelanggaran', 'Konseling', 'KenaikanKelas', 'Kelulusan',
+        'KategoriPembayaran', 'JenisPembayaran', 'TagihanSiswa', 'Pembayaran',
+        'Akun', 'JurnalUmum', 'SaldoAwal', 'KasMasuk', 'KasKeluar',
+        'BuktiTransfer', 'SettingGaji', 'SlipGaji', 'Pajak', 'UnitPos',
+        'PosBayar', 'PembayaranPaket', 'TabunganSiswa',
+    ];
+
+    /**
+     * Standard CRUD actions.
+     *
+     * @var array<string>
+     */
+    private array $allActions = [
+        'ViewAny', 'View', 'Create', 'Update', 'Delete',
+        'DeleteAny', 'ForceDelete', 'ForceDeleteAny',
+        'Restore', 'RestoreAny', 'Replicate', 'Reorder',
+    ];
+
     public function run(): void
     {
-        // Create roles
-        $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
-        $admin = Role::firstOrCreate(['name' => 'admin']);
+        $this->createPermissions();
+        $this->createRoles();
+    }
 
-        // Create all permissions for User resource
-        $permissions = [
-            // User permissions (singular - based on model name)
-            'ViewAny:User',
-            'View:User',
-            'Create:User',
-            'Update:User',
-            'Delete:User',
-            'DeleteAny:User',
-            'ForceDelete:User',
-            'ForceDeleteAny:User',
-            'Restore:User',
-            'RestoreAny:User',
-            'Replicate:User',
-            'Reorder:User',
-            // Role permissions
-            'ViewAny:Role',
-            'View:Role',
-            'Create:Role',
-            'Update:Role',
-            'Delete:Role',
-            'DeleteAny:Role',
-            'ForceDelete:Role',
-            'ForceDeleteAny:Role',
-            'Restore:Role',
-            'RestoreAny:Role',
-            'Replicate:Role',
-            'Reorder:Role',
-            // Activity Log permissions
-            'ViewAny:Activity',
-            'View:Activity',
-            // Sekolah permissions
-            'ViewAny:Sekolah',
-            'View:Sekolah',
-            'Create:Sekolah',
-            'Update:Sekolah',
-            'Delete:Sekolah',
-            'DeleteAny:Sekolah',
-            'ForceDelete:Sekolah',
-            'ForceDeleteAny:Sekolah',
-            'Restore:Sekolah',
-            'RestoreAny:Sekolah',
-            'Replicate:Sekolah',
-            'Reorder:Sekolah',
-            // Informasi permissions
-            'ViewAny:Informasi',
-            'View:Informasi',
-            'Create:Informasi',
-            'Update:Informasi',
-            'Delete:Informasi',
-            'DeleteAny:Informasi',
-            'ForceDelete:Informasi',
-            'ForceDeleteAny:Informasi',
-            'Restore:Informasi',
-            'RestoreAny:Informasi',
-            'Replicate:Informasi',
-            'Reorder:Informasi',
-            // JabatanPegawai permissions
-            'ViewAny:JabatanPegawai',
-            'View:JabatanPegawai',
-            'Create:JabatanPegawai',
-            'Update:JabatanPegawai',
-            'Delete:JabatanPegawai',
-            'DeleteAny:JabatanPegawai',
-            'ForceDelete:JabatanPegawai',
-            'ForceDeleteAny:JabatanPegawai',
-            'Restore:JabatanPegawai',
-            'RestoreAny:JabatanPegawai',
-            'Replicate:JabatanPegawai',
-            'Reorder:JabatanPegawai',
-            // Pegawai permissions
-            'ViewAny:Pegawai',
-            'View:Pegawai',
-            'Create:Pegawai',
-            'Update:Pegawai',
-            'Delete:Pegawai',
-            'DeleteAny:Pegawai',
-            'ForceDelete:Pegawai',
-            'ForceDeleteAny:Pegawai',
-            'Restore:Pegawai',
-            'RestoreAny:Pegawai',
-            'Replicate:Pegawai',
-            'Reorder:Pegawai',
-            // TahunAjaran permissions
-            'ViewAny:TahunAjaran',
-            'View:TahunAjaran',
-            'Create:TahunAjaran',
-            'Update:TahunAjaran',
-            'Delete:TahunAjaran',
-            'DeleteAny:TahunAjaran',
-            'ForceDelete:TahunAjaran',
-            'ForceDeleteAny:TahunAjaran',
-            'Restore:TahunAjaran',
-            'RestoreAny:TahunAjaran',
-            'Replicate:TahunAjaran',
-            'Reorder:TahunAjaran',
-            // Semester permissions
-            'ViewAny:Semester',
-            'View:Semester',
-            'Create:Semester',
-            'Update:Semester',
-            'Delete:Semester',
-            'DeleteAny:Semester',
-            'ForceDelete:Semester',
-            'ForceDeleteAny:Semester',
-            'Restore:Semester',
-            'RestoreAny:Semester',
-            'Replicate:Semester',
-            'Reorder:Semester',
-            // MataPelajaran permissions
-            'ViewAny:MataPelajaran',
-            'View:MataPelajaran',
-            'Create:MataPelajaran',
-            'Update:MataPelajaran',
-            'Delete:MataPelajaran',
-            'DeleteAny:MataPelajaran',
-            'ForceDelete:MataPelajaran',
-            'ForceDeleteAny:MataPelajaran',
-            'Restore:MataPelajaran',
-            'RestoreAny:MataPelajaran',
-            'Replicate:MataPelajaran',
-            'Reorder:MataPelajaran',
-            // JamPelajaran permissions
-            'ViewAny:JamPelajaran',
-            'View:JamPelajaran',
-            'Create:JamPelajaran',
-            'Update:JamPelajaran',
-            'Delete:JamPelajaran',
-            'DeleteAny:JamPelajaran',
-            'ForceDelete:JamPelajaran',
-            'ForceDeleteAny:JamPelajaran',
-            'Restore:JamPelajaran',
-            'RestoreAny:JamPelajaran',
-            'Replicate:JamPelajaran',
-            'Reorder:JamPelajaran',
-            // Kelas permissions
-            'ViewAny:Kelas',
-            'View:Kelas',
-            'Create:Kelas',
-            'Update:Kelas',
-            'Delete:Kelas',
-            'DeleteAny:Kelas',
-            'ForceDelete:Kelas',
-            'ForceDeleteAny:Kelas',
-            'Restore:Kelas',
-            'RestoreAny:Kelas',
-            'Replicate:Kelas',
-            'Reorder:Kelas',
-            // Siswa permissions
-            'ViewAny:Siswa',
-            'View:Siswa',
-            'Create:Siswa',
-            'Update:Siswa',
-            'Delete:Siswa',
-            'DeleteAny:Siswa',
-            'ForceDelete:Siswa',
-            'ForceDeleteAny:Siswa',
-            'Restore:Siswa',
-            'RestoreAny:Siswa',
-            'Replicate:Siswa',
-            'Reorder:Siswa',
-            // JadwalPelajaran permissions
-            'ViewAny:JadwalPelajaran',
-            'View:JadwalPelajaran',
-            'Create:JadwalPelajaran',
-            'Update:JadwalPelajaran',
-            'Delete:JadwalPelajaran',
-            'DeleteAny:JadwalPelajaran',
-            'ForceDelete:JadwalPelajaran',
-            'ForceDeleteAny:JadwalPelajaran',
-            'Restore:JadwalPelajaran',
-            'RestoreAny:JadwalPelajaran',
-            'Replicate:JadwalPelajaran',
-            'Reorder:JadwalPelajaran',
-            // Tahfidz permissions
-            'ViewAny:Tahfidz',
-            'View:Tahfidz',
-            'Create:Tahfidz',
-            'Update:Tahfidz',
-            'Delete:Tahfidz',
-            'DeleteAny:Tahfidz',
-            'ForceDelete:Tahfidz',
-            'ForceDeleteAny:Tahfidz',
-            'Restore:Tahfidz',
-            'RestoreAny:Tahfidz',
-            'Replicate:Tahfidz',
-            'Reorder:Tahfidz',
-            // IzinKeluar permissions
-            'ViewAny:IzinKeluar',
-            'View:IzinKeluar',
-            'Create:IzinKeluar',
-            'Update:IzinKeluar',
-            'Delete:IzinKeluar',
-            'DeleteAny:IzinKeluar',
-            'ForceDelete:IzinKeluar',
-            'ForceDeleteAny:IzinKeluar',
-            'Restore:IzinKeluar',
-            'RestoreAny:IzinKeluar',
-            'Replicate:IzinKeluar',
-            'Reorder:IzinKeluar',
-            // IzinPulang permissions
-            'ViewAny:IzinPulang',
-            'View:IzinPulang',
-            'Create:IzinPulang',
-            'Update:IzinPulang',
-            'Delete:IzinPulang',
-            'DeleteAny:IzinPulang',
-            'ForceDelete:IzinPulang',
-            'ForceDeleteAny:IzinPulang',
-            'Restore:IzinPulang',
-            'RestoreAny:IzinPulang',
-            'Replicate:IzinPulang',
-            'Reorder:IzinPulang',
-            // Prestasi permissions
-            'ViewAny:Prestasi',
-            'View:Prestasi',
-            'Create:Prestasi',
-            'Update:Prestasi',
-            'Delete:Prestasi',
-            'DeleteAny:Prestasi',
-            'ForceDelete:Prestasi',
-            'ForceDeleteAny:Prestasi',
-            'Restore:Prestasi',
-            'RestoreAny:Prestasi',
-            'Replicate:Prestasi',
-            'Reorder:Prestasi',
-            // Pelanggaran permissions
-            'ViewAny:Pelanggaran',
-            'View:Pelanggaran',
-            'Create:Pelanggaran',
-            'Update:Pelanggaran',
-            'Delete:Pelanggaran',
-            'DeleteAny:Pelanggaran',
-            'ForceDelete:Pelanggaran',
-            'ForceDeleteAny:Pelanggaran',
-            'Restore:Pelanggaran',
-            'RestoreAny:Pelanggaran',
-            'Replicate:Pelanggaran',
-            'Reorder:Pelanggaran',
-            // Konseling permissions
-            'ViewAny:Konseling',
-            'View:Konseling',
-            'Create:Konseling',
-            'Update:Konseling',
-            'Delete:Konseling',
-            'DeleteAny:Konseling',
-            'ForceDelete:Konseling',
-            'ForceDeleteAny:Konseling',
-            'Restore:Konseling',
-            'RestoreAny:Konseling',
-            'Replicate:Konseling',
-            'Reorder:Konseling',
-            // KenaikanKelas permissions
-            'ViewAny:KenaikanKelas',
-            'View:KenaikanKelas',
-            'Create:KenaikanKelas',
-            'Update:KenaikanKelas',
-            'Delete:KenaikanKelas',
-            'DeleteAny:KenaikanKelas',
-            'ForceDelete:KenaikanKelas',
-            'ForceDeleteAny:KenaikanKelas',
-            'Restore:KenaikanKelas',
-            'RestoreAny:KenaikanKelas',
-            'Replicate:KenaikanKelas',
-            'Reorder:KenaikanKelas',
-            // Kelulusan permissions
-            'ViewAny:Kelulusan',
-            'View:Kelulusan',
-            'Create:Kelulusan',
-            'Update:Kelulusan',
-            'Delete:Kelulusan',
-            'DeleteAny:Kelulusan',
-            'ForceDelete:Kelulusan',
-            'ForceDeleteAny:Kelulusan',
-            'Restore:Kelulusan',
-            'RestoreAny:Kelulusan',
-            'Replicate:Kelulusan',
-            'Reorder:Kelulusan',
-            // KategoriPembayaran permissions
-            'ViewAny:KategoriPembayaran',
-            'View:KategoriPembayaran',
-            'Create:KategoriPembayaran',
-            'Update:KategoriPembayaran',
-            'Delete:KategoriPembayaran',
-            'DeleteAny:KategoriPembayaran',
-            'ForceDelete:KategoriPembayaran',
-            'ForceDeleteAny:KategoriPembayaran',
-            'Restore:KategoriPembayaran',
-            'RestoreAny:KategoriPembayaran',
-            'Replicate:KategoriPembayaran',
-            'Reorder:KategoriPembayaran',
-            // JenisPembayaran permissions
-            'ViewAny:JenisPembayaran',
-            'View:JenisPembayaran',
-            'Create:JenisPembayaran',
-            'Update:JenisPembayaran',
-            'Delete:JenisPembayaran',
-            'DeleteAny:JenisPembayaran',
-            'ForceDelete:JenisPembayaran',
-            'ForceDeleteAny:JenisPembayaran',
-            'Restore:JenisPembayaran',
-            'RestoreAny:JenisPembayaran',
-            'Replicate:JenisPembayaran',
-            'Reorder:JenisPembayaran',
-            // TagihanSiswa permissions
-            'ViewAny:TagihanSiswa',
-            'View:TagihanSiswa',
-            'Create:TagihanSiswa',
-            'Update:TagihanSiswa',
-            'Delete:TagihanSiswa',
-            'DeleteAny:TagihanSiswa',
-            'ForceDelete:TagihanSiswa',
-            'ForceDeleteAny:TagihanSiswa',
-            'Restore:TagihanSiswa',
-            'RestoreAny:TagihanSiswa',
-            'Replicate:TagihanSiswa',
-            'Reorder:TagihanSiswa',
-            // Pembayaran permissions
-            'ViewAny:Pembayaran',
-            'View:Pembayaran',
-            'Create:Pembayaran',
-            'Update:Pembayaran',
-            'Delete:Pembayaran',
-            'DeleteAny:Pembayaran',
-            'ForceDelete:Pembayaran',
-            'ForceDeleteAny:Pembayaran',
-            'Restore:Pembayaran',
-            'RestoreAny:Pembayaran',
-            'Replicate:Pembayaran',
-            'Reorder:Pembayaran',
-            // Akun permissions
-            'ViewAny:Akun',
-            'View:Akun',
-            'Create:Akun',
-            'Update:Akun',
-            'Delete:Akun',
-            'DeleteAny:Akun',
-            'ForceDelete:Akun',
-            'ForceDeleteAny:Akun',
-            'Restore:Akun',
-            'RestoreAny:Akun',
-            'Replicate:Akun',
-            'Reorder:Akun',
-            // JurnalUmum permissions
-            'ViewAny:JurnalUmum',
-            'View:JurnalUmum',
-            'Create:JurnalUmum',
-            'Update:JurnalUmum',
-            'Delete:JurnalUmum',
-            'DeleteAny:JurnalUmum',
-            'ForceDelete:JurnalUmum',
-            'ForceDeleteAny:JurnalUmum',
-            'Restore:JurnalUmum',
-            'RestoreAny:JurnalUmum',
-            'Replicate:JurnalUmum',
-            'Reorder:JurnalUmum',
-            // SaldoAwal permissions
-            'ViewAny:SaldoAwal',
-            'View:SaldoAwal',
-            'Create:SaldoAwal',
-            'Update:SaldoAwal',
-            'Delete:SaldoAwal',
-            'DeleteAny:SaldoAwal',
-            'ForceDelete:SaldoAwal',
-            'ForceDeleteAny:SaldoAwal',
-            'Restore:SaldoAwal',
-            'RestoreAny:SaldoAwal',
-            'Replicate:SaldoAwal',
-            'Reorder:SaldoAwal',
-            // KasMasuk permissions
-            'ViewAny:KasMasuk',
-            'View:KasMasuk',
-            'Create:KasMasuk',
-            'Update:KasMasuk',
-            'Delete:KasMasuk',
-            'DeleteAny:KasMasuk',
-            'ForceDelete:KasMasuk',
-            'ForceDeleteAny:KasMasuk',
-            'Restore:KasMasuk',
-            'RestoreAny:KasMasuk',
-            'Replicate:KasMasuk',
-            'Reorder:KasMasuk',
-            // KasKeluar permissions
-            'ViewAny:KasKeluar',
-            'View:KasKeluar',
-            'Create:KasKeluar',
-            'Update:KasKeluar',
-            'Delete:KasKeluar',
-            'DeleteAny:KasKeluar',
-            'ForceDelete:KasKeluar',
-            'ForceDeleteAny:KasKeluar',
-            'Restore:KasKeluar',
-            'RestoreAny:KasKeluar',
-            'Replicate:KasKeluar',
-            'Reorder:KasKeluar',
-            // BuktiTransfer permissions
-            'ViewAny:BuktiTransfer',
-            'View:BuktiTransfer',
-            'Create:BuktiTransfer',
-            'Update:BuktiTransfer',
-            'Delete:BuktiTransfer',
-            'DeleteAny:BuktiTransfer',
-            'ForceDelete:BuktiTransfer',
-            'ForceDeleteAny:BuktiTransfer',
-            'Restore:BuktiTransfer',
-            'RestoreAny:BuktiTransfer',
-            'Replicate:BuktiTransfer',
-            'Reorder:BuktiTransfer',
-            // SettingGaji permissions
-            'ViewAny:SettingGaji',
-            'View:SettingGaji',
-            'Create:SettingGaji',
-            'Update:SettingGaji',
-            'Delete:SettingGaji',
-            'DeleteAny:SettingGaji',
-            'ForceDelete:SettingGaji',
-            'ForceDeleteAny:SettingGaji',
-            'Restore:SettingGaji',
-            'RestoreAny:SettingGaji',
-            'Replicate:SettingGaji',
-            'Reorder:SettingGaji',
-            // SlipGaji permissions
-            'ViewAny:SlipGaji',
-            'View:SlipGaji',
-            'Create:SlipGaji',
-            'Update:SlipGaji',
-            'Delete:SlipGaji',
-            'DeleteAny:SlipGaji',
-            'ForceDelete:SlipGaji',
-            'ForceDeleteAny:SlipGaji',
-            'Restore:SlipGaji',
-            'RestoreAny:SlipGaji',
-            'Replicate:SlipGaji',
-            'Reorder:SlipGaji',
-            // Pajak permissions
-            'ViewAny:Pajak',
-            'View:Pajak',
-            'Create:Pajak',
-            'Update:Pajak',
-            'Delete:Pajak',
-            'DeleteAny:Pajak',
-            'ForceDelete:Pajak',
-            'ForceDeleteAny:Pajak',
-            'Restore:Pajak',
-            'RestoreAny:Pajak',
-            'Replicate:Pajak',
-            'Reorder:Pajak',
-            // UnitPos permissions
-            'ViewAny:UnitPos',
-            'View:UnitPos',
-            'Create:UnitPos',
-            'Update:UnitPos',
-            'Delete:UnitPos',
-            'DeleteAny:UnitPos',
-            'ForceDelete:UnitPos',
-            'ForceDeleteAny:UnitPos',
-            'Restore:UnitPos',
-            'RestoreAny:UnitPos',
-            'Replicate:UnitPos',
-            'Reorder:UnitPos',
-            // PosBayar permissions
-            'ViewAny:PosBayar',
-            'View:PosBayar',
-            'Create:PosBayar',
-            'Update:PosBayar',
-            'Delete:PosBayar',
-            'DeleteAny:PosBayar',
-            'ForceDelete:PosBayar',
-            'ForceDeleteAny:PosBayar',
-            'Restore:PosBayar',
-            'RestoreAny:PosBayar',
-            'Replicate:PosBayar',
-            'Reorder:PosBayar',
-            // PembayaranPaket permissions
-            'ViewAny:PembayaranPaket',
-            'View:PembayaranPaket',
-            'Create:PembayaranPaket',
-            'Update:PembayaranPaket',
-            'Delete:PembayaranPaket',
-            'DeleteAny:PembayaranPaket',
-            'ForceDelete:PembayaranPaket',
-            'ForceDeleteAny:PembayaranPaket',
-            'Restore:PembayaranPaket',
-            'RestoreAny:PembayaranPaket',
-            'Replicate:PembayaranPaket',
-            'Reorder:PembayaranPaket',
-            // TabunganSiswa permissions
-            'ViewAny:TabunganSiswa',
-            'View:TabunganSiswa',
-            'Create:TabunganSiswa',
-            'Update:TabunganSiswa',
-            'Delete:TabunganSiswa',
-            'DeleteAny:TabunganSiswa',
-            'ForceDelete:TabunganSiswa',
-            'ForceDeleteAny:TabunganSiswa',
-            'Restore:TabunganSiswa',
-            'RestoreAny:TabunganSiswa',
-            'Replicate:TabunganSiswa',
-            'Reorder:TabunganSiswa',
-        ];
+    /**
+     * Create all permissions for all resources.
+     */
+    private function createPermissions(): void
+    {
+        foreach ($this->allResources as $resource) {
+            $actions = $resource === 'Activity' ? ['ViewAny', 'View'] : $this->allActions;
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            foreach ($actions as $action) {
+                Permission::firstOrCreate(['name' => "{$action}:{$resource}"]);
+            }
         }
+    }
 
-        // Give all permissions to super_admin
+    /**
+     * Create all roles with their permissions.
+     */
+    private function createRoles(): void
+    {
+        // 1. Super Admin - Full access
+        $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdmin->syncPermissions(Permission::all());
 
-        // Give limited permissions to admin
-        $admin->syncPermissions([
-            'ViewAny:User',
-            'View:User',
-            'Create:User',
-            'Update:User',
-            'ViewAny:Role',
-            'View:Role',
-            'ViewAny:Activity',
-            'View:Activity',
-            'ViewAny:Sekolah',
-            'View:Sekolah',
-            'ViewAny:Informasi',
-            'View:Informasi',
-            'Create:Informasi',
-            'Update:Informasi',
-            'ViewAny:JabatanPegawai',
-            'View:JabatanPegawai',
-            'ViewAny:Pegawai',
-            'View:Pegawai',
-            'Create:Pegawai',
-            'Update:Pegawai',
-            'ViewAny:TahunAjaran',
-            'View:TahunAjaran',
-            'ViewAny:Semester',
-            'View:Semester',
-            'ViewAny:MataPelajaran',
-            'View:MataPelajaran',
-            'ViewAny:JamPelajaran',
-            'View:JamPelajaran',
-            'ViewAny:Kelas',
-            'View:Kelas',
-            'Create:Kelas',
-            'Update:Kelas',
-            'ViewAny:Siswa',
-            'View:Siswa',
-            'Create:Siswa',
-            'Update:Siswa',
-            'ViewAny:JadwalPelajaran',
-            'View:JadwalPelajaran',
-            'Create:JadwalPelajaran',
-            'Update:JadwalPelajaran',
-            'ViewAny:Tahfidz',
-            'View:Tahfidz',
-            'Create:Tahfidz',
-            'Update:Tahfidz',
-            'ViewAny:IzinKeluar',
-            'View:IzinKeluar',
-            'Create:IzinKeluar',
-            'Update:IzinKeluar',
-            'ViewAny:IzinPulang',
-            'View:IzinPulang',
-            'Create:IzinPulang',
-            'Update:IzinPulang',
-            'ViewAny:Prestasi',
-            'View:Prestasi',
-            'Create:Prestasi',
-            'Update:Prestasi',
-            'ViewAny:Pelanggaran',
-            'View:Pelanggaran',
-            'Create:Pelanggaran',
-            'Update:Pelanggaran',
-            'ViewAny:Konseling',
-            'View:Konseling',
-            'Create:Konseling',
-            'Update:Konseling',
-            'ViewAny:KenaikanKelas',
-            'View:KenaikanKelas',
-            'Create:KenaikanKelas',
-            'Update:KenaikanKelas',
-            'ViewAny:Kelulusan',
-            'View:Kelulusan',
-            'Create:Kelulusan',
-            'Update:Kelulusan',
-            'ViewAny:KategoriPembayaran',
-            'View:KategoriPembayaran',
-            'Create:KategoriPembayaran',
-            'Update:KategoriPembayaran',
-            'ViewAny:JenisPembayaran',
-            'View:JenisPembayaran',
-            'Create:JenisPembayaran',
-            'Update:JenisPembayaran',
-            'ViewAny:TagihanSiswa',
-            'View:TagihanSiswa',
-            'Create:TagihanSiswa',
-            'Update:TagihanSiswa',
-            'ViewAny:Pembayaran',
-            'View:Pembayaran',
-            'Create:Pembayaran',
-            'Update:Pembayaran',
-            'ViewAny:Akun',
-            'View:Akun',
-            'Create:Akun',
-            'Update:Akun',
-            'ViewAny:JurnalUmum',
-            'View:JurnalUmum',
-            'Create:JurnalUmum',
-            'Update:JurnalUmum',
-            // SaldoAwal (admin access)
-            'ViewAny:SaldoAwal',
-            'View:SaldoAwal',
-            'Create:SaldoAwal',
-            'Update:SaldoAwal',
-            // KasMasuk (admin access)
-            'ViewAny:KasMasuk',
-            'View:KasMasuk',
-            'Create:KasMasuk',
-            'Update:KasMasuk',
-            // KasKeluar (admin access)
-            'ViewAny:KasKeluar',
-            'View:KasKeluar',
-            'Create:KasKeluar',
-            'Update:KasKeluar',
-            // BuktiTransfer (admin access)
-            'ViewAny:BuktiTransfer',
-            'View:BuktiTransfer',
-            'Create:BuktiTransfer',
-            'Update:BuktiTransfer',
-            // SettingGaji (admin view only)
-            'ViewAny:SettingGaji',
-            'View:SettingGaji',
-            // SlipGaji (admin access)
-            'ViewAny:SlipGaji',
-            'View:SlipGaji',
-            'Create:SlipGaji',
-            'Update:SlipGaji',
-            // Pajak (admin view only)
-            'ViewAny:Pajak',
-            'View:Pajak',
-            // UnitPos (admin access)
-            'ViewAny:UnitPos',
-            'View:UnitPos',
-            'Create:UnitPos',
-            'Update:UnitPos',
-            // PosBayar (admin access)
-            'ViewAny:PosBayar',
-            'View:PosBayar',
-            'Create:PosBayar',
-            'Update:PosBayar',
-            // PembayaranPaket (admin access)
-            'ViewAny:PembayaranPaket',
-            'View:PembayaranPaket',
-            'Create:PembayaranPaket',
-            'Update:PembayaranPaket',
-            // TabunganSiswa (admin access)
-            'ViewAny:TabunganSiswa',
-            'View:TabunganSiswa',
-            'Create:TabunganSiswa',
-            'Update:TabunganSiswa',
-        ]);
+        // 2. Bendahara - Keuangan, Akuntansi, Kas & Bank, Penggajian, Setting Pembayaran
+        $bendahara = Role::firstOrCreate(['name' => 'bendahara']);
+        $bendahara->syncPermissions($this->getBendaharaPermissions());
+
+        // 3. Tata Usaha - Akademik, Kesiswaan, Kepegawaian, Pengaturan
+        $tataUsaha = Role::firstOrCreate(['name' => 'tata_usaha']);
+        $tataUsaha->syncPermissions($this->getTataUsahaPermissions());
+
+        // 4. Guru BK - Konseling, Pelanggaran, Prestasi, Izin
+        $guruBk = Role::firstOrCreate(['name' => 'guru_bk']);
+        $guruBk->syncPermissions($this->getGuruBkPermissions());
+
+        // 5. Guru - View jadwal, input tahfidz, view siswa
+        $guru = Role::firstOrCreate(['name' => 'guru']);
+        $guru->syncPermissions($this->getGuruPermissions());
+
+        // 6. Wali Kelas - Sama dengan guru + kelola siswa kelasnya
+        $waliKelas = Role::firstOrCreate(['name' => 'wali_kelas']);
+        $waliKelas->syncPermissions($this->getWaliKelasPermissions());
+
+        // 7. Petugas Piket - Kelola izin keluar/pulang
+        $petugasPiket = Role::firstOrCreate(['name' => 'petugas_piket']);
+        $petugasPiket->syncPermissions($this->getPetugasPiketPermissions());
+
+        // Keep admin role for backward compatibility (same as tata_usaha)
+        $admin = Role::firstOrCreate(['name' => 'admin']);
+        $admin->syncPermissions($this->getTataUsahaPermissions());
+    }
+
+    /**
+     * Generate full CRUD permissions for a resource.
+     *
+     * @return array<string>
+     */
+    private function fullCrud(string $resource): array
+    {
+        return array_map(fn ($action) => "{$action}:{$resource}", $this->allActions);
+    }
+
+    /**
+     * Generate view-only permissions for a resource.
+     *
+     * @return array<string>
+     */
+    private function viewOnly(string $resource): array
+    {
+        return [
+            "ViewAny:{$resource}",
+            "View:{$resource}",
+        ];
+    }
+
+    /**
+     * Generate create-only permissions (view + create) for a resource.
+     *
+     * @return array<string>
+     */
+    private function createOnly(string $resource): array
+    {
+        return [
+            "ViewAny:{$resource}",
+            "View:{$resource}",
+            "Create:{$resource}",
+        ];
+    }
+
+    /**
+     * Generate permissions without delete for a resource.
+     *
+     * @return array<string>
+     */
+    private function noDelete(string $resource): array
+    {
+        return [
+            "ViewAny:{$resource}",
+            "View:{$resource}",
+            "Create:{$resource}",
+            "Update:{$resource}",
+        ];
+    }
+
+    /**
+     * Get Bendahara permissions.
+     * Focus: Keuangan, Akuntansi, Kas & Bank, Penggajian, Setting Pembayaran
+     *
+     * @return array<string>
+     */
+    private function getBendaharaPermissions(): array
+    {
+        return array_merge(
+            // KEUANGAN - Full CRUD
+            $this->fullCrud('KategoriPembayaran'),
+            $this->fullCrud('JenisPembayaran'),
+            $this->fullCrud('TagihanSiswa'),
+            $this->fullCrud('Pembayaran'),
+            $this->fullCrud('TabunganSiswa'),
+            $this->fullCrud('BuktiTransfer'),
+
+            // AKUNTANSI - Full CRUD
+            $this->fullCrud('Akun'),
+            $this->fullCrud('JurnalUmum'),
+            $this->fullCrud('SaldoAwal'),
+
+            // KAS & BANK - Full CRUD
+            $this->fullCrud('KasMasuk'),
+            $this->fullCrud('KasKeluar'),
+
+            // PENGGAJIAN - Full CRUD
+            $this->fullCrud('SettingGaji'),
+            $this->fullCrud('SlipGaji'),
+
+            // SETTING PEMBAYARAN - Full CRUD
+            $this->fullCrud('PosBayar'),
+            $this->fullCrud('Pajak'),
+            $this->fullCrud('UnitPos'),
+            $this->fullCrud('PembayaranPaket'),
+
+            // REFERENSI - View Only
+            $this->viewOnly('Siswa'),
+            $this->viewOnly('Pegawai'),
+            $this->viewOnly('Kelas'),
+        );
+    }
+
+    /**
+     * Get Tata Usaha permissions.
+     * Focus: Akademik, Kesiswaan, Kepegawaian, Pengaturan
+     *
+     * @return array<string>
+     */
+    private function getTataUsahaPermissions(): array
+    {
+        return array_merge(
+            // AKADEMIK - Full CRUD
+            $this->fullCrud('TahunAjaran'),
+            $this->fullCrud('Semester'),
+            $this->fullCrud('MataPelajaran'),
+            $this->fullCrud('JamPelajaran'),
+            $this->fullCrud('JadwalPelajaran'),
+            $this->fullCrud('KenaikanKelas'),
+            $this->fullCrud('Kelulusan'),
+
+            // KESISWAAN - Full CRUD
+            $this->fullCrud('Siswa'),
+            $this->fullCrud('Kelas'),
+            $this->fullCrud('Tahfidz'),
+            $this->fullCrud('IzinKeluar'),
+            $this->fullCrud('IzinPulang'),
+            $this->fullCrud('Prestasi'),
+            $this->fullCrud('Pelanggaran'),
+            $this->fullCrud('Konseling'),
+
+            // KEPEGAWAIAN - Full CRUD
+            $this->fullCrud('JabatanPegawai'),
+            $this->fullCrud('Pegawai'),
+
+            // PENGATURAN
+            $this->noDelete('Sekolah'), // Can't delete school settings
+            $this->fullCrud('Informasi'),
+        );
+    }
+
+    /**
+     * Get Guru BK permissions.
+     * Focus: Konseling, Pelanggaran, Prestasi, Izin
+     *
+     * @return array<string>
+     */
+    private function getGuruBkPermissions(): array
+    {
+        return array_merge(
+            // Full CRUD
+            $this->fullCrud('Konseling'),
+            $this->fullCrud('Pelanggaran'),
+            $this->fullCrud('Prestasi'),
+
+            // No Delete for Izin
+            $this->noDelete('IzinKeluar'),
+            $this->noDelete('IzinPulang'),
+
+            // View Only - Referensi
+            $this->viewOnly('Siswa'),
+            $this->viewOnly('Kelas'),
+        );
+    }
+
+    /**
+     * Get Guru permissions.
+     * Focus: View jadwal, input tahfidz, view siswa
+     *
+     * @return array<string>
+     */
+    private function getGuruPermissions(): array
+    {
+        return array_merge(
+            // View Only
+            $this->viewOnly('JadwalPelajaran'),
+            $this->viewOnly('MataPelajaran'),
+            $this->viewOnly('Siswa'),
+            $this->viewOnly('Kelas'),
+            $this->viewOnly('Pegawai'), // Self view
+            $this->viewOnly('SlipGaji'), // Self view
+
+            // Tahfidz - Create & Update, no delete
+            $this->noDelete('Tahfidz'),
+
+            // Prestasi & Pelanggaran - Create only
+            $this->createOnly('Prestasi'),
+            $this->createOnly('Pelanggaran'),
+        );
+    }
+
+    /**
+     * Get Wali Kelas permissions.
+     * Focus: Same as Guru + manage students in their class
+     *
+     * @return array<string>
+     */
+    private function getWaliKelasPermissions(): array
+    {
+        return array_merge(
+            // All Guru permissions
+            $this->getGuruPermissions(),
+
+            // Additional for Wali Kelas
+            ['Update:Siswa'], // Can update students in their class
+
+            // KenaikanKelas - Create only
+            $this->createOnly('KenaikanKelas'),
+
+            // Kelulusan - View only
+            $this->viewOnly('Kelulusan'),
+
+            // Konseling - View only
+            $this->viewOnly('Konseling'),
+        );
+    }
+
+    /**
+     * Get Petugas Piket permissions.
+     * Focus: Izin Keluar/Pulang management
+     *
+     * @return array<string>
+     */
+    private function getPetugasPiketPermissions(): array
+    {
+        return array_merge(
+            // No Delete for Izin
+            $this->noDelete('IzinKeluar'),
+            $this->noDelete('IzinPulang'),
+
+            // View Only - Referensi
+            $this->viewOnly('Siswa'),
+            $this->viewOnly('Kelas'),
+        );
     }
 }
