@@ -2,70 +2,68 @@
 
 namespace App\Policies;
 
-use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\Siswa;
+use App\Models\User;
 
 class SiswaPolicy
 {
-    use HandlesAuthorization;
-
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:Siswa');
+        return $user->can('ViewAny:Siswa');
     }
 
-    public function view(AuthUser $authUser): bool
+    public function view(User $user, Siswa $siswa): bool
     {
-        return $authUser->can('View:Siswa');
+        return $user->can('View:Siswa');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:Siswa');
+        return $user->can('Create:Siswa');
     }
 
-    public function update(AuthUser $authUser): bool
+    public function update(User $user, Siswa $siswa): bool
     {
-        return $authUser->can('Update:Siswa');
+        return $user->can('Update:Siswa');
     }
 
-    public function delete(AuthUser $authUser): bool
+    public function delete(User $user, Siswa $siswa): bool
     {
-        return $authUser->can('Delete:Siswa');
+        return $user->can('Delete:Siswa');
     }
 
-    public function deleteAny(AuthUser $authUser): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('DeleteAny:Siswa');
+        return $user->can('DeleteAny:Siswa');
     }
 
-    public function restore(AuthUser $authUser): bool
+    public function restore(User $user, Siswa $siswa): bool
     {
-        return $authUser->can('Restore:Siswa');
+        return $user->can('Restore:Siswa');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('RestoreAny:Siswa');
+        return $user->can('RestoreAny:Siswa');
     }
 
-    public function forceDelete(AuthUser $authUser): bool
+    public function forceDelete(User $user, Siswa $siswa): bool
     {
-        return $authUser->can('ForceDelete:Siswa');
+        return $user->can('ForceDelete:Siswa');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:Siswa');
+        return $user->can('ForceDeleteAny:Siswa');
     }
 
-    public function replicate(AuthUser $authUser): bool
+    public function replicate(User $user, Siswa $siswa): bool
     {
-        return $authUser->can('Replicate:Siswa');
+        return $user->can('Replicate:Siswa');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function reorder(User $user): bool
     {
-        return $authUser->can('Reorder:Siswa');
+        return $user->can('Reorder:Siswa');
     }
 }

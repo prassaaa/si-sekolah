@@ -1,69 +1,69 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Policies;
 
 use App\Models\Informasi;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 
 class InformasiPolicy
 {
-    use HandlesAuthorization;
-
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:Informasi');
+        return $user->can('ViewAny:Informasi');
     }
 
-    public function view(AuthUser $authUser, Informasi $informasi): bool
+    public function view(User $user, Informasi $informasi): bool
     {
-        return $authUser->can('View:Informasi');
+        return $user->can('View:Informasi');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:Informasi');
+        return $user->can('Create:Informasi');
     }
 
-    public function update(AuthUser $authUser, Informasi $informasi): bool
+    public function update(User $user, Informasi $informasi): bool
     {
-        return $authUser->can('Update:Informasi');
+        return $user->can('Update:Informasi');
     }
 
-    public function delete(AuthUser $authUser, Informasi $informasi): bool
+    public function delete(User $user, Informasi $informasi): bool
     {
-        return $authUser->can('Delete:Informasi');
+        return $user->can('Delete:Informasi');
     }
 
-    public function restore(AuthUser $authUser, Informasi $informasi): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('Restore:Informasi');
+        return $user->can('DeleteAny:Informasi');
     }
 
-    public function forceDelete(AuthUser $authUser, Informasi $informasi): bool
+    public function restore(User $user, Informasi $informasi): bool
     {
-        return $authUser->can('ForceDelete:Informasi');
+        return $user->can('Restore:Informasi');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:Informasi');
+        return $user->can('RestoreAny:Informasi');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function forceDelete(User $user, Informasi $informasi): bool
     {
-        return $authUser->can('RestoreAny:Informasi');
+        return $user->can('ForceDelete:Informasi');
     }
 
-    public function replicate(AuthUser $authUser, Informasi $informasi): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('Replicate:Informasi');
+        return $user->can('ForceDeleteAny:Informasi');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function replicate(User $user, Informasi $informasi): bool
     {
-        return $authUser->can('Reorder:Informasi');
+        return $user->can('Replicate:Informasi');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('Reorder:Informasi');
     }
 }

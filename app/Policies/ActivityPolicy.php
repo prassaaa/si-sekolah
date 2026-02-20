@@ -1,70 +1,69 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 use Spatie\Activitylog\Models\Activity;
-use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ActivityPolicy
 {
-    use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:Activity');
+        return $user->can('ViewAny:Activity');
     }
 
-    public function view(AuthUser $authUser, Activity $activity): bool
+    public function view(User $user, Activity $activity): bool
     {
-        return $authUser->can('View:Activity');
+        return $user->can('View:Activity');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:Activity');
+        return $user->can('Create:Activity');
     }
 
-    public function update(AuthUser $authUser, Activity $activity): bool
+    public function update(User $user, Activity $activity): bool
     {
-        return $authUser->can('Update:Activity');
+        return $user->can('Update:Activity');
     }
 
-    public function delete(AuthUser $authUser, Activity $activity): bool
+    public function delete(User $user, Activity $activity): bool
     {
-        return $authUser->can('Delete:Activity');
+        return $user->can('Delete:Activity');
     }
 
-    public function restore(AuthUser $authUser, Activity $activity): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('Restore:Activity');
+        return $user->can('DeleteAny:Activity');
     }
 
-    public function forceDelete(AuthUser $authUser, Activity $activity): bool
+    public function restore(User $user, Activity $activity): bool
     {
-        return $authUser->can('ForceDelete:Activity');
+        return $user->can('Restore:Activity');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:Activity');
+        return $user->can('RestoreAny:Activity');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function forceDelete(User $user, Activity $activity): bool
     {
-        return $authUser->can('RestoreAny:Activity');
+        return $user->can('ForceDelete:Activity');
     }
 
-    public function replicate(AuthUser $authUser, Activity $activity): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('Replicate:Activity');
+        return $user->can('ForceDeleteAny:Activity');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function replicate(User $user, Activity $activity): bool
     {
-        return $authUser->can('Reorder:Activity');
+        return $user->can('Replicate:Activity');
     }
 
+    public function reorder(User $user): bool
+    {
+        return $user->can('Reorder:Activity');
+    }
 }

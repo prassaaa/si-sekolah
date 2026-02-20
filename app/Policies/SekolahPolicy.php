@@ -1,69 +1,69 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Policies;
 
 use App\Models\Sekolah;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 
 class SekolahPolicy
 {
-    use HandlesAuthorization;
-
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:Sekolah');
+        return $user->can('ViewAny:Sekolah');
     }
 
-    public function view(AuthUser $authUser, Sekolah $sekolah): bool
+    public function view(User $user, Sekolah $sekolah): bool
     {
-        return $authUser->can('View:Sekolah');
+        return $user->can('View:Sekolah');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:Sekolah');
+        return $user->can('Create:Sekolah');
     }
 
-    public function update(AuthUser $authUser, Sekolah $sekolah): bool
+    public function update(User $user, Sekolah $sekolah): bool
     {
-        return $authUser->can('Update:Sekolah');
+        return $user->can('Update:Sekolah');
     }
 
-    public function delete(AuthUser $authUser, Sekolah $sekolah): bool
+    public function delete(User $user, Sekolah $sekolah): bool
     {
-        return $authUser->can('Delete:Sekolah');
+        return $user->can('Delete:Sekolah');
     }
 
-    public function restore(AuthUser $authUser, Sekolah $sekolah): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('Restore:Sekolah');
+        return $user->can('DeleteAny:Sekolah');
     }
 
-    public function forceDelete(AuthUser $authUser, Sekolah $sekolah): bool
+    public function restore(User $user, Sekolah $sekolah): bool
     {
-        return $authUser->can('ForceDelete:Sekolah');
+        return $user->can('Restore:Sekolah');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:Sekolah');
+        return $user->can('RestoreAny:Sekolah');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function forceDelete(User $user, Sekolah $sekolah): bool
     {
-        return $authUser->can('RestoreAny:Sekolah');
+        return $user->can('ForceDelete:Sekolah');
     }
 
-    public function replicate(AuthUser $authUser, Sekolah $sekolah): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('Replicate:Sekolah');
+        return $user->can('ForceDeleteAny:Sekolah');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function replicate(User $user, Sekolah $sekolah): bool
     {
-        return $authUser->can('Reorder:Sekolah');
+        return $user->can('Replicate:Sekolah');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('Reorder:Sekolah');
     }
 }

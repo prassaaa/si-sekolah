@@ -1,69 +1,69 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Policies;
 
 use App\Models\TahunAjaran;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 
 class TahunAjaranPolicy
 {
-    use HandlesAuthorization;
-
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:TahunAjaran');
+        return $user->can('ViewAny:TahunAjaran');
     }
 
-    public function view(AuthUser $authUser, TahunAjaran $tahunAjaran): bool
+    public function view(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $authUser->can('View:TahunAjaran');
+        return $user->can('View:TahunAjaran');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:TahunAjaran');
+        return $user->can('Create:TahunAjaran');
     }
 
-    public function update(AuthUser $authUser, TahunAjaran $tahunAjaran): bool
+    public function update(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $authUser->can('Update:TahunAjaran');
+        return $user->can('Update:TahunAjaran');
     }
 
-    public function delete(AuthUser $authUser, TahunAjaran $tahunAjaran): bool
+    public function delete(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $authUser->can('Delete:TahunAjaran');
+        return $user->can('Delete:TahunAjaran');
     }
 
-    public function restore(AuthUser $authUser, TahunAjaran $tahunAjaran): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('Restore:TahunAjaran');
+        return $user->can('DeleteAny:TahunAjaran');
     }
 
-    public function forceDelete(AuthUser $authUser, TahunAjaran $tahunAjaran): bool
+    public function restore(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $authUser->can('ForceDelete:TahunAjaran');
+        return $user->can('Restore:TahunAjaran');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:TahunAjaran');
+        return $user->can('RestoreAny:TahunAjaran');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function forceDelete(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $authUser->can('RestoreAny:TahunAjaran');
+        return $user->can('ForceDelete:TahunAjaran');
     }
 
-    public function replicate(AuthUser $authUser, TahunAjaran $tahunAjaran): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('Replicate:TahunAjaran');
+        return $user->can('ForceDeleteAny:TahunAjaran');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function replicate(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $authUser->can('Reorder:TahunAjaran');
+        return $user->can('Replicate:TahunAjaran');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('Reorder:TahunAjaran');
     }
 }

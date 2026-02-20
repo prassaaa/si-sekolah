@@ -2,66 +2,67 @@
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Models\User;
 
 class UserPolicy
 {
-    use HandlesAuthorization;
-    
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:User');
+        return $user->can('ViewAny:User');
     }
 
-    public function view(AuthUser $authUser): bool
+    public function view(User $user, User $model): bool
     {
-        return $authUser->can('View:User');
+        return $user->can('View:User');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:User');
+        return $user->can('Create:User');
     }
 
-    public function update(AuthUser $authUser): bool
+    public function update(User $user, User $model): bool
     {
-        return $authUser->can('Update:User');
+        return $user->can('Update:User');
     }
 
-    public function delete(AuthUser $authUser): bool
+    public function delete(User $user, User $model): bool
     {
-        return $authUser->can('Delete:User');
+        return $user->can('Delete:User');
     }
 
-    public function restore(AuthUser $authUser): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('Restore:User');
+        return $user->can('DeleteAny:User');
     }
 
-    public function forceDelete(AuthUser $authUser): bool
+    public function restore(User $user, User $model): bool
     {
-        return $authUser->can('ForceDelete:User');
+        return $user->can('Restore:User');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:User');
+        return $user->can('RestoreAny:User');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function forceDelete(User $user, User $model): bool
     {
-        return $authUser->can('RestoreAny:User');
+        return $user->can('ForceDelete:User');
     }
 
-    public function replicate(AuthUser $authUser): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('Replicate:User');
+        return $user->can('ForceDeleteAny:User');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function replicate(User $user, User $model): bool
     {
-        return $authUser->can('Reorder:User');
+        return $user->can('Replicate:User');
     }
 
+    public function reorder(User $user): bool
+    {
+        return $user->can('Reorder:User');
+    }
 }

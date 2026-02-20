@@ -2,70 +2,72 @@
 
 namespace App\Policies;
 
-use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\JadwalPelajaran;
+use App\Models\User;
 
 class JadwalPelajaranPolicy
 {
-    use HandlesAuthorization;
-
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:JadwalPelajaran');
+        return $user->can('ViewAny:JadwalPelajaran');
     }
 
-    public function view(AuthUser $authUser): bool
+    public function view(User $user, JadwalPelajaran $jadwalPelajaran): bool
     {
-        return $authUser->can('View:JadwalPelajaran');
+        return $user->can('View:JadwalPelajaran');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:JadwalPelajaran');
+        return $user->can('Create:JadwalPelajaran');
     }
 
-    public function update(AuthUser $authUser): bool
+    public function update(User $user, JadwalPelajaran $jadwalPelajaran): bool
     {
-        return $authUser->can('Update:JadwalPelajaran');
+        return $user->can('Update:JadwalPelajaran');
     }
 
-    public function delete(AuthUser $authUser): bool
+    public function delete(User $user, JadwalPelajaran $jadwalPelajaran): bool
     {
-        return $authUser->can('Delete:JadwalPelajaran');
+        return $user->can('Delete:JadwalPelajaran');
     }
 
-    public function deleteAny(AuthUser $authUser): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('DeleteAny:JadwalPelajaran');
+        return $user->can('DeleteAny:JadwalPelajaran');
     }
 
-    public function restore(AuthUser $authUser): bool
+    public function restore(User $user, JadwalPelajaran $jadwalPelajaran): bool
     {
-        return $authUser->can('Restore:JadwalPelajaran');
+        return $user->can('Restore:JadwalPelajaran');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('RestoreAny:JadwalPelajaran');
+        return $user->can('RestoreAny:JadwalPelajaran');
     }
 
-    public function forceDelete(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDelete:JadwalPelajaran');
+    public function forceDelete(
+        User $user,
+        JadwalPelajaran $jadwalPelajaran,
+    ): bool {
+        return $user->can('ForceDelete:JadwalPelajaran');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:JadwalPelajaran');
+        return $user->can('ForceDeleteAny:JadwalPelajaran');
     }
 
-    public function replicate(AuthUser $authUser): bool
-    {
-        return $authUser->can('Replicate:JadwalPelajaran');
+    public function replicate(
+        User $user,
+        JadwalPelajaran $jadwalPelajaran,
+    ): bool {
+        return $user->can('Replicate:JadwalPelajaran');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function reorder(User $user): bool
     {
-        return $authUser->can('Reorder:JadwalPelajaran');
+        return $user->can('Reorder:JadwalPelajaran');
     }
 }

@@ -1,69 +1,69 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Policies;
 
 use App\Models\Pegawai;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 
 class PegawaiPolicy
 {
-    use HandlesAuthorization;
-
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:Pegawai');
+        return $user->can('ViewAny:Pegawai');
     }
 
-    public function view(AuthUser $authUser, Pegawai $pegawai): bool
+    public function view(User $user, Pegawai $pegawai): bool
     {
-        return $authUser->can('View:Pegawai');
+        return $user->can('View:Pegawai');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:Pegawai');
+        return $user->can('Create:Pegawai');
     }
 
-    public function update(AuthUser $authUser, Pegawai $pegawai): bool
+    public function update(User $user, Pegawai $pegawai): bool
     {
-        return $authUser->can('Update:Pegawai');
+        return $user->can('Update:Pegawai');
     }
 
-    public function delete(AuthUser $authUser, Pegawai $pegawai): bool
+    public function delete(User $user, Pegawai $pegawai): bool
     {
-        return $authUser->can('Delete:Pegawai');
+        return $user->can('Delete:Pegawai');
     }
 
-    public function restore(AuthUser $authUser, Pegawai $pegawai): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('Restore:Pegawai');
+        return $user->can('DeleteAny:Pegawai');
     }
 
-    public function forceDelete(AuthUser $authUser, Pegawai $pegawai): bool
+    public function restore(User $user, Pegawai $pegawai): bool
     {
-        return $authUser->can('ForceDelete:Pegawai');
+        return $user->can('Restore:Pegawai');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:Pegawai');
+        return $user->can('RestoreAny:Pegawai');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function forceDelete(User $user, Pegawai $pegawai): bool
     {
-        return $authUser->can('RestoreAny:Pegawai');
+        return $user->can('ForceDelete:Pegawai');
     }
 
-    public function replicate(AuthUser $authUser, Pegawai $pegawai): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('Replicate:Pegawai');
+        return $user->can('ForceDeleteAny:Pegawai');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function replicate(User $user, Pegawai $pegawai): bool
     {
-        return $authUser->can('Reorder:Pegawai');
+        return $user->can('Replicate:Pegawai');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('Reorder:Pegawai');
     }
 }

@@ -1,69 +1,69 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Policies;
 
 use App\Models\MataPelajaran;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 
 class MataPelajaranPolicy
 {
-    use HandlesAuthorization;
-
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:MataPelajaran');
+        return $user->can('ViewAny:MataPelajaran');
     }
 
-    public function view(AuthUser $authUser, MataPelajaran $mataPelajaran): bool
+    public function view(User $user, MataPelajaran $mataPelajaran): bool
     {
-        return $authUser->can('View:MataPelajaran');
+        return $user->can('View:MataPelajaran');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:MataPelajaran');
+        return $user->can('Create:MataPelajaran');
     }
 
-    public function update(AuthUser $authUser, MataPelajaran $mataPelajaran): bool
+    public function update(User $user, MataPelajaran $mataPelajaran): bool
     {
-        return $authUser->can('Update:MataPelajaran');
+        return $user->can('Update:MataPelajaran');
     }
 
-    public function delete(AuthUser $authUser, MataPelajaran $mataPelajaran): bool
+    public function delete(User $user, MataPelajaran $mataPelajaran): bool
     {
-        return $authUser->can('Delete:MataPelajaran');
+        return $user->can('Delete:MataPelajaran');
     }
 
-    public function restore(AuthUser $authUser, MataPelajaran $mataPelajaran): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('Restore:MataPelajaran');
+        return $user->can('DeleteAny:MataPelajaran');
     }
 
-    public function forceDelete(AuthUser $authUser, MataPelajaran $mataPelajaran): bool
+    public function restore(User $user, MataPelajaran $mataPelajaran): bool
     {
-        return $authUser->can('ForceDelete:MataPelajaran');
+        return $user->can('Restore:MataPelajaran');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:MataPelajaran');
+        return $user->can('RestoreAny:MataPelajaran');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function forceDelete(User $user, MataPelajaran $mataPelajaran): bool
     {
-        return $authUser->can('RestoreAny:MataPelajaran');
+        return $user->can('ForceDelete:MataPelajaran');
     }
 
-    public function replicate(AuthUser $authUser, MataPelajaran $mataPelajaran): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('Replicate:MataPelajaran');
+        return $user->can('ForceDeleteAny:MataPelajaran');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function replicate(User $user, MataPelajaran $mataPelajaran): bool
     {
-        return $authUser->can('Reorder:MataPelajaran');
+        return $user->can('Replicate:MataPelajaran');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('Reorder:MataPelajaran');
     }
 }

@@ -1,69 +1,69 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Policies;
 
 use App\Models\JamPelajaran;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\User;
 
 class JamPelajaranPolicy
 {
-    use HandlesAuthorization;
-
-    public function viewAny(AuthUser $authUser): bool
+    public function viewAny(User $user): bool
     {
-        return $authUser->can('ViewAny:JamPelajaran');
+        return $user->can('ViewAny:JamPelajaran');
     }
 
-    public function view(AuthUser $authUser, JamPelajaran $jamPelajaran): bool
+    public function view(User $user, JamPelajaran $jamPelajaran): bool
     {
-        return $authUser->can('View:JamPelajaran');
+        return $user->can('View:JamPelajaran');
     }
 
-    public function create(AuthUser $authUser): bool
+    public function create(User $user): bool
     {
-        return $authUser->can('Create:JamPelajaran');
+        return $user->can('Create:JamPelajaran');
     }
 
-    public function update(AuthUser $authUser, JamPelajaran $jamPelajaran): bool
+    public function update(User $user, JamPelajaran $jamPelajaran): bool
     {
-        return $authUser->can('Update:JamPelajaran');
+        return $user->can('Update:JamPelajaran');
     }
 
-    public function delete(AuthUser $authUser, JamPelajaran $jamPelajaran): bool
+    public function delete(User $user, JamPelajaran $jamPelajaran): bool
     {
-        return $authUser->can('Delete:JamPelajaran');
+        return $user->can('Delete:JamPelajaran');
     }
 
-    public function restore(AuthUser $authUser, JamPelajaran $jamPelajaran): bool
+    public function deleteAny(User $user): bool
     {
-        return $authUser->can('Restore:JamPelajaran');
+        return $user->can('DeleteAny:JamPelajaran');
     }
 
-    public function forceDelete(AuthUser $authUser, JamPelajaran $jamPelajaran): bool
+    public function restore(User $user, JamPelajaran $jamPelajaran): bool
     {
-        return $authUser->can('ForceDelete:JamPelajaran');
+        return $user->can('Restore:JamPelajaran');
     }
 
-    public function forceDeleteAny(AuthUser $authUser): bool
+    public function restoreAny(User $user): bool
     {
-        return $authUser->can('ForceDeleteAny:JamPelajaran');
+        return $user->can('RestoreAny:JamPelajaran');
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    public function forceDelete(User $user, JamPelajaran $jamPelajaran): bool
     {
-        return $authUser->can('RestoreAny:JamPelajaran');
+        return $user->can('ForceDelete:JamPelajaran');
     }
 
-    public function replicate(AuthUser $authUser, JamPelajaran $jamPelajaran): bool
+    public function forceDeleteAny(User $user): bool
     {
-        return $authUser->can('Replicate:JamPelajaran');
+        return $user->can('ForceDeleteAny:JamPelajaran');
     }
 
-    public function reorder(AuthUser $authUser): bool
+    public function replicate(User $user, JamPelajaran $jamPelajaran): bool
     {
-        return $authUser->can('Reorder:JamPelajaran');
+        return $user->can('Replicate:JamPelajaran');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('Reorder:JamPelajaran');
     }
 }
