@@ -12,7 +12,7 @@
     <div class="grid gap-6 lg:grid-cols-2 mt-6">
         <x-filament::section>
             <x-slot name="heading">Aset</x-slot>
-            <div class="overflow-x-auto">
+            <div style="overflow-x: auto">
                 <table class="w-full text-left">
                     <tbody>
                         @foreach($aset as $item)
@@ -35,7 +35,7 @@
         <div class="space-y-6">
             <x-filament::section>
                 <x-slot name="heading">Kewajiban</x-slot>
-                <div class="overflow-x-auto">
+                <div style="overflow-x: auto">
                     <table class="w-full text-left">
                         <tbody>
                             @foreach($kewajiban as $item)
@@ -57,7 +57,7 @@
 
             <x-filament::section>
                 <x-slot name="heading">Modal</x-slot>
-                <div class="overflow-x-auto">
+                <div style="overflow-x: auto">
                     <table class="w-full text-left">
                         <tbody>
                             @foreach($modal as $item)

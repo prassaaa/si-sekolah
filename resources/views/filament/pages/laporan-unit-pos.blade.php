@@ -18,7 +18,7 @@
                 Rekap Per Unit POS
             </x-slot>
 
-            <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
+            <div class="fi-ta-content relative divide-y divide-gray-200 dark:divide-white/10" style="overflow-x: auto">
                 <table class="fi-ta-table w-full min-w-[600px] table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
                     <thead class="bg-gray-50 dark:bg-white/5">
                         <tr>
@@ -55,7 +55,7 @@
             Detail Transaksi
         </x-slot>
 
-        <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
+        <div class="fi-ta-content relative divide-y divide-gray-200 dark:divide-white/10" style="overflow-x: auto">
             <table class="fi-ta-table w-full min-w-[700px] table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
                 <thead class="bg-gray-50 dark:bg-white/5">
                     <tr>

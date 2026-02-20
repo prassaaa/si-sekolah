@@ -12,7 +12,7 @@
     <x-filament::section class="mt-6">
         <x-slot name="heading">Laporan Perubahan Modal</x-slot>
 
-        <div class="overflow-x-auto">
+        <div style="overflow-x: auto">
             <table class="w-full text-left">
                 <tbody>
                     <tr class="border-b dark:border-gray-700">

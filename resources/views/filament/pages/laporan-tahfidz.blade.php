@@ -17,7 +17,7 @@
             Data Rekap Tahfidz
         </x-slot>
 
-        <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
+        <div class="fi-ta-content relative divide-y divide-gray-200 dark:divide-white/10" style="overflow-x: auto">
             <table class="fi-ta-table min-w-[750px] w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
                 <thead class="bg-gray-50 dark:bg-white/5">
                     <tr>

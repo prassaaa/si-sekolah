@@ -36,7 +36,7 @@
         <div class="grid gap-6 lg:grid-cols-2 mt-6">
             <x-filament::section>
                 <x-slot name="heading">Kas Masuk</x-slot>
-                <div class="overflow-x-auto">
+                <div style="overflow-x: auto">
                     <table class="w-full text-left text-sm">
                         <thead>
                             <tr class="border-b dark:border-gray-700">
@@ -60,7 +60,7 @@
 
             <x-filament::section>
                 <x-slot name="heading">Kas Keluar</x-slot>
-                <div class="overflow-x-auto">
+                <div style="overflow-x: auto">
                     <table class="w-full text-left text-sm">
                         <thead>
                             <tr class="border-b dark:border-gray-700">

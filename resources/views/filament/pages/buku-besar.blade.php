@@ -21,7 +21,7 @@
                 </p>
             </div>
 
-            <div class="overflow-x-auto">
+            <div style="overflow-x: auto">
                 <table class="w-full text-left">
                     <thead>
                         <tr class="border-b dark:border-gray-700">
