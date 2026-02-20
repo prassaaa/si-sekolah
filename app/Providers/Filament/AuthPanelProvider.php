@@ -2,10 +2,9 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Enums\DatabaseNotificationsPosition;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Enums\UserMenuPosition;
 use Filament\Http\Middleware\Authenticate;
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -46,15 +45,20 @@ class AuthPanelProvider extends PanelProvider
             ->globalSearch(true)
             // Navigation Groups (akan diatur di Resources)
             ->collapsibleNavigationGroups(true) // Groups bisa di-collapse
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                AccountWidget::class,
-            ])
+            ->discoverResources(
+                in: app_path('Filament/Resources'),
+                for: "App\Filament\Resources",
+            )
+            ->discoverPages(
+                in: app_path('Filament/Pages'),
+                for: "App\Filament\Pages",
+            )
+            ->pages([Dashboard::class])
+            ->discoverWidgets(
+                in: app_path('Filament/Widgets'),
+                for: "App\Filament\Widgets",
+            )
+            ->widgets([AccountWidget::class])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -66,11 +70,7 @@ class AuthPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->plugins([
-                FilamentShieldPlugin::make(),
-            ])
-            ->authMiddleware([
-                Authenticate::class,
-            ]);
+            ->plugins([FilamentShieldPlugin::make()])
+            ->authMiddleware([Authenticate::class]);
     }
 }
