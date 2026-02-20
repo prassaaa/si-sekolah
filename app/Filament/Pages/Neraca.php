@@ -4,16 +4,25 @@ namespace App\Filament\Pages;
 
 use App\Models\Akun;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class Neraca extends Page implements HasForms
+class Neraca extends Page implements HasSchemas, HasTable
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedScale;
 
@@ -25,92 +34,100 @@ class Neraca extends Page implements HasForms
 
     protected static ?string $navigationLabel = 'Neraca';
 
-    protected string $view = 'filament.pages.neraca';
-
-    public ?string $tanggal = null;
-
-    /** @var array<int, array<string, mixed>> */
-    public array $aset = [];
-
-    /** @var array<int, array<string, mixed>> */
-    public array $kewajiban = [];
-
-    /** @var array<int, array<string, mixed>> */
-    public array $modal = [];
-
-    public float $totalAset = 0;
-
-    public float $totalKewajiban = 0;
-
-    public float $totalModal = 0;
-
-    public function mount(): void
+    public function getTitle(): string|Htmlable
     {
-        $this->tanggal = now()->format('Y-m-d');
+        return 'Neraca';
     }
 
-    public function form(Schema $schema): Schema
+    public function content(Schema $schema): Schema
     {
         return $schema
             ->components([
-                DatePicker::make('tanggal')
-                    ->label('Per Tanggal')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-            ])
-            ->columns(1);
+                EmbeddedTable::make(),
+            ]);
     }
 
-    public function filter(): void
+    public function table(Table $table): Table
     {
-        $saldoPerAkun = $this->calculateSaldoPerAkun($this->tanggal);
+        return $table
+            ->records(function (array $filters): Collection {
+                $tanggal = $filters['tanggal']['tanggal'] ?? null;
+                $tipe = $filters['tipe']['value'] ?? null;
 
-        $akuns = Akun::whereIn('tipe', [
-            'aset',
-            'liabilitas',
-            'ekuitas',
-        ])->get();
+                if (! $tanggal) {
+                    return collect();
+                }
 
-        $this->aset = $akuns
-            ->where('tipe', 'aset')
-            ->map(
-                fn ($akun) => [
-                    'akun' => $akun->nama,
-                    'saldo' => $saldoPerAkun[$akun->id] ?? 0,
-                ],
-            )
-            ->filter(fn ($item) => $item['saldo'] != 0)
-            ->values()
-            ->toArray();
+                $saldoPerAkun = $this->calculateSaldoPerAkun($tanggal);
 
-        $this->kewajiban = $akuns
-            ->where('tipe', 'liabilitas')
-            ->map(
-                fn ($akun) => [
-                    'akun' => $akun->nama,
-                    'saldo' => $saldoPerAkun[$akun->id] ?? 0,
-                ],
-            )
-            ->filter(fn ($item) => $item['saldo'] != 0)
-            ->values()
-            ->toArray();
+                $akuns = Akun::whereIn('tipe', ['aset', 'liabilitas', 'ekuitas'])
+                    ->when($tipe, fn ($q) => $q->where('tipe', $tipe))
+                    ->get();
 
-        $this->modal = $akuns
-            ->where('tipe', 'ekuitas')
-            ->map(
-                fn ($akun) => [
-                    'akun' => $akun->nama,
-                    'saldo' => $saldoPerAkun[$akun->id] ?? 0,
-                ],
-            )
-            ->filter(fn ($item) => $item['saldo'] != 0)
-            ->values()
-            ->toArray();
+                return $akuns->map(function ($akun) use ($saldoPerAkun) {
+                    $saldo = $saldoPerAkun[$akun->id] ?? 0;
 
-        $this->totalAset = collect($this->aset)->sum('saldo');
-        $this->totalKewajiban = collect($this->kewajiban)->sum('saldo');
-        $this->totalModal = collect($this->modal)->sum('saldo');
+                    if ($saldo == 0) {
+                        return null;
+                    }
+
+                    return [
+                        'akun' => $akun->nama,
+                        'tipe' => match ($akun->tipe) {
+                            'aset' => 'Aset',
+                            'liabilitas' => 'Kewajiban',
+                            'ekuitas' => 'Modal',
+                            default => ucfirst($akun->tipe),
+                        },
+                        'saldo' => $saldo,
+                    ];
+                })->filter()->values();
+            })
+            ->columns([
+                TextColumn::make('akun')
+                    ->label('Akun'),
+                TextColumn::make('tipe')
+                    ->label('Tipe')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Aset' => 'success',
+                        'Kewajiban' => 'danger',
+                        'Modal' => 'info',
+                        default => 'gray',
+                    }),
+                TextColumn::make('saldo')
+                    ->label('Saldo')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->weight('bold'),
+            ])
+            ->filters([
+                SelectFilter::make('tipe')
+                    ->label('Tipe')
+                    ->options([
+                        'aset' => 'Aset',
+                        'liabilitas' => 'Kewajiban',
+                        'ekuitas' => 'Modal',
+                    ]),
+                Filter::make('tanggal')
+                    ->form([
+                        DatePicker::make('tanggal')
+                            ->label('Per Tanggal')
+                            ->default(now()),
+                    ])
+                    ->indicateUsing(function (array $data): ?string {
+                        if (! ($data['tanggal'] ?? null)) {
+                            return null;
+                        }
+
+                        return 'Per: '.\Carbon\Carbon::parse($data['tanggal'])->translatedFormat('d M Y');
+                    }),
+            ])
+            ->deferFilters(false)
+            ->defaultPaginationPageOption('all')
+            ->emptyStateHeading('Tidak ada data')
+            ->emptyStateDescription('Silakan pilih tanggal untuk melihat neraca.')
+            ->emptyStateIcon('heroicon-o-inbox');
     }
 
     /**

@@ -5,16 +5,25 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\Laporan\LaporanJurnalStats;
 use App\Models\JurnalUmum;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\Summarizers\Sum;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
-class LaporanJurnal extends Page implements HasForms
+class LaporanJurnal extends Page implements HasSchemas, HasTable
 {
-    use InteractsWithForms;
+    use ExposesTableToWidgets, InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
@@ -26,85 +35,100 @@ class LaporanJurnal extends Page implements HasForms
 
     protected static ?string $slug = 'laporan/jurnal';
 
-    protected string $view = 'filament.pages.laporan-jurnal';
+    public ?string $activeTab = null;
 
-    public ?string $tanggal_mulai = null;
-
-    public ?string $tanggal_selesai = null;
-
-    public Collection $data;
-
-    public array $summary = [];
+    public ?Model $parentRecord = null;
 
     public function getTitle(): string|Htmlable
     {
         return 'Laporan Jurnal Umum';
     }
 
-    public function mount(): void
-    {
-        $this->tanggal_mulai = now()->startOfMonth()->format('Y-m-d');
-        $this->tanggal_selesai = now()->format('Y-m-d');
-
-        $this->data = collect();
-        $this->filter();
-    }
-
-    public function filtersForm(Schema $schema): Schema
+    public function content(Schema $schema): Schema
     {
         return $schema
             ->components([
-                DatePicker::make('tanggal_mulai')
-                    ->label('Dari Tanggal')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-                DatePicker::make('tanggal_selesai')
-                    ->label('Sampai Tanggal')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-            ])
-            ->columns(2);
+                EmbeddedTable::make(),
+            ]);
     }
 
-    public function filter(): void
+    public function table(Table $table): Table
     {
-        if (! $this->tanggal_mulai || ! $this->tanggal_selesai) {
-            $this->data = collect();
-            $this->summary = [];
+        return $table
+            ->query(
+                JurnalUmum::query()
+                    ->with('akun')
+                    ->orderBy('tanggal')
+                    ->orderBy('nomor_bukti')
+            )
+            ->columns([
+                TextColumn::make('tanggal')
+                    ->label('Tanggal')
+                    ->date('d/m/Y')
+                    ->sortable(),
+                TextColumn::make('nomor_bukti')
+                    ->label('No. Bukti')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('akun.nama')
+                    ->label('Akun')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('keterangan')
+                    ->label('Keterangan')
+                    ->searchable()
+                    ->limit(50),
+                TextColumn::make('debit')
+                    ->label('Debit')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->summarize(Sum::make()->money('IDR')->label('Total')),
+                TextColumn::make('kredit')
+                    ->label('Kredit')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->summarize(Sum::make()->money('IDR')->label('Total')),
+            ])
+            ->filters([
+                Filter::make('tanggal')
+                    ->form([
+                        DatePicker::make('tanggal_mulai')
+                            ->label('Dari Tanggal')
+                            ->default(now()->startOfMonth()),
+                        DatePicker::make('tanggal_selesai')
+                            ->label('Sampai Tanggal')
+                            ->default(now()),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['tanggal_mulai'], fn (Builder $q, $date) => $q->where('tanggal', '>=', $date))
+                            ->when($data['tanggal_selesai'], fn (Builder $q, $date) => $q->where('tanggal', '<=', $date));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
 
-            return;
-        }
+                        if ($data['tanggal_mulai'] ?? null) {
+                            $indicators[] = 'Dari: '.\Carbon\Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
+                        }
 
-        $this->data = JurnalUmum::query()
-            ->with('akun')
-            ->whereBetween('tanggal', [$this->tanggal_mulai, $this->tanggal_selesai])
-            ->orderBy('tanggal')
-            ->orderBy('nomor_bukti')
-            ->get()
-            ->map(fn ($j) => [
-                'tanggal' => $j->tanggal->format('d/m/Y'),
-                'nomor_bukti' => $j->nomor_bukti,
-                'akun' => $j->akun?->nama ?? '-',
-                'keterangan' => $j->keterangan,
-                'debit' => $j->debit,
-                'kredit' => $j->kredit,
-            ]);
+                        if ($data['tanggal_selesai'] ?? null) {
+                            $indicators[] = 'Sampai: '.\Carbon\Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
+                        }
 
-        $this->summary = [
-            'total_debit' => $this->data->sum('debit'),
-            'total_kredit' => $this->data->sum('kredit'),
-            'total_transaksi' => $this->data->count(),
-        ];
+                        return $indicators;
+                    }),
+            ])
+            ->deferFilters(false)
+            ->defaultPaginationPageOption('all')
+            ->emptyStateHeading('Tidak ada data')
+            ->emptyStateDescription('Silakan pilih rentang tanggal untuk melihat jurnal umum.')
+            ->emptyStateIcon('heroicon-o-inbox');
     }
 
     protected function getHeaderWidgets(): array
     {
         return [
-            LaporanJurnalStats::make([
-                'summary' => $this->summary,
-            ]),
+            LaporanJurnalStats::class,
         ];
     }
 }

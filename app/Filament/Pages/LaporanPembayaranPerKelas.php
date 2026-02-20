@@ -6,17 +6,22 @@ use App\Filament\Widgets\Laporan\LaporanPembayaranPerKelasStats;
 use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\TagihanSiswa;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
 
-class LaporanPembayaranPerKelas extends Page implements HasForms
+class LaporanPembayaranPerKelas extends Page implements HasSchemas, HasTable
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
 
@@ -28,14 +33,6 @@ class LaporanPembayaranPerKelas extends Page implements HasForms
 
     protected static ?string $slug = 'laporan/pembayaran-per-kelas';
 
-    protected string $view = 'filament.pages.laporan-pembayaran-per-kelas';
-
-    public ?int $semester_id = null;
-
-    public ?int $kelas_id = null;
-
-    public Collection $data;
-
     public array $summary = [];
 
     public ?string $kelasNama = null;
@@ -45,76 +42,107 @@ class LaporanPembayaranPerKelas extends Page implements HasForms
         return 'Laporan Pembayaran Per Kelas';
     }
 
-    public function mount(): void
-    {
-        $this->semester_id = Semester::query()
-            ->where('is_active', true)
-            ->value('id');
-
-        $this->data = collect();
-        $this->filter();
-    }
-
-    public function filtersForm(Schema $schema): Schema
+    public function content(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Select::make('semester_id')
-                    ->label('Semester')
-                    ->options(Semester::query()->orderByDesc('tahun_ajaran_id')->pluck('nama', 'id'))
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-                Select::make('kelas_id')
-                    ->label('Kelas')
-                    ->options(Kelas::query()->where('is_active', true)->orderBy('tingkat')->orderBy('nama')->pluck('nama', 'id'))
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-            ])
-            ->columns(2);
+                EmbeddedTable::make(),
+            ]);
     }
 
-    public function filter(): void
+    public function table(Table $table): Table
     {
-        if (! $this->semester_id || ! $this->kelas_id) {
-            $this->data = collect();
-            $this->summary = [];
-            $this->kelasNama = null;
+        $activeSemesterId = Semester::query()->where('is_active', true)->value('id');
 
-            return;
-        }
+        return $table
+            ->records(function (array $filters) use ($activeSemesterId): Collection {
+                $semesterId = $filters['semester_id']['value'] ?? $activeSemesterId;
+                $kelasId = $filters['kelas_id']['value'] ?? null;
 
-        $this->kelasNama = Kelas::find($this->kelas_id)?->nama;
+                if (! $semesterId || ! $kelasId) {
+                    $this->summary = [];
+                    $this->kelasNama = null;
 
-        $tagihans = TagihanSiswa::query()
-            ->with(['siswa', 'jenisPembayaran', 'pembayarans'])
-            ->where('semester_id', $this->semester_id)
-            ->whereHas('siswa', fn ($q) => $q->where('kelas_id', $this->kelas_id))
-            ->get();
+                    return collect();
+                }
 
-        // Group by siswa
-        $this->data = $tagihans->groupBy('siswa_id')->map(function ($items) {
-            $siswa = $items->first()->siswa;
+                $this->kelasNama = Kelas::query()->find($kelasId)?->nama;
 
-            return [
-                'nis' => $siswa?->nis ?? '-',
-                'nama' => $siswa?->nama_lengkap ?? '-',
-                'total_tagihan' => $items->sum('total_tagihan'),
-                'total_terbayar' => $items->sum('total_terbayar'),
-                'sisa' => $items->sum('sisa_tagihan'),
-                'status' => $items->every(fn ($t) => $t->status === 'lunas') ? 'Lunas' : 'Belum Lunas',
-            ];
-        })->sortBy('nama')->values();
+                $tagihans = TagihanSiswa::query()
+                    ->with(['siswa', 'jenisPembayaran', 'pembayarans'])
+                    ->where('semester_id', $semesterId)
+                    ->whereHas('siswa', fn ($q) => $q->where('kelas_id', $kelasId))
+                    ->get();
 
-        $this->summary = [
-            'total_siswa' => $this->data->count(),
-            'total_tagihan' => $this->data->sum('total_tagihan'),
-            'total_terbayar' => $this->data->sum('total_terbayar'),
-            'total_sisa' => $this->data->sum('sisa'),
-            'lunas' => $this->data->where('status', 'Lunas')->count(),
-            'belum_lunas' => $this->data->where('status', 'Belum Lunas')->count(),
-        ];
+                $data = $tagihans->groupBy('siswa_id')->map(function ($items) {
+                    $siswa = $items->first()->siswa;
+
+                    return [
+                        'nis' => $siswa?->nis ?? '-',
+                        'nama' => $siswa?->nama_lengkap ?? '-',
+                        'total_tagihan' => $items->sum('total_tagihan'),
+                        'total_terbayar' => $items->sum('total_terbayar'),
+                        'sisa' => $items->sum('sisa_tagihan'),
+                        'status' => $items->every(fn ($t) => $t->status === 'lunas') ? 'Lunas' : 'Belum Lunas',
+                    ];
+                })->sortBy('nama')->values();
+
+                $this->summary = [
+                    'total_siswa' => $data->count(),
+                    'total_tagihan' => $data->sum('total_tagihan'),
+                    'total_terbayar' => $data->sum('total_terbayar'),
+                    'total_sisa' => $data->sum('sisa'),
+                    'lunas' => $data->where('status', 'Lunas')->count(),
+                    'belum_lunas' => $data->where('status', 'Belum Lunas')->count(),
+                ];
+
+                return $data;
+            })
+            ->columns([
+                TextColumn::make('nis')
+                    ->label('NIS')
+                    ->searchable(),
+                TextColumn::make('nama')
+                    ->label('Nama Siswa')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('total_tagihan')
+                    ->label('Tagihan')
+                    ->money('IDR')
+                    ->alignEnd(),
+                TextColumn::make('total_terbayar')
+                    ->label('Terbayar')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->color('success'),
+                TextColumn::make('sisa')
+                    ->label('Sisa')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->color('danger'),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Lunas' => 'success',
+                        default => 'danger',
+                    })
+                    ->alignCenter(),
+            ])
+            ->filters([
+                SelectFilter::make('semester_id')
+                    ->label('Semester')
+                    ->options(Semester::query()->orderByDesc('tahun_ajaran_id')->pluck('nama', 'id'))
+                    ->default($activeSemesterId),
+                SelectFilter::make('kelas_id')
+                    ->label('Kelas')
+                    ->options(Kelas::query()->where('is_active', true)->orderBy('tingkat')->orderBy('nama')->pluck('nama', 'id')),
+            ])
+            ->deferFilters(false)
+            ->defaultPaginationPageOption('all')
+            ->emptyStateHeading('Tidak ada data')
+            ->emptyStateDescription('Silakan pilih semester dan kelas untuk melihat data pembayaran.')
+            ->emptyStateIcon('heroicon-o-inbox');
     }
 
     protected function getHeaderWidgets(): array

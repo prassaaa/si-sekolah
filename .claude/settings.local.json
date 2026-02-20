@@ -16,7 +16,11 @@
       "mcp__playwright__browser_take_screenshot",
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_resize",
-      "mcp__playwright__browser_evaluate"
+      "mcp__playwright__browser_evaluate",
+      "mcp__laravel-boost__search-docs",
+      "Bash(vendor/bin/pint:*)",
+      "mcp__laravel-boost__tinker",
+      "mcp__laravel-boost__last-error"
     ]
   },
   "enableAllProjectMcpServers": true,

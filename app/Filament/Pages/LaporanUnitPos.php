@@ -6,17 +6,24 @@ use App\Filament\Widgets\Laporan\LaporanUnitPosStats;
 use App\Models\Pembayaran;
 use App\Models\UnitPos;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
-class LaporanUnitPos extends Page implements HasForms
+class LaporanUnitPos extends Page implements HasSchemas, HasTable
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';
 
@@ -28,17 +35,9 @@ class LaporanUnitPos extends Page implements HasForms
 
     protected static ?string $slug = 'laporan/unit-pos';
 
-    protected string $view = 'filament.pages.laporan-unit-pos';
+    public ?string $activeTab = null;
 
-    public ?int $unit_pos_id = null;
-
-    public ?string $tanggal_mulai = null;
-
-    public ?string $tanggal_selesai = null;
-
-    public Collection $data;
-
-    public Collection $transaksiData;
+    public ?Model $parentRecord = null;
 
     public array $summary = [];
 
@@ -49,97 +48,83 @@ class LaporanUnitPos extends Page implements HasForms
         return 'Laporan Transaksi Unit POS';
     }
 
-    public function mount(): void
-    {
-        $this->tanggal_mulai = now()->startOfMonth()->format('Y-m-d');
-        $this->tanggal_selesai = now()->format('Y-m-d');
-        $this->data = collect();
-        $this->transaksiData = collect();
-        $this->filter();
-    }
-
-    public function filtersForm(Schema $schema): Schema
+    public function content(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Select::make('unit_pos_id')
-                    ->label('Unit POS')
-                    ->options(UnitPos::query()->where('is_active', true)->pluck('nama', 'id'))
-                    ->placeholder('Semua Unit')
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-                DatePicker::make('tanggal_mulai')
-                    ->label('Dari Tanggal')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-                DatePicker::make('tanggal_selesai')
-                    ->label('Sampai Tanggal')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-            ])
-            ->columns(3);
+                EmbeddedTable::make(),
+            ]);
     }
 
-    public function filter(): void
+    public function table(Table $table): Table
     {
-        if (! $this->tanggal_mulai || ! $this->tanggal_selesai) {
-            $this->data = collect();
-            $this->transaksiData = collect();
-            $this->summary = [];
+        return $table
+            ->query(
+                Pembayaran::query()
+                    ->with(['tagihanSiswa.siswa', 'tagihanSiswa.jenisPembayaran'])
+                    ->where('status', 'berhasil')
+                    ->orderBy('tanggal_bayar', 'desc')
+            )
+            ->columns([
+                TextColumn::make('tanggal_bayar')
+                    ->label('Tanggal')
+                    ->date('d/m/Y')
+                    ->sortable(),
+                TextColumn::make('nomor_transaksi')
+                    ->label('No. Transaksi')
+                    ->searchable(),
+                TextColumn::make('tagihanSiswa.siswa.nama_lengkap')
+                    ->label('Siswa')
+                    ->searchable(),
+                TextColumn::make('tagihanSiswa.jenisPembayaran.nama')
+                    ->label('Jenis'),
+                TextColumn::make('metode_pembayaran')
+                    ->label('Metode')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
+                TextColumn::make('jumlah_bayar')
+                    ->label('Nominal')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('unit_pos_id')
+                    ->label('Unit POS')
+                    ->options(UnitPos::query()->where('is_active', true)->pluck('nama', 'id')),
+                Filter::make('tanggal')
+                    ->form([
+                        DatePicker::make('tanggal_mulai')
+                            ->label('Dari Tanggal')
+                            ->default(now()->startOfMonth()),
+                        DatePicker::make('tanggal_selesai')
+                            ->label('Sampai Tanggal')
+                            ->default(now()),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['tanggal_mulai'], fn (Builder $q, $date) => $q->where('tanggal_bayar', '>=', $date))
+                            ->when($data['tanggal_selesai'], fn (Builder $q, $date) => $q->where('tanggal_bayar', '<=', $date));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
 
-            return;
-        }
+                        if ($data['tanggal_mulai'] ?? null) {
+                            $indicators[] = 'Dari: '.\Carbon\Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
+                        }
 
-        $this->unitPosNama = $this->unit_pos_id
-            ? UnitPos::find($this->unit_pos_id)?->nama
-            : 'Semua Unit';
+                        if ($data['tanggal_selesai'] ?? null) {
+                            $indicators[] = 'Sampai: '.\Carbon\Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
+                        }
 
-        // Get all active unit pos for summary
-        $units = UnitPos::query()
-            ->where('is_active', true)
-            ->when($this->unit_pos_id, fn ($q) => $q->where('id', $this->unit_pos_id))
-            ->get();
-
-        // Query pembayaran with unit_pos filter
-        $query = Pembayaran::query()
-            ->with(['tagihanSiswa.siswa', 'tagihanSiswa.jenisPembayaran'])
-            ->where('status', 'berhasil')
-            ->whereBetween('tanggal_bayar', [$this->tanggal_mulai, $this->tanggal_selesai])
-            ->when($this->unit_pos_id, fn ($q) => $q->where('unit_pos_id', $this->unit_pos_id));
-
-        $pembayarans = $query->orderBy('tanggal_bayar', 'desc')->get();
-
-        // Summary per unit
-        $this->data = $units->map(function ($unit) use ($pembayarans) {
-            $unitPembayarans = $pembayarans->where('unit_pos_id', $unit->id);
-
-            return [
-                'kode' => $unit->kode,
-                'nama' => $unit->nama,
-                'alamat' => $unit->alamat ?? '-',
-                'total_transaksi' => $unitPembayarans->count(),
-                'total_nominal' => $unitPembayarans->sum('jumlah_bayar'),
-            ];
-        });
-
-        // Detail transaksi
-        $this->transaksiData = $pembayarans->map(fn ($p) => [
-            'tanggal' => $p->tanggal_bayar->format('d/m/Y'),
-            'nomor_transaksi' => $p->nomor_transaksi,
-            'siswa' => $p->tagihanSiswa?->siswa?->nama_lengkap ?? '-',
-            'jenis' => $p->tagihanSiswa?->jenisPembayaran?->nama ?? '-',
-            'metode' => $p->metode_info,
-            'nominal' => $p->jumlah_bayar,
-        ]);
-
-        $this->summary = [
-            'total_unit' => $units->count(),
-            'total_transaksi' => $pembayarans->count(),
-            'total_nominal' => $pembayarans->sum('jumlah_bayar'),
-            'rata_rata' => $pembayarans->count() > 0 ? $pembayarans->sum('jumlah_bayar') / $pembayarans->count() : 0,
-        ];
+                        return $indicators;
+                    }),
+            ])
+            ->deferFilters(false)
+            ->defaultPaginationPageOption('all')
+            ->emptyStateHeading('Tidak ada data')
+            ->emptyStateDescription('Silakan pilih filter untuk melihat transaksi unit POS.')
+            ->emptyStateIcon('heroicon-o-inbox');
     }
 
     protected function getHeaderWidgets(): array

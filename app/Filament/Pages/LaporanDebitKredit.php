@@ -6,17 +6,23 @@ use App\Filament\Widgets\Laporan\LaporanDebitKreditStats;
 use App\Models\KasKeluar;
 use App\Models\KasMasuk;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
 
-class LaporanDebitKredit extends Page implements HasForms
+class LaporanDebitKredit extends Page implements HasSchemas, HasTable
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrows-right-left';
 
@@ -28,18 +34,6 @@ class LaporanDebitKredit extends Page implements HasForms
 
     protected static ?string $slug = 'laporan/debit-kredit';
 
-    protected string $view = 'filament.pages.laporan-debit-kredit';
-
-    public ?string $jenis = 'all';
-
-    public ?string $tanggal_mulai = null;
-
-    public ?string $tanggal_selesai = null;
-
-    public Collection $kasMasukData;
-
-    public Collection $kasKeluarData;
-
     public array $summary = [];
 
     public function getTitle(): string|Htmlable
@@ -47,101 +41,141 @@ class LaporanDebitKredit extends Page implements HasForms
         return 'Laporan Debit & Kredit (Kas)';
     }
 
-    public function mount(): void
-    {
-        $this->tanggal_mulai = now()->startOfMonth()->format('Y-m-d');
-        $this->tanggal_selesai = now()->format('Y-m-d');
-        $this->kasMasukData = collect();
-        $this->kasKeluarData = collect();
-        $this->filter();
-    }
-
-    public function filtersForm(Schema $schema): Schema
+    public function content(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Select::make('jenis')
-                    ->label('Jenis')
-                    ->options([
-                        'all' => 'Semua',
-                        'masuk' => 'Kas Masuk (Debit)',
-                        'keluar' => 'Kas Keluar (Kredit)',
-                    ])
-                    ->default('all')
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-                DatePicker::make('tanggal_mulai')
-                    ->label('Dari Tanggal')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-                DatePicker::make('tanggal_selesai')
-                    ->label('Sampai Tanggal')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-            ])
-            ->columns(3);
+                EmbeddedTable::make(),
+            ]);
     }
 
-    public function filter(): void
+    public function table(Table $table): Table
     {
-        if (! $this->tanggal_mulai || ! $this->tanggal_selesai) {
-            $this->kasMasukData = collect();
-            $this->kasKeluarData = collect();
-            $this->summary = [];
+        return $table
+            ->records(function (array $filters): Collection {
+                $tanggalMulai = $filters['tanggal']['tanggal_mulai'] ?? null;
+                $tanggalSelesai = $filters['tanggal']['tanggal_selesai'] ?? null;
+                $jenis = $filters['jenis']['value'] ?? null;
 
-            return;
-        }
+                if (! $tanggalMulai || ! $tanggalSelesai) {
+                    $this->summary = [];
 
-        // Kas Masuk
-        if ($this->jenis === 'all' || $this->jenis === 'masuk') {
-            $this->kasMasukData = KasMasuk::query()
-                ->with('akun')
-                ->whereBetween('tanggal', [$this->tanggal_mulai, $this->tanggal_selesai])
-                ->orderBy('tanggal')
-                ->get()
-                ->map(fn ($k) => [
-                    'tanggal' => $k->tanggal->format('d/m/Y'),
-                    'nomor_bukti' => $k->nomor_bukti,
-                    'akun' => $k->akun?->nama ?? '-',
-                    'sumber' => $k->sumber,
-                    'keterangan' => $k->keterangan,
-                    'nominal' => $k->nominal,
-                ]);
-        } else {
-            $this->kasMasukData = collect();
-        }
+                    return collect();
+                }
 
-        // Kas Keluar
-        if ($this->jenis === 'all' || $this->jenis === 'keluar') {
-            $this->kasKeluarData = KasKeluar::query()
-                ->with('akun')
-                ->whereBetween('tanggal', [$this->tanggal_mulai, $this->tanggal_selesai])
-                ->orderBy('tanggal')
-                ->get()
-                ->map(fn ($k) => [
-                    'tanggal' => $k->tanggal->format('d/m/Y'),
-                    'nomor_bukti' => $k->nomor_bukti,
-                    'akun' => $k->akun?->nama ?? '-',
-                    'penerima' => $k->penerima,
-                    'keterangan' => $k->keterangan,
-                    'nominal' => $k->nominal,
-                ]);
-        } else {
-            $this->kasKeluarData = collect();
-        }
+                $data = collect();
 
-        $totalMasuk = $this->kasMasukData->sum('nominal');
-        $totalKeluar = $this->kasKeluarData->sum('nominal');
+                if (! $jenis || $jenis === 'masuk') {
+                    $kasMasuk = KasMasuk::query()
+                        ->with('akun')
+                        ->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
+                        ->orderBy('tanggal')
+                        ->get()
+                        ->map(fn ($k) => [
+                            'tanggal' => $k->tanggal->format('Y-m-d'),
+                            'nomor_bukti' => $k->nomor_bukti,
+                            'akun' => $k->akun?->nama ?? '-',
+                            'keterangan' => $k->sumber ?? $k->keterangan ?? '-',
+                            'jenis' => 'Kas Masuk',
+                            'nominal' => $k->nominal,
+                        ]);
+                    $data = $data->merge($kasMasuk);
+                }
 
-        $this->summary = [
-            'total_masuk' => $totalMasuk,
-            'total_keluar' => $totalKeluar,
-            'selisih' => $totalMasuk - $totalKeluar,
-            'jml_masuk' => $this->kasMasukData->count(),
-            'jml_keluar' => $this->kasKeluarData->count(),
-        ];
+                if (! $jenis || $jenis === 'keluar') {
+                    $kasKeluar = KasKeluar::query()
+                        ->with('akun')
+                        ->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
+                        ->orderBy('tanggal')
+                        ->get()
+                        ->map(fn ($k) => [
+                            'tanggal' => $k->tanggal->format('Y-m-d'),
+                            'nomor_bukti' => $k->nomor_bukti,
+                            'akun' => $k->akun?->nama ?? '-',
+                            'keterangan' => $k->penerima ?? $k->keterangan ?? '-',
+                            'jenis' => 'Kas Keluar',
+                            'nominal' => $k->nominal,
+                        ]);
+                    $data = $data->merge($kasKeluar);
+                }
+
+                $data = $data->sortBy('tanggal')->values();
+
+                $totalMasuk = $data->where('jenis', 'Kas Masuk')->sum('nominal');
+                $totalKeluar = $data->where('jenis', 'Kas Keluar')->sum('nominal');
+
+                $this->summary = [
+                    'total_masuk' => $totalMasuk,
+                    'total_keluar' => $totalKeluar,
+                    'selisih' => $totalMasuk - $totalKeluar,
+                    'jml_masuk' => $data->where('jenis', 'Kas Masuk')->count(),
+                    'jml_keluar' => $data->where('jenis', 'Kas Keluar')->count(),
+                ];
+
+                return $data;
+            })
+            ->columns([
+                TextColumn::make('tanggal')
+                    ->label('Tanggal')
+                    ->date('d/m/Y')
+                    ->sortable(),
+                TextColumn::make('nomor_bukti')
+                    ->label('No. Bukti')
+                    ->searchable(),
+                TextColumn::make('akun')
+                    ->label('Akun'),
+                TextColumn::make('keterangan')
+                    ->label('Keterangan')
+                    ->limit(40),
+                TextColumn::make('jenis')
+                    ->label('Jenis')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Kas Masuk' => 'success',
+                        'Kas Keluar' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('nominal')
+                    ->label('Nominal')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->weight('bold'),
+            ])
+            ->filters([
+                SelectFilter::make('jenis')
+                    ->label('Jenis')
+                    ->options([
+                        'masuk' => 'Kas Masuk (Debit)',
+                        'keluar' => 'Kas Keluar (Kredit)',
+                    ]),
+                Filter::make('tanggal')
+                    ->form([
+                        DatePicker::make('tanggal_mulai')
+                            ->label('Dari Tanggal')
+                            ->default(now()->startOfMonth()),
+                        DatePicker::make('tanggal_selesai')
+                            ->label('Sampai Tanggal')
+                            ->default(now()),
+                    ])
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['tanggal_mulai'] ?? null) {
+                            $indicators[] = 'Dari: '.\Carbon\Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
+                        }
+
+                        if ($data['tanggal_selesai'] ?? null) {
+                            $indicators[] = 'Sampai: '.\Carbon\Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
+                        }
+
+                        return $indicators;
+                    }),
+            ])
+            ->deferFilters(false)
+            ->defaultPaginationPageOption('all')
+            ->emptyStateHeading('Tidak ada data')
+            ->emptyStateDescription('Silakan pilih rentang tanggal untuk melihat data kas.')
+            ->emptyStateIcon('heroicon-o-inbox');
     }
 
     protected function getHeaderWidgets(): array

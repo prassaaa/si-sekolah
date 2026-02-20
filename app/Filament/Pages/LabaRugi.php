@@ -5,15 +5,24 @@ namespace App\Filament\Pages;
 use App\Models\Akun;
 use App\Models\JurnalUmum;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Collection;
 
-class LabaRugi extends Page implements HasForms
+class LabaRugi extends Page implements HasSchemas, HasTable
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
 
@@ -25,75 +34,132 @@ class LabaRugi extends Page implements HasForms
 
     protected static ?string $navigationLabel = 'Laba Rugi';
 
-    protected string $view = 'filament.pages.laba-rugi';
-
-    public ?string $tanggal_mulai = null;
-
-    public ?string $tanggal_akhir = null;
-
-    /** @var array<int, array<string, mixed>> */
-    public array $pendapatan = [];
-
-    /** @var array<int, array<string, mixed>> */
-    public array $beban = [];
-
     public float $totalPendapatan = 0;
 
     public float $totalBeban = 0;
 
     public float $labaRugi = 0;
 
-    public function mount(): void
+    public function getTitle(): string|Htmlable
     {
-        $this->tanggal_mulai = now()->startOfMonth()->format('Y-m-d');
-        $this->tanggal_akhir = now()->format('Y-m-d');
+        return 'Laporan Laba Rugi';
     }
 
-    public function form(Schema $schema): Schema
+    public function content(Schema $schema): Schema
     {
         return $schema
             ->components([
-                DatePicker::make('tanggal_mulai')
-                    ->label('Tanggal Mulai')
-                    ->required(),
-                DatePicker::make('tanggal_akhir')
-                    ->label('Tanggal Akhir')
-                    ->required(),
-            ])
-            ->columns(2)
-            ->statePath('data');
+                EmbeddedTable::make(),
+            ]);
     }
 
-    public function filter(): void
+    public function table(Table $table): Table
     {
-        // Pendapatan (tipe = pendapatan)
-        $akunPendapatan = Akun::where('tipe', 'pendapatan')->pluck('id');
-        $this->pendapatan = JurnalUmum::query()
-            ->whereIn('akun_id', $akunPendapatan)
-            ->whereBetween('tanggal', [$this->tanggal_mulai, $this->tanggal_akhir])
-            ->with('akun')
-            ->get()
-            ->groupBy('akun_id')
-            ->map(fn ($items) => [
-                'akun' => $items->first()->akun?->nama,
-                'nominal' => $items->sum('kredit') - $items->sum('debit'),
-            ])->values()->toArray();
+        return $table
+            ->records(function (array $filters): Collection {
+                $tanggalMulai = $filters['tanggal']['tanggal_mulai'] ?? null;
+                $tanggalAkhir = $filters['tanggal']['tanggal_akhir'] ?? null;
+                $kategori = $filters['kategori']['value'] ?? null;
 
-        // Beban (tipe = beban)
-        $akunBeban = Akun::where('tipe', 'beban')->pluck('id');
-        $this->beban = JurnalUmum::query()
-            ->whereIn('akun_id', $akunBeban)
-            ->whereBetween('tanggal', [$this->tanggal_mulai, $this->tanggal_akhir])
-            ->with('akun')
-            ->get()
-            ->groupBy('akun_id')
-            ->map(fn ($items) => [
-                'akun' => $items->first()->akun?->nama,
-                'nominal' => $items->sum('debit') - $items->sum('kredit'),
-            ])->values()->toArray();
+                if (! $tanggalMulai || ! $tanggalAkhir) {
+                    $this->totalPendapatan = 0;
+                    $this->totalBeban = 0;
+                    $this->labaRugi = 0;
 
-        $this->totalPendapatan = collect($this->pendapatan)->sum('nominal');
-        $this->totalBeban = collect($this->beban)->sum('nominal');
-        $this->labaRugi = $this->totalPendapatan - $this->totalBeban;
+                    return collect();
+                }
+
+                $data = collect();
+
+                if (! $kategori || $kategori === 'pendapatan') {
+                    $akunPendapatan = Akun::where('tipe', 'pendapatan')->pluck('id');
+                    $pendapatan = JurnalUmum::query()
+                        ->whereIn('akun_id', $akunPendapatan)
+                        ->whereBetween('tanggal', [$tanggalMulai, $tanggalAkhir])
+                        ->with('akun')
+                        ->get()
+                        ->groupBy('akun_id')
+                        ->map(fn ($items) => [
+                            'akun' => $items->first()->akun?->nama ?? '-',
+                            'kategori' => 'Pendapatan',
+                            'nominal' => $items->sum('kredit') - $items->sum('debit'),
+                        ])->values();
+                    $data = $data->merge($pendapatan);
+                }
+
+                if (! $kategori || $kategori === 'beban') {
+                    $akunBeban = Akun::where('tipe', 'beban')->pluck('id');
+                    $beban = JurnalUmum::query()
+                        ->whereIn('akun_id', $akunBeban)
+                        ->whereBetween('tanggal', [$tanggalMulai, $tanggalAkhir])
+                        ->with('akun')
+                        ->get()
+                        ->groupBy('akun_id')
+                        ->map(fn ($items) => [
+                            'akun' => $items->first()->akun?->nama ?? '-',
+                            'kategori' => 'Beban',
+                            'nominal' => $items->sum('debit') - $items->sum('kredit'),
+                        ])->values();
+                    $data = $data->merge($beban);
+                }
+
+                $this->totalPendapatan = $data->where('kategori', 'Pendapatan')->sum('nominal');
+                $this->totalBeban = $data->where('kategori', 'Beban')->sum('nominal');
+                $this->labaRugi = $this->totalPendapatan - $this->totalBeban;
+
+                return $data->values();
+            })
+            ->columns([
+                TextColumn::make('akun')
+                    ->label('Akun'),
+                TextColumn::make('kategori')
+                    ->label('Kategori')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Pendapatan' => 'success',
+                        'Beban' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('nominal')
+                    ->label('Nominal')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->weight('bold'),
+            ])
+            ->filters([
+                SelectFilter::make('kategori')
+                    ->label('Kategori')
+                    ->options([
+                        'pendapatan' => 'Pendapatan',
+                        'beban' => 'Beban',
+                    ]),
+                Filter::make('tanggal')
+                    ->form([
+                        DatePicker::make('tanggal_mulai')
+                            ->label('Tanggal Mulai')
+                            ->default(now()->startOfMonth()),
+                        DatePicker::make('tanggal_akhir')
+                            ->label('Tanggal Akhir')
+                            ->default(now()),
+                    ])
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['tanggal_mulai'] ?? null) {
+                            $indicators[] = 'Dari: '.\Carbon\Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
+                        }
+
+                        if ($data['tanggal_akhir'] ?? null) {
+                            $indicators[] = 'Sampai: '.\Carbon\Carbon::parse($data['tanggal_akhir'])->translatedFormat('d M Y');
+                        }
+
+                        return $indicators;
+                    }),
+            ])
+            ->deferFilters(false)
+            ->defaultPaginationPageOption('all')
+            ->emptyStateHeading('Tidak ada data')
+            ->emptyStateDescription('Silakan pilih rentang tanggal untuk melihat laporan laba rugi.')
+            ->emptyStateIcon('heroicon-o-inbox');
     }
 }

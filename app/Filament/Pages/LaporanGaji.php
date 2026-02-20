@@ -5,17 +5,25 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\Laporan\LaporanGajiStats;
 use App\Models\SlipGaji;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
-class LaporanGaji extends Page implements HasForms
+class LaporanGaji extends Page implements HasSchemas, HasTable
 {
-    use InteractsWithForms;
+    use ExposesTableToWidgets, InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-currency-dollar';
 
@@ -27,101 +35,117 @@ class LaporanGaji extends Page implements HasForms
 
     protected static ?string $slug = 'laporan/gaji';
 
-    protected string $view = 'filament.pages.laporan-gaji';
+    public ?string $activeTab = null;
 
-    public ?string $bulan = null;
-
-    public ?string $status = null;
-
-    public Collection $data;
-
-    public array $summary = [];
+    public ?Model $parentRecord = null;
 
     public function getTitle(): string|Htmlable
     {
         return 'Laporan Slip Gaji';
     }
 
-    public function mount(): void
-    {
-        $this->bulan = now()->format('Y-m');
-        $this->data = collect();
-        $this->filter();
-    }
-
-    public function filtersForm(Schema $schema): Schema
+    public function content(Schema $schema): Schema
     {
         return $schema
             ->components([
-                DatePicker::make('bulan')
-                    ->label('Bulan')
-                    ->displayFormat('F Y')
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
-                Select::make('status')
+                EmbeddedTable::make(),
+            ]);
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(
+                SlipGaji::query()->with('pegawai')
+            )
+            ->columns([
+                TextColumn::make('pegawai.nip')
+                    ->label('NIP')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('pegawai.nama_lengkap')
+                    ->label('Nama')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('gaji_pokok')
+                    ->label('Gaji Pokok')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->sortable(),
+                TextColumn::make('total_tunjangan')
+                    ->label('Tunjangan')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->color('success')
+                    ->sortable(),
+                TextColumn::make('total_potongan')
+                    ->label('Potongan')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->color('danger')
+                    ->sortable(),
+                TextColumn::make('gaji_bersih')
+                    ->label('Gaji Bersih')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->weight('bold')
+                    ->sortable(),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'dibayar' => 'success',
+                        'disetujui' => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->alignCenter(),
+            ])
+            ->filters([
+                Filter::make('bulan')
+                    ->form([
+                        DatePicker::make('bulan')
+                            ->label('Bulan')
+                            ->displayFormat('F Y')
+                            ->default(now()->startOfMonth()),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (! $data['bulan']) {
+                            return $query;
+                        }
+
+                        $date = \Carbon\Carbon::parse($data['bulan']);
+
+                        return $query
+                            ->where('tahun', $date->year)
+                            ->where('bulan', $date->month);
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        if (! $data['bulan']) {
+                            return null;
+                        }
+
+                        return 'Bulan: '.\Carbon\Carbon::parse($data['bulan'])->translatedFormat('F Y');
+                    }),
+                SelectFilter::make('status')
                     ->label('Status')
                     ->options([
                         'draft' => 'Draft',
                         'disetujui' => 'Disetujui',
                         'dibayar' => 'Dibayar',
-                    ])
-                    ->placeholder('Semua Status')
-                    ->live()
-                    ->afterStateUpdated(fn () => $this->filter()),
+                    ]),
             ])
-            ->columns(2);
-    }
-
-    public function filter(): void
-    {
-        if (! $this->bulan) {
-            $this->data = collect();
-            $this->summary = [];
-
-            return;
-        }
-
-        $carbonDate = \Carbon\Carbon::parse($this->bulan);
-        $tahun = $carbonDate->year;
-        $bulan = $carbonDate->month;
-
-        $query = SlipGaji::query()
-            ->with('pegawai')
-            ->where('tahun', $tahun)
-            ->where('bulan', $bulan);
-
-        if ($this->status) {
-            $query->where('status', $this->status);
-        }
-
-        $slips = $query->get();
-
-        $this->data = $slips->map(fn ($s) => [
-            'nip' => $s->pegawai?->nip ?? '-',
-            'nama' => $s->pegawai?->nama_lengkap ?? '-',
-            'gaji_pokok' => $s->gaji_pokok,
-            'total_tunjangan' => $s->total_tunjangan,
-            'total_potongan' => $s->total_potongan,
-            'gaji_bersih' => $s->gaji_bersih,
-            'status' => $s->status,
-        ]);
-
-        $this->summary = [
-            'total_pegawai' => $slips->count(),
-            'total_gaji_pokok' => $slips->sum('gaji_pokok'),
-            'total_tunjangan' => $slips->sum('total_tunjangan'),
-            'total_potongan' => $slips->sum('total_potongan'),
-            'total_gaji_bersih' => $slips->sum('gaji_bersih'),
-        ];
+            ->deferFilters(false)
+            ->defaultPaginationPageOption('all')
+            ->emptyStateHeading('Tidak ada data')
+            ->emptyStateDescription('Silakan pilih bulan untuk melihat data slip gaji.')
+            ->emptyStateIcon('heroicon-o-inbox');
     }
 
     protected function getHeaderWidgets(): array
     {
         return [
-            LaporanGajiStats::make([
-                'summary' => $this->summary,
-            ]),
+            LaporanGajiStats::class,
         ];
     }
 }
