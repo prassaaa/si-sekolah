@@ -206,6 +206,11 @@ class Siswa extends Model
         return $this->hasMany(KenaikanKelas::class);
     }
 
+    public function absensis(): HasMany
+    {
+        return $this->hasMany(Absensi::class);
+    }
+
     // =====================
     // SCOPES
     // =====================

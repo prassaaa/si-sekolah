@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -89,6 +90,11 @@ class JadwalPelajaran extends Model
     public function guru(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'guru_id');
+    }
+
+    public function absensis(): HasMany
+    {
+        return $this->hasMany(Absensi::class);
     }
 
     // =====================

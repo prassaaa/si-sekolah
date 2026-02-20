@@ -64,6 +64,11 @@ class Kelas extends Model
         return $this->hasMany(Siswa::class);
     }
 
+    public function jadwalPelajarans(): HasMany
+    {
+        return $this->hasMany(JadwalPelajaran::class);
+    }
+
     // Scopes
     public function scopeActive(Builder $query): Builder
     {
