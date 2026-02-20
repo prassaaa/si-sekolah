@@ -37,12 +37,14 @@ class TagihanSiswaResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('status', 'belum_lunas')->count();
+        return static::getModel()::whereIn('status', ['belum_bayar', 'sebagian'])
+            ->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        $count = static::getModel()::where('status', 'belum_lunas')->count();
+        $count = (int) static::getNavigationBadge();
+
         return $count > 10 ? 'danger' : ($count > 0 ? 'warning' : 'primary');
     }
 
