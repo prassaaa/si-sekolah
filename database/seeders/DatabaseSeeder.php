@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
 
             // Kesiswaan - Data Siswa
             SiswaSeeder::class,
+            AbsensiSeeder::class,
             TahfidzSeeder::class,
             IzinKeluarSeeder::class,
             IzinPulangSeeder::class,
