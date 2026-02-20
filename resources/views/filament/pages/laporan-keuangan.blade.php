@@ -8,15 +8,7 @@
             Pilih rentang tanggal untuk melihat laporan keuangan
         </x-slot>
 
-        <form wire:submit="filter">
-            {{ $this->form }}
-
-            <div class="mt-4">
-                <x-filament::button type="submit" icon="heroicon-m-magnifying-glass">
-                    Terapkan Filter
-                </x-filament::button>
-            </div>
-        </form>
+        {{ $this->filtersForm }}
     </x-filament::section>
 
     {{-- Pembayaran per Metode --}}
@@ -30,21 +22,21 @@
             </x-slot>
 
             <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10 dark:border-t-white/10">
-                <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
+                <table class="fi-ta-table min-w-[500px] w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
                     <thead class="bg-gray-50 dark:bg-white/5">
                         <tr>
-                            <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
+                            <th class="fi-ta-header-cell px-3 sm:px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
                                 Metode Pembayaran
                             </th>
-                            <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
+                            <th class="fi-ta-header-cell px-3 sm:px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
                                 Total
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 whitespace-nowrap dark:divide-white/5">
+                    <tbody class="divide-y divide-gray-200 dark:divide-white/5">
                         @foreach($summary['pembayaran_per_metode'] as $metode => $total)
                             <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
-                                <td class="fi-ta-cell px-4 py-3 text-sm text-gray-950 dark:text-white">
+                                <td class="fi-ta-cell whitespace-nowrap px-3 sm:px-4 py-3 text-sm text-gray-950 dark:text-white">
                                     @switch($metode)
                                         @case('tunai')
                                             <x-filament::badge color="success" icon="heroicon-o-banknotes">
@@ -72,7 +64,7 @@
                                             </x-filament::badge>
                                     @endswitch
                                 </td>
-                                <td class="fi-ta-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
+                                <td class="fi-ta-cell whitespace-nowrap px-3 sm:px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
                                     Rp {{ number_format($total, 0, ',', '.') }}
                                 </td>
                             </tr>

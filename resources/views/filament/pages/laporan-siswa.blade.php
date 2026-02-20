@@ -8,15 +8,7 @@
             Pilih tahun ajaran untuk melihat laporan siswa
         </x-slot>
 
-        <form wire:submit="filter">
-            {{ $this->form }}
-
-            <div class="mt-4">
-                <x-filament::button type="submit" icon="heroicon-m-magnifying-glass">
-                    Terapkan Filter
-                </x-filament::button>
-            </div>
-        </form>
+        {{ $this->filtersForm }}
     </x-filament::section>
 
     {{-- Tables Section --}}
@@ -28,21 +20,21 @@
                 </x-slot>
 
                 <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
-                    <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
+                    <table class="fi-ta-table min-w-[400px] w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
                         <thead class="bg-gray-50 dark:bg-white/5">
                             <tr>
-                                <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
+                                <th class="fi-ta-header-cell px-3 sm:px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
                                     Status
                                 </th>
-                                <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
+                                <th class="fi-ta-header-cell px-3 sm:px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
                                     Jumlah
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 whitespace-nowrap dark:divide-white/5">
+                        <tbody class="divide-y divide-gray-200 dark:divide-white/5">
                             @foreach($summary['siswa_per_status'] as $status => $count)
                                 <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
-                                    <td class="fi-ta-cell px-4 py-3 text-sm text-gray-950 dark:text-white">
+                                    <td class="fi-ta-cell whitespace-nowrap px-3 sm:px-4 py-3 text-sm text-gray-950 dark:text-white">
                                         @switch($status)
                                             @case('aktif')
                                                 <x-filament::badge color="success">Aktif</x-filament::badge>
@@ -63,7 +55,7 @@
                                                 <x-filament::badge>{{ ucfirst($status) }}</x-filament::badge>
                                         @endswitch
                                     </td>
-                                    <td class="fi-ta-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
+                                    <td class="fi-ta-cell whitespace-nowrap px-3 sm:px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
                                         {{ number_format($count) }}
                                     </td>
                                 </tr>
@@ -81,24 +73,24 @@
                 </x-slot>
 
                 <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10 max-h-80 overflow-y-auto">
-                    <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
+                    <table class="fi-ta-table min-w-[400px] w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
                         <thead class="bg-gray-50 dark:bg-white/5 sticky top-0">
                             <tr>
-                                <th class="fi-ta-header-cell px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
+                                <th class="fi-ta-header-cell px-3 sm:px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
                                     Kelas
                                 </th>
-                                <th class="fi-ta-header-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
+                                <th class="fi-ta-header-cell px-3 sm:px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
                                     Jumlah
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 whitespace-nowrap dark:divide-white/5">
+                        <tbody class="divide-y divide-gray-200 dark:divide-white/5">
                             @foreach($summary['siswa_per_kelas'] as $kelas => $count)
                                 <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
-                                    <td class="fi-ta-cell px-4 py-3 text-sm text-gray-950 dark:text-white">
+                                    <td class="fi-ta-cell px-3 sm:px-4 py-3 text-sm text-gray-950 dark:text-white">
                                         {{ $kelas }}
                                     </td>
-                                    <td class="fi-ta-cell px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
+                                    <td class="fi-ta-cell whitespace-nowrap px-3 sm:px-4 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">
                                         {{ number_format($count) }}
                                     </td>
                                 </tr>

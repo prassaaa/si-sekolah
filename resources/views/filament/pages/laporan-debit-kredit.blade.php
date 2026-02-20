@@ -21,28 +21,28 @@
                 </x-slot>
 
                 <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
-                    <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
+                    <table class="fi-ta-table min-w-[450px] w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
                         <thead class="bg-success-50 dark:bg-success-500/10">
                             <tr>
-                                <th class="fi-ta-header-cell px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Tanggal</th>
-                                <th class="fi-ta-header-cell px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">No. Bukti</th>
-                                <th class="fi-ta-header-cell px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Sumber</th>
-                                <th class="fi-ta-header-cell px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Nominal</th>
+                                <th class="fi-ta-header-cell px-2 sm:px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white whitespace-nowrap">Tanggal</th>
+                                <th class="fi-ta-header-cell px-2 sm:px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white whitespace-nowrap">No. Bukti</th>
+                                <th class="fi-ta-header-cell px-2 sm:px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Sumber</th>
+                                <th class="fi-ta-header-cell px-2 sm:px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white whitespace-nowrap">Nominal</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 whitespace-nowrap dark:divide-white/5">
+                        <tbody class="divide-y divide-gray-200 dark:divide-white/5">
                             @forelse($kasMasukData as $item)
                                 <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
-                                    <td class="fi-ta-cell px-3 py-3 text-sm text-gray-950 dark:text-white">{{ $item['tanggal'] }}</td>
-                                    <td class="fi-ta-cell px-3 py-3 text-sm font-mono text-gray-950 dark:text-white">{{ $item['nomor_bukti'] }}</td>
-                                    <td class="fi-ta-cell px-3 py-3 text-sm text-gray-950 dark:text-white">{{ $item['sumber'] }}</td>
-                                    <td class="fi-ta-cell px-3 py-3 text-end text-sm font-medium text-success-600 dark:text-success-400">Rp {{ number_format($item['nominal'], 0, ',', '.') }}</td>
+                                    <td class="fi-ta-cell px-2 sm:px-3 py-3 text-sm text-gray-950 dark:text-white whitespace-nowrap">{{ $item['tanggal'] }}</td>
+                                    <td class="fi-ta-cell px-2 sm:px-3 py-3 text-sm font-mono text-gray-950 dark:text-white whitespace-nowrap">{{ $item['nomor_bukti'] }}</td>
+                                    <td class="fi-ta-cell px-2 sm:px-3 py-3 text-sm text-gray-950 dark:text-white">{{ $item['sumber'] }}</td>
+                                    <td class="fi-ta-cell px-2 sm:px-3 py-3 text-end text-sm font-medium text-success-600 dark:text-success-400 whitespace-nowrap">Rp {{ number_format($item['nominal'], 0, ',', '.') }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-3 py-4 text-center">
+                                    <td colspan="4" class="px-2 sm:px-3 py-4 text-center">
                                         <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                                            <x-filament::icon icon="heroicon-o-inbox" class="h-8 w-8 mb-1" />
+                                            <x-filament::icon icon="heroicon-o-inbox" class="mb-1 h-8 w-8" />
                                             <p class="text-sm">Tidak ada data</p>
                                         </div>
                                     </td>
@@ -52,8 +52,8 @@
                         @if($kasMasukData->count() > 0)
                             <tfoot class="bg-success-100 dark:bg-success-500/20">
                                 <tr>
-                                    <td colspan="3" class="px-3 py-3 text-sm font-bold text-gray-950 dark:text-white">Total</td>
-                                    <td class="px-3 py-3 text-end text-sm font-bold text-success-600 dark:text-success-400">Rp {{ number_format($summary['total_masuk'] ?? 0, 0, ',', '.') }}</td>
+                                    <td colspan="3" class="px-2 sm:px-3 py-3 text-sm font-bold text-gray-950 dark:text-white">Total</td>
+                                    <td class="px-2 sm:px-3 py-3 text-end text-sm font-bold text-success-600 dark:text-success-400 whitespace-nowrap">Rp {{ number_format($summary['total_masuk'] ?? 0, 0, ',', '.') }}</td>
                                 </tr>
                             </tfoot>
                         @endif
@@ -70,28 +70,28 @@
                 </x-slot>
 
                 <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10">
-                    <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
+                    <table class="fi-ta-table min-w-[450px] w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5">
                         <thead class="bg-danger-50 dark:bg-danger-500/10">
                             <tr>
-                                <th class="fi-ta-header-cell px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Tanggal</th>
-                                <th class="fi-ta-header-cell px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">No. Bukti</th>
-                                <th class="fi-ta-header-cell px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Penerima</th>
-                                <th class="fi-ta-header-cell px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white">Nominal</th>
+                                <th class="fi-ta-header-cell px-2 sm:px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white whitespace-nowrap">Tanggal</th>
+                                <th class="fi-ta-header-cell px-2 sm:px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white whitespace-nowrap">No. Bukti</th>
+                                <th class="fi-ta-header-cell px-2 sm:px-3 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">Penerima</th>
+                                <th class="fi-ta-header-cell px-2 sm:px-3 py-3 text-end text-sm font-semibold text-gray-950 dark:text-white whitespace-nowrap">Nominal</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 whitespace-nowrap dark:divide-white/5">
+                        <tbody class="divide-y divide-gray-200 dark:divide-white/5">
                             @forelse($kasKeluarData as $item)
                                 <tr class="fi-ta-row transition duration-75 hover:bg-gray-50 dark:hover:bg-white/5">
-                                    <td class="fi-ta-cell px-3 py-3 text-sm text-gray-950 dark:text-white">{{ $item['tanggal'] }}</td>
-                                    <td class="fi-ta-cell px-3 py-3 text-sm font-mono text-gray-950 dark:text-white">{{ $item['nomor_bukti'] }}</td>
-                                    <td class="fi-ta-cell px-3 py-3 text-sm text-gray-950 dark:text-white">{{ $item['penerima'] }}</td>
-                                    <td class="fi-ta-cell px-3 py-3 text-end text-sm font-medium text-danger-600 dark:text-danger-400">Rp {{ number_format($item['nominal'], 0, ',', '.') }}</td>
+                                    <td class="fi-ta-cell px-2 sm:px-3 py-3 text-sm text-gray-950 dark:text-white whitespace-nowrap">{{ $item['tanggal'] }}</td>
+                                    <td class="fi-ta-cell px-2 sm:px-3 py-3 text-sm font-mono text-gray-950 dark:text-white whitespace-nowrap">{{ $item['nomor_bukti'] }}</td>
+                                    <td class="fi-ta-cell px-2 sm:px-3 py-3 text-sm text-gray-950 dark:text-white">{{ $item['penerima'] }}</td>
+                                    <td class="fi-ta-cell px-2 sm:px-3 py-3 text-end text-sm font-medium text-danger-600 dark:text-danger-400 whitespace-nowrap">Rp {{ number_format($item['nominal'], 0, ',', '.') }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-3 py-4 text-center">
+                                    <td colspan="4" class="px-2 sm:px-3 py-4 text-center">
                                         <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                                            <x-filament::icon icon="heroicon-o-inbox" class="h-8 w-8 mb-1" />
+                                            <x-filament::icon icon="heroicon-o-inbox" class="mb-1 h-8 w-8" />
                                             <p class="text-sm">Tidak ada data</p>
                                         </div>
                                     </td>
@@ -101,8 +101,8 @@
                         @if($kasKeluarData->count() > 0)
                             <tfoot class="bg-danger-100 dark:bg-danger-500/20">
                                 <tr>
-                                    <td colspan="3" class="px-3 py-3 text-sm font-bold text-gray-950 dark:text-white">Total</td>
-                                    <td class="px-3 py-3 text-end text-sm font-bold text-danger-600 dark:text-danger-400">Rp {{ number_format($summary['total_keluar'] ?? 0, 0, ',', '.') }}</td>
+                                    <td colspan="3" class="px-2 sm:px-3 py-3 text-sm font-bold text-gray-950 dark:text-white">Total</td>
+                                    <td class="px-2 sm:px-3 py-3 text-end text-sm font-bold text-danger-600 dark:text-danger-400 whitespace-nowrap">Rp {{ number_format($summary['total_keluar'] ?? 0, 0, ',', '.') }}</td>
                                 </tr>
                             </tfoot>
                         @endif

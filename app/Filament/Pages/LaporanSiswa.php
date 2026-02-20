@@ -5,62 +5,65 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\Laporan\LaporanSiswaStats;
 use App\Models\Kelas;
 use App\Models\Siswa;
-use BackedEnum;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
-use UnitEnum;
+use Illuminate\Contracts\Support\Htmlable;
 
 class LaporanSiswa extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
 
     protected static ?string $navigationLabel = 'Laporan Siswa';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Laporan';
+    protected static \UnitEnum|string|null $navigationGroup = 'Laporan';
 
     protected static ?int $navigationSort = 2;
 
-    protected string $view = 'filament.pages.laporan-siswa';
+    protected static ?string $slug = 'laporan/siswa';
 
-    public ?array $data = [];
+    protected string $view = 'filament.pages.laporan-siswa';
 
     public ?int $kelas_id = null;
 
     public array $summary = [];
 
-    public function mount(): void
+    public function getTitle(): string|Htmlable
     {
-        $this->loadReport();
+        return 'Laporan Siswa';
     }
 
-    public function form(Schema $schema): Schema
+    public function mount(): void
+    {
+        $this->filter();
+    }
+
+    public function filtersForm(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('Filter')
-                    ->schema([
-                        Select::make('kelas_id')
-                            ->label('Kelas')
-                            ->options(Kelas::pluck('nama', 'id'))
-                            ->placeholder('Semua Kelas')
-                            ->live()
-                            ->afterStateUpdated(fn () => $this->filter()),
-                    ])
-                    ->columns(1),
+                Select::make('kelas_id')
+                    ->label('Kelas')
+                    ->options(
+                        Kelas::query()
+                            ->where('is_active', true)
+                            ->orderBy('tingkat')
+                            ->orderBy('nama')
+                            ->pluck('nama', 'id'),
+                    )
+                    ->placeholder('Semua Kelas')
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->filter()),
             ])
-            ->statePath('data');
+            ->columns(1);
     }
 
     public function filter(): void
     {
-        $this->kelas_id = $this->data['kelas_id'] ?? null;
         $this->loadReport();
     }
 
@@ -75,14 +78,20 @@ class LaporanSiswa extends Page implements HasForms
         $totalSiswa = $query->count();
 
         $siswaPerStatus = Siswa::query()
-            ->when($this->kelas_id, fn ($q) => $q->where('kelas_id', $this->kelas_id))
+            ->when(
+                $this->kelas_id,
+                fn ($q) => $q->where('kelas_id', $this->kelas_id),
+            )
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
 
         $siswaPerJenisKelamin = Siswa::query()
-            ->when($this->kelas_id, fn ($q) => $q->where('kelas_id', $this->kelas_id))
+            ->when(
+                $this->kelas_id,
+                fn ($q) => $q->where('kelas_id', $this->kelas_id),
+            )
             ->selectRaw('jenis_kelamin, COUNT(*) as count')
             ->groupBy('jenis_kelamin')
             ->pluck('count', 'jenis_kelamin')
@@ -90,7 +99,10 @@ class LaporanSiswa extends Page implements HasForms
 
         $siswaPerKelas = Siswa::query()
             ->join('kelas', 'siswas.kelas_id', '=', 'kelas.id')
-            ->when($this->kelas_id, fn ($q) => $q->where('kelas_id', $this->kelas_id))
+            ->when(
+                $this->kelas_id,
+                fn ($q) => $q->where('kelas_id', $this->kelas_id),
+            )
             ->selectRaw('kelas.nama as kelas_nama, COUNT(siswas.id) as count')
             ->groupBy('kelas.id', 'kelas.nama')
             ->pluck('count', 'kelas_nama')
