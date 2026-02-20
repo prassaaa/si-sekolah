@@ -11,6 +11,13 @@ class EditAbsensi extends EditRecord
 {
     protected static string $resource = AbsensiResource::class;
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['kelas_id'] = $this->record->jadwalPelajaran?->kelas_id;
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [ViewAction::make(), DeleteAction::make()];

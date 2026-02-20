@@ -59,6 +59,7 @@ it('can create an absensi record', function () {
 
     Livewire::test(CreateAbsensi::class)
         ->fillForm([
+            'kelas_id' => $kelas->id,
             'jadwal_pelajaran_id' => $jadwal->id,
             'siswa_id' => $siswa->id,
             'tanggal' => '2026-02-20',
@@ -87,6 +88,7 @@ it('validates required fields on create', function (array $data, array $errors) 
 
     Livewire::test(CreateAbsensi::class)
         ->fillForm([
+            'kelas_id' => $kelas->id,
             'jadwal_pelajaran_id' => $jadwal->id,
             'siswa_id' => $siswa->id,
             'tanggal' => '2026-02-20',
