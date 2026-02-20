@@ -51,13 +51,16 @@ class PerubahanModal extends Page implements HasForms
             ->components([
                 DatePicker::make('tanggal_mulai')
                     ->label('Tanggal Mulai')
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->filter()),
                 DatePicker::make('tanggal_akhir')
                     ->label('Tanggal Akhir')
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(fn () => $this->filter()),
             ])
-            ->columns(2)
-            ->statePath('data');
+            ->columns(2);
     }
 
     public function filter(): void

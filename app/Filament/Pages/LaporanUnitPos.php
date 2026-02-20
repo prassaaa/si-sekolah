@@ -102,18 +102,18 @@ class LaporanUnitPos extends Page implements HasForms
             ->when($this->unit_pos_id, fn ($q) => $q->where('id', $this->unit_pos_id))
             ->get();
 
-        // Query pembayaran with unit_pos (assuming pembayaran has unit_pos_id)
+        // Query pembayaran with unit_pos filter
         $query = Pembayaran::query()
             ->with(['tagihanSiswa.siswa', 'tagihanSiswa.jenisPembayaran'])
             ->where('status', 'berhasil')
-            ->whereBetween('tanggal_bayar', [$this->tanggal_mulai, $this->tanggal_selesai]);
+            ->whereBetween('tanggal_bayar', [$this->tanggal_mulai, $this->tanggal_selesai])
+            ->when($this->unit_pos_id, fn ($q) => $q->where('unit_pos_id', $this->unit_pos_id));
 
         $pembayarans = $query->orderBy('tanggal_bayar', 'desc')->get();
 
         // Summary per unit
         $this->data = $units->map(function ($unit) use ($pembayarans) {
-            // Filter pembayaran for this unit (by matching account or metadata)
-            $unitPembayarans = $pembayarans; // In real implementation, filter by unit_pos_id
+            $unitPembayarans = $pembayarans->where('unit_pos_id', $unit->id);
 
             return [
                 'kode' => $unit->kode,
