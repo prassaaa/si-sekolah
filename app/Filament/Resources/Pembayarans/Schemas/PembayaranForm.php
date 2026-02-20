@@ -2,8 +2,9 @@
 
 namespace App\Filament\Resources\Pembayarans\Schemas;
 
+use App\Models\Pegawai;
 use App\Models\TagihanSiswa;
-use App\Models\User;
+use App\Models\UnitPos;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -105,10 +106,18 @@ class PembayaranForm
                         Grid::make(2)->schema([
                             Select::make('diterima_oleh')
                                 ->label('Diterima Oleh')
-                                ->options(User::pluck('name', 'id'))
+                                ->options(Pegawai::query()->where('is_active', true)->pluck('nama', 'id'))
                                 ->searchable()
-                                ->default(fn () => Auth::id()),
+                                ->default(fn () => Pegawai::where('user_id', Auth::id())->value('id')),
 
+                            Select::make('unit_pos_id')
+                                ->label('Unit POS')
+                                ->options(UnitPos::query()->where('is_active', true)->pluck('nama', 'id'))
+                                ->searchable()
+                                ->placeholder('Pilih Unit POS'),
+                        ]),
+
+                        Grid::make(2)->schema([
                             Select::make('status')
                                 ->label('Status')
                                 ->options([

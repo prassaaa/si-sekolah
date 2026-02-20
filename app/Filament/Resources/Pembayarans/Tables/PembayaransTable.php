@@ -71,7 +71,7 @@ class PembayaransTable
                         default => $state,
                     }),
 
-                TextColumn::make('penerima.name')
+                TextColumn::make('penerima.nama')
                     ->label('Diterima Oleh')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
