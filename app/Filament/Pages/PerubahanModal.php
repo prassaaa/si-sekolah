@@ -66,28 +66,37 @@ class PerubahanModal extends Page implements HasForms
     public function filter(): void
     {
         // Modal awal (saldo modal sebelum periode)
-        $akunModal = Akun::where('tipe', 'modal')->pluck('id');
-        $this->modalAwal = JurnalUmum::query()
-            ->whereIn('akun_id', $akunModal)
-            ->where('tanggal', '<', $this->tanggal_mulai)
-            ->selectRaw('SUM(kredit) - SUM(debit) as saldo')
-            ->value('saldo') ?? 0;
+        $akunModal = Akun::where('tipe', 'ekuitas')->pluck('id');
+        $this->modalAwal =
+            JurnalUmum::query()
+                ->whereIn('akun_id', $akunModal)
+                ->where('tanggal', '<', $this->tanggal_mulai)
+                ->selectRaw('SUM(kredit) - SUM(debit) as saldo')
+                ->value('saldo') ?? 0;
 
         // Laba Rugi periode
         $akunPendapatan = Akun::where('tipe', 'pendapatan')->pluck('id');
         $akunBeban = Akun::where('tipe', 'beban')->pluck('id');
 
-        $pendapatan = JurnalUmum::query()
-            ->whereIn('akun_id', $akunPendapatan)
-            ->whereBetween('tanggal', [$this->tanggal_mulai, $this->tanggal_akhir])
-            ->selectRaw('SUM(kredit) - SUM(debit) as total')
-            ->value('total') ?? 0;
+        $pendapatan =
+            JurnalUmum::query()
+                ->whereIn('akun_id', $akunPendapatan)
+                ->whereBetween('tanggal', [
+                    $this->tanggal_mulai,
+                    $this->tanggal_akhir,
+                ])
+                ->selectRaw('SUM(kredit) - SUM(debit) as total')
+                ->value('total') ?? 0;
 
-        $beban = JurnalUmum::query()
-            ->whereIn('akun_id', $akunBeban)
-            ->whereBetween('tanggal', [$this->tanggal_mulai, $this->tanggal_akhir])
-            ->selectRaw('SUM(debit) - SUM(kredit) as total')
-            ->value('total') ?? 0;
+        $beban =
+            JurnalUmum::query()
+                ->whereIn('akun_id', $akunBeban)
+                ->whereBetween('tanggal', [
+                    $this->tanggal_mulai,
+                    $this->tanggal_akhir,
+                ])
+                ->selectRaw('SUM(debit) - SUM(kredit) as total')
+                ->value('total') ?? 0;
 
         $this->labaRugi = $pendapatan - $beban;
 

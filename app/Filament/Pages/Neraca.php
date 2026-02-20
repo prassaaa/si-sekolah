@@ -3,14 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Models\Akun;
-use App\Models\JurnalUmum;
-use App\Models\SaldoAwal;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\DB;
 
 class Neraca extends Page implements HasForms
 {
@@ -65,62 +64,107 @@ class Neraca extends Page implements HasForms
 
     public function filter(): void
     {
-        // Aset
-        $akunAset = Akun::where('tipe', 'aset')->get();
-        $this->aset = $akunAset->map(function ($akun) {
-            $saldoAwal = SaldoAwal::where('akun_id', $akun->id)
-                ->where('tanggal', '<=', $this->tanggal)
-                ->sum('saldo');
+        $saldoPerAkun = $this->calculateSaldoPerAkun($this->tanggal);
 
-            $jurnalSaldo = JurnalUmum::where('akun_id', $akun->id)
-                ->where('tanggal', '<=', $this->tanggal)
-                ->selectRaw('SUM(debit) - SUM(kredit) as saldo')
-                ->value('saldo') ?? 0;
+        $akuns = Akun::whereIn('tipe', [
+            'aset',
+            'liabilitas',
+            'ekuitas',
+        ])->get();
 
-            return [
-                'akun' => $akun->nama,
-                'saldo' => $saldoAwal + $jurnalSaldo,
-            ];
-        })->filter(fn ($item) => $item['saldo'] != 0)->values()->toArray();
+        $this->aset = $akuns
+            ->where('tipe', 'aset')
+            ->map(
+                fn ($akun) => [
+                    'akun' => $akun->nama,
+                    'saldo' => $saldoPerAkun[$akun->id] ?? 0,
+                ],
+            )
+            ->filter(fn ($item) => $item['saldo'] != 0)
+            ->values()
+            ->toArray();
 
-        // Kewajiban
-        $akunKewajiban = Akun::where('tipe', 'kewajiban')->get();
-        $this->kewajiban = $akunKewajiban->map(function ($akun) {
-            $saldoAwal = SaldoAwal::where('akun_id', $akun->id)
-                ->where('tanggal', '<=', $this->tanggal)
-                ->sum('saldo');
+        $this->kewajiban = $akuns
+            ->where('tipe', 'liabilitas')
+            ->map(
+                fn ($akun) => [
+                    'akun' => $akun->nama,
+                    'saldo' => $saldoPerAkun[$akun->id] ?? 0,
+                ],
+            )
+            ->filter(fn ($item) => $item['saldo'] != 0)
+            ->values()
+            ->toArray();
 
-            $jurnalSaldo = JurnalUmum::where('akun_id', $akun->id)
-                ->where('tanggal', '<=', $this->tanggal)
-                ->selectRaw('SUM(kredit) - SUM(debit) as saldo')
-                ->value('saldo') ?? 0;
-
-            return [
-                'akun' => $akun->nama,
-                'saldo' => $saldoAwal + $jurnalSaldo,
-            ];
-        })->filter(fn ($item) => $item['saldo'] != 0)->values()->toArray();
-
-        // Modal
-        $akunModal = Akun::where('tipe', 'modal')->get();
-        $this->modal = $akunModal->map(function ($akun) {
-            $saldoAwal = SaldoAwal::where('akun_id', $akun->id)
-                ->where('tanggal', '<=', $this->tanggal)
-                ->sum('saldo');
-
-            $jurnalSaldo = JurnalUmum::where('akun_id', $akun->id)
-                ->where('tanggal', '<=', $this->tanggal)
-                ->selectRaw('SUM(kredit) - SUM(debit) as saldo')
-                ->value('saldo') ?? 0;
-
-            return [
-                'akun' => $akun->nama,
-                'saldo' => $saldoAwal + $jurnalSaldo,
-            ];
-        })->filter(fn ($item) => $item['saldo'] != 0)->values()->toArray();
+        $this->modal = $akuns
+            ->where('tipe', 'ekuitas')
+            ->map(
+                fn ($akun) => [
+                    'akun' => $akun->nama,
+                    'saldo' => $saldoPerAkun[$akun->id] ?? 0,
+                ],
+            )
+            ->filter(fn ($item) => $item['saldo'] != 0)
+            ->values()
+            ->toArray();
 
         $this->totalAset = collect($this->aset)->sum('saldo');
         $this->totalKewajiban = collect($this->kewajiban)->sum('saldo');
         $this->totalModal = collect($this->modal)->sum('saldo');
+    }
+
+    /**
+     * @return array<int, float>
+     */
+    private function calculateSaldoPerAkun(string $tanggal): array
+    {
+        $saldoAwal = DB::table('saldo_awals')
+            ->select('akun_id', DB::raw('SUM(saldo) as total'))
+            ->where('tanggal', '<=', $tanggal)
+            ->whereNull('deleted_at')
+            ->groupBy('akun_id')
+            ->pluck('total', 'akun_id')
+            ->toArray();
+
+        $jurnalDebit = DB::table('jurnal_umums')
+            ->select(
+                'akun_id',
+                DB::raw(
+                    'SUM(debit) as total_debit, SUM(kredit) as total_kredit',
+                ),
+            )
+            ->where('tanggal', '<=', $tanggal)
+            ->whereNull('deleted_at')
+            ->groupBy('akun_id')
+            ->get()
+            ->keyBy('akun_id');
+
+        $akuns = Akun::whereIn('tipe', [
+            'aset',
+            'liabilitas',
+            'ekuitas',
+        ])->get();
+
+        $result = [];
+        foreach ($akuns as $akun) {
+            $awal = (float) ($saldoAwal[$akun->id] ?? 0);
+            $jurnal = $jurnalDebit[$akun->id] ?? null;
+
+            if ($akun->tipe === 'aset') {
+                $jurnalSaldo = $jurnal
+                    ? (float) $jurnal->total_debit -
+                        (float) $jurnal->total_kredit
+                    : 0;
+            } else {
+                $jurnalSaldo = $jurnal
+                    ? (float) $jurnal->total_kredit -
+                        (float) $jurnal->total_debit
+                    : 0;
+            }
+
+            $result[$akun->id] = $awal + $jurnalSaldo;
+        }
+
+        return $result;
     }
 }
