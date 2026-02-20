@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -65,8 +66,9 @@ class TahunAjaran extends Model
 
     public function activate(): void
     {
-        // Deactivate all other tahun ajaran
-        self::where('id', '!=', $this->id)->update(['is_active' => false]);
-        $this->update(['is_active' => true]);
+        DB::transaction(function () {
+            self::where('id', '!=', $this->id)->update(['is_active' => false]);
+            $this->update(['is_active' => true]);
+        });
     }
 }

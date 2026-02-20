@@ -22,6 +22,7 @@ class Pembayaran extends Model
         'metode_pembayaran',
         'referensi_pembayaran',
         'diterima_oleh',
+        'unit_pos_id',
         'keterangan',
         'status',
     ];
@@ -49,6 +50,11 @@ class Pembayaran extends Model
     public function penerima(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'diterima_oleh');
+    }
+
+    public function unitPos(): BelongsTo
+    {
+        return $this->belongsTo(UnitPos::class);
     }
 
     public function getMetodeInfoAttribute(): string
@@ -81,6 +87,7 @@ class Pembayaran extends Model
                 $tagihan = $pembayaran->tagihanSiswa;
                 $tagihan->increment('total_terbayar', $pembayaran->jumlah_bayar);
                 $tagihan->decrement('sisa_tagihan', $pembayaran->jumlah_bayar);
+                $tagihan->refresh();
                 $tagihan->updateStatus();
             }
         });

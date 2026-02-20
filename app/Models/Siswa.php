@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -142,6 +144,66 @@ class Siswa extends Model
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class);
+    }
+
+    public function tagihanSiswas(): HasMany
+    {
+        return $this->hasMany(TagihanSiswa::class);
+    }
+
+    public function pembayarans(): HasManyThrough
+    {
+        return $this->hasManyThrough(Pembayaran::class, TagihanSiswa::class);
+    }
+
+    public function pelanggarans(): HasMany
+    {
+        return $this->hasMany(Pelanggaran::class);
+    }
+
+    public function prestasis(): HasMany
+    {
+        return $this->hasMany(Prestasi::class);
+    }
+
+    public function konselings(): HasMany
+    {
+        return $this->hasMany(Konseling::class);
+    }
+
+    public function tahfidzs(): HasMany
+    {
+        return $this->hasMany(Tahfidz::class);
+    }
+
+    public function izinKeluars(): HasMany
+    {
+        return $this->hasMany(IzinKeluar::class);
+    }
+
+    public function izinPulangs(): HasMany
+    {
+        return $this->hasMany(IzinPulang::class);
+    }
+
+    public function tabunganSiswas(): HasMany
+    {
+        return $this->hasMany(TabunganSiswa::class);
+    }
+
+    public function buktiTransfers(): HasMany
+    {
+        return $this->hasMany(BuktiTransfer::class);
+    }
+
+    public function kelulusans(): HasMany
+    {
+        return $this->hasMany(Kelulusan::class);
+    }
+
+    public function kenaikanKelas(): HasMany
+    {
+        return $this->hasMany(KenaikanKelas::class);
     }
 
     // =====================

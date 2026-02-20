@@ -99,6 +99,8 @@ class TagihanSiswa extends Model
             $this->update(['status' => 'lunas']);
         } elseif ($this->total_terbayar > 0) {
             $this->update(['status' => 'sebagian']);
+        } else {
+            $this->update(['status' => 'belum_bayar']);
         }
     }
 }
