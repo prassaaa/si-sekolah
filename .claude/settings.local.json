@@ -20,7 +20,9 @@
       "mcp__laravel-boost__search-docs",
       "Bash(vendor/bin/pint:*)",
       "mcp__laravel-boost__tinker",
-      "mcp__laravel-boost__last-error"
+      "mcp__laravel-boost__last-error",
+      "Bash(php artisan make:model:*)",
+      "Bash(php artisan make:seeder:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
