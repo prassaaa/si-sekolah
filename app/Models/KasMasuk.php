@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -34,7 +35,14 @@ class KasMasuk extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['nomor_bukti', 'akun_id', 'tanggal', 'nominal', 'sumber', 'keterangan'])
+            ->logOnly([
+                'nomor_bukti',
+                'akun_id',
+                'tanggal',
+                'nominal',
+                'sumber',
+                'keterangan',
+            ])
             ->logOnlyDirty()
             ->useLogName('kas_masuk');
     }
@@ -51,16 +59,23 @@ class KasMasuk extends Model
 
     public static function generateNomorBukti(): string
     {
-        $prefix = 'KM-' . date('Ymd');
-        $lastRecord = static::whereDate('created_at', today())->latest()->first();
-        $lastNumber = $lastRecord ? (int) substr($lastRecord->nomor_bukti, -4) : 0;
-        return $prefix . '-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        $prefix = 'KM-'.date('Ymd');
+
+        $lastNomor = DB::table('kas_masuks')
+            ->where('nomor_bukti', 'like', $prefix.'%')
+            ->max('nomor_bukti');
+
+        $lastNumber = $lastNomor ? (int) substr($lastNomor, -4) : 0;
+
+        return $prefix.'-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
     }
 
     protected static function booted(): void
     {
         static::creating(function (KasMasuk $kasMasuk) {
-            $kasMasuk->user_id = auth()->id();
+            if (! $kasMasuk->user_id) {
+                $kasMasuk->user_id = auth()->id();
+            }
             if (empty($kasMasuk->nomor_bukti)) {
                 $kasMasuk->nomor_bukti = static::generateNomorBukti();
             }

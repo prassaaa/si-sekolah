@@ -55,33 +55,64 @@ class Informasi extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    protected static function boot(): void
+    protected static function booted(): void
     {
-        parent::boot();
-
         static::creating(function ($informasi) {
             if (empty($informasi->slug)) {
-                $informasi->slug = Str::slug($informasi->judul);
+                $informasi->slug = static::generateUniqueSlug(
+                    $informasi->judul,
+                );
             }
         });
 
         static::updating(function ($informasi) {
             if ($informasi->isDirty('judul') && ! $informasi->isDirty('slug')) {
-                $informasi->slug = Str::slug($informasi->judul);
+                $informasi->slug = static::generateUniqueSlug(
+                    $informasi->judul,
+                    $informasi->id,
+                );
             }
         });
     }
 
+    private static function generateUniqueSlug(
+        string $judul,
+        ?int $excludeId = null,
+    ): string {
+        $slug = Str::slug($judul);
+        $original = $slug;
+        $counter = 2;
+
+        while (
+            static::query()
+                ->where('slug', $slug)
+                ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+                ->exists()
+        ) {
+            $slug = $original.'-'.$counter;
+            $counter++;
+        }
+
+        return $slug;
+    }
+
     public function scopePublished($query)
     {
-        return $query->where('is_published', true)
+        return $query
+            ->where('is_published', true)
             ->where(function ($q) {
-                $q->whereNull('tanggal_publish')
-                    ->orWhere('tanggal_publish', '<=', now());
+                $q->whereNull('tanggal_publish')->orWhere(
+                    'tanggal_publish',
+                    '<=',
+                    now(),
+                );
             })
             ->where(function ($q) {
-                $q->whereNull('tanggal_expired')
-                    ->orWhere('tanggal_expired', '>=', now());
+                $q->whereNull('tanggal_expired')->orWhere(
+                    'tanggal_expired',
+                    '>=',
+                    now(),
+                );
             });
     }
 

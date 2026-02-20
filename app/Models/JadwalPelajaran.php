@@ -137,7 +137,10 @@ class JadwalPelajaran extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
+        return $query
+            ->orderByRaw(
+                "FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')",
+            )
             ->orderBy('jam_pelajaran_id');
     }
 
@@ -154,7 +157,7 @@ class JadwalPelajaran extends Model
             '%s, %s - %s',
             $this->hari,
             $this->jamPelajaran?->nama ?? '-',
-            $this->mataPelajaran?->nama ?? '-'
+            $this->mataPelajaran?->nama ?? '-',
         );
     }
 
@@ -167,7 +170,9 @@ class JadwalPelajaran extends Model
             return '-';
         }
 
-        return $this->jamPelajaran->jam_mulai.' - '.$this->jamPelajaran->jam_selesai;
+        return $this->jamPelajaran->waktu_mulai.
+            ' - '.
+            $this->jamPelajaran->waktu_selesai;
     }
 
     /**

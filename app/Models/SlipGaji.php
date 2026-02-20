@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -70,10 +71,18 @@ class SlipGaji extends Model
     public function getNamaBulanAttribute(): string
     {
         $bulanList = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
-            4 => 'April', 5 => 'Mei', 6 => 'Juni',
-            7 => 'Juli', 8 => 'Agustus', 9 => 'September',
-            10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
         ];
 
         return $bulanList[$this->bulan] ?? '';
@@ -88,9 +97,20 @@ class SlipGaji extends Model
     {
         static::creating(function (SlipGaji $slip) {
             if (empty($slip->nomor)) {
-                $slip->nomor = 'SG-'.date('Ym').'-'.str_pad(static::whereYear('created_at', date('Y'))->count() + 1, 4, '0', STR_PAD_LEFT);
+                $prefix = 'SG-'.date('Ym').'-';
+
+                $lastNomor = DB::table('slip_gajis')
+                    ->where('nomor', 'like', 'SG-'.date('Y').'%')
+                    ->max('nomor');
+
+                $lastNumber = $lastNomor ? (int) substr($lastNomor, -4) : 0;
+
+                $slip->nomor =
+                    $prefix.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
             }
-            $slip->created_by = auth()->id();
+            if (! $slip->created_by) {
+                $slip->created_by = auth()->id();
+            }
         });
     }
 }

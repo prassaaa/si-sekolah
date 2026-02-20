@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -39,7 +40,11 @@ class Semester extends Model
         return LogOptions::defaults()
             ->logFillable()
             ->logOnlyDirty()
-            ->setDescriptionForEvent(fn (string $eventName): string => "Semester {$this->nama} telah {$eventName}");
+            ->setDescriptionForEvent(
+                fn (
+                    string $eventName,
+                ): string => "Semester {$this->nama} telah {$eventName}",
+            );
     }
 
     // Relationships
@@ -77,9 +82,10 @@ class Semester extends Model
 
     public function activate(): void
     {
-        // Deactivate all other semesters
-        self::where('id', '!=', $this->id)->update(['is_active' => false]);
-        $this->update(['is_active' => true]);
+        DB::transaction(function () {
+            self::where('id', '!=', $this->id)->update(['is_active' => false]);
+            $this->update(['is_active' => true]);
+        });
     }
 
     public function getSemesterLabelAttribute(): string

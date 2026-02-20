@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -37,9 +38,7 @@ class Pembayaran extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()
-            ->logFillable()
-            ->logOnlyDirty();
+        return LogOptions::defaults()->logFillable()->logOnlyDirty();
     }
 
     public function tagihanSiswa(): BelongsTo
@@ -84,12 +83,57 @@ class Pembayaran extends Model
     {
         static::created(function (Pembayaran $pembayaran) {
             if ($pembayaran->status === 'berhasil') {
-                $tagihan = $pembayaran->tagihanSiswa;
-                $tagihan->increment('total_terbayar', $pembayaran->jumlah_bayar);
-                $tagihan->decrement('sisa_tagihan', $pembayaran->jumlah_bayar);
-                $tagihan->refresh();
-                $tagihan->updateStatus();
+                static::applyPaymentToTagihan($pembayaran);
             }
+        });
+
+        static::updated(function (Pembayaran $pembayaran) {
+            if (! $pembayaran->wasChanged('status')) {
+                return;
+            }
+
+            $oldStatus = $pembayaran->getOriginal('status');
+            $newStatus = $pembayaran->status;
+
+            if ($oldStatus !== 'berhasil' && $newStatus === 'berhasil') {
+                static::applyPaymentToTagihan($pembayaran);
+            }
+
+            if (
+                $oldStatus === 'berhasil' &&
+                in_array($newStatus, ['batal', 'gagal'])
+            ) {
+                static::reversePaymentFromTagihan($pembayaran);
+            }
+        });
+
+        static::deleted(function (Pembayaran $pembayaran) {
+            if ($pembayaran->status === 'berhasil') {
+                static::reversePaymentFromTagihan($pembayaran);
+            }
+        });
+    }
+
+    private static function applyPaymentToTagihan(Pembayaran $pembayaran): void
+    {
+        DB::transaction(function () use ($pembayaran) {
+            $tagihan = $pembayaran->tagihanSiswa()->lockForUpdate()->first();
+            $tagihan->increment('total_terbayar', $pembayaran->jumlah_bayar);
+            $tagihan->decrement('sisa_tagihan', $pembayaran->jumlah_bayar);
+            $tagihan->refresh();
+            $tagihan->updateStatus();
+        });
+    }
+
+    private static function reversePaymentFromTagihan(
+        Pembayaran $pembayaran,
+    ): void {
+        DB::transaction(function () use ($pembayaran) {
+            $tagihan = $pembayaran->tagihanSiswa()->lockForUpdate()->first();
+            $tagihan->decrement('total_terbayar', $pembayaran->jumlah_bayar);
+            $tagihan->increment('sisa_tagihan', $pembayaran->jumlah_bayar);
+            $tagihan->refresh();
+            $tagihan->updateStatus();
         });
     }
 }
