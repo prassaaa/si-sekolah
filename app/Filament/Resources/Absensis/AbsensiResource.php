@@ -57,10 +57,6 @@ class AbsensiResource extends Resource
 
         return $count > 0 ? (string) $count : null;
     }
-        $count = static::getModel()::alpha()->count();
-
-        return $count > 0 ? (string) $count : null;
-    }
 
     public static function getNavigationBadgeColor(): ?string
     {
