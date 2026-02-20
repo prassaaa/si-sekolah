@@ -7,7 +7,16 @@
       "mcp__acp__Bash",
       "mcp__acp__Write",
       "mcp__acp__Edit",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__laravel-boost__get-absolute-url",
+      "mcp__playwright__browser_navigate",
+      "mcp__laravel-boost__database-query",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_evaluate"
     ]
   },
   "enableAllProjectMcpServers": true,
