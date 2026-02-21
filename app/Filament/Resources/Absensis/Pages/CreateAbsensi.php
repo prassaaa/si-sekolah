@@ -7,11 +7,14 @@ use App\Models\Absensi;
 use App\Models\JadwalPelajaran;
 use App\Models\Siswa;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Support\Enums\Width;
 use Illuminate\Validation\ValidationException;
 
 class CreateAbsensi extends CreateRecord
 {
     protected static string $resource = AbsensiResource::class;
+
+    protected Width|string|null $maxContentWidth = Width::Full;
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {

@@ -110,6 +110,10 @@ class InputAbsensi extends Page
                                 Hidden::make('siswa_id'),
                                 Hidden::make('nama_siswa')
                                     ->dehydrated(false),
+                                Hidden::make('sudah_diabsen')
+                                    ->dehydrated(false),
+                                Hidden::make('status_tersimpan')
+                                    ->dehydrated(false),
                                 Placeholder::make('no')
                                     ->label('No')
                                     ->content(fn ($get): int => collect($this->data['absensi'] ?? [])
@@ -117,6 +121,18 @@ class InputAbsensi extends Page
                                 Placeholder::make('nama_siswa_display')
                                     ->label('Nama Siswa')
                                     ->content(fn ($get): string => $get('nama_siswa') ?? '-'),
+                                Placeholder::make('status_absensi_siswa')
+                                    ->label('Data Sebelumnya')
+                                    ->content(function ($get): string {
+                                        if (! $get('sudah_diabsen')) {
+                                            return 'Belum diabsen';
+                                        }
+
+                                        $statusTersimpan = (string) ($get('status_tersimpan') ?? '');
+                                        $statusLabel = Absensi::statusOptions()[$statusTersimpan] ?? $statusTersimpan;
+
+                                        return "Sudah diabsen ({$statusLabel})";
+                                    }),
                                 Select::make('status')
                                     ->label('Status')
                                     ->options(Absensi::statusOptions())
@@ -127,7 +143,7 @@ class InputAbsensi extends Page
                                     ->label('Keterangan')
                                     ->placeholder('Opsional'),
                             ])
-                            ->columns(5)
+                            ->columns(6)
                             ->reorderable(false)
                             ->addable(false)
                             ->deletable(false)
@@ -142,6 +158,7 @@ class InputAbsensi extends Page
         return $schema->components([
             Form::make([EmbeddedSchema::make('form')])
                 ->id('inputAbsensiForm')
+                ->footer($this->getFormActions())
                 ->livewireSubmitHandler('simpan'),
         ]);
     }
@@ -187,6 +204,8 @@ class InputAbsensi extends Page
             $absensiData[] = [
                 'siswa_id' => $siswa->id,
                 'nama_siswa' => $siswa->nama_lengkap,
+                'sudah_diabsen' => $existingRecord !== null,
+                'status_tersimpan' => $existingRecord?->status,
                 'status' => $existingRecord?->status ?? 'hadir',
                 'keterangan' => $existingRecord?->keterangan ?? '',
             ];

@@ -7,6 +7,7 @@ use App\Models\JadwalPelajaran;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Grid;
@@ -83,18 +84,47 @@ class AbsensiForm
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->live()
                             ->exists('siswas', 'id'),
                     ]),
                     Grid::make(2)->schema([
                         DatePicker::make('tanggal')->label('Tanggal')
                             ->required()
-                            ->default(now()),
+                            ->default(now())
+                            ->live(),
                         Select::make('status')->label('Status')
                             ->options(Absensi::statusOptions())
                             ->default('hadir')
                             ->required()
                             ->native(false),
                     ]),
+                    Placeholder::make('status_absensi_existing')
+                        ->label('Status Data Absensi')
+                        ->hiddenOn('edit')
+                        ->content(function ($get): string {
+                            $jadwalId = $get('jadwal_pelajaran_id');
+                            $siswaId = $get('siswa_id');
+                            $tanggal = $get('tanggal');
+
+                            if (! $jadwalId || ! $siswaId || ! $tanggal) {
+                                return 'Pilih jadwal, siswa, dan tanggal untuk cek data absensi.';
+                            }
+
+                            $existing = Absensi::query()
+                                ->where('jadwal_pelajaran_id', $jadwalId)
+                                ->where('siswa_id', $siswaId)
+                                ->whereDate('tanggal', (string) $tanggal)
+                                ->first();
+
+                            if (! $existing) {
+                                return 'Belum diabsen untuk kombinasi ini.';
+                            }
+
+                            $statusLabel = Absensi::statusOptions()[$existing->status] ?? $existing->status;
+
+                            return "Sudah diabsen ({$statusLabel}).";
+                        })
+                        ->columnSpanFull(),
                     Textarea::make('keterangan')->label('Keterangan')
                         ->rows(2)
                         ->columnSpanFull(),
