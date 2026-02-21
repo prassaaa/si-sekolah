@@ -48,15 +48,17 @@ class PegawaisTable
                     ->color(fn (string $state): string => match ($state) {
                         'PNS' => 'success',
                         'PPPK' => 'info',
-                        'Honorer' => 'warning',
-                        'Kontrak' => 'gray',
+                        'GTY' => 'primary',
+                        'GTT' => 'warning',
+                        'PTY' => 'gray',
+                        'PTT' => 'gray',
                         default => 'gray',
                     }),
                 TextColumn::make('jenis_kelamin')
                     ->label('L/P')
-                    ->formatStateUsing(fn (string $state): string => $state === 'Laki-laki' ? 'L' : 'P')
+                    ->formatStateUsing(fn (string $state): string => $state)
                     ->badge()
-                    ->color(fn (string $state): string => $state === 'Laki-laki' ? 'info' : 'pink')
+                    ->color(fn (string $state): string => $state === 'L' ? 'info' : 'pink')
                     ->toggleable(),
                 TextColumn::make('telepon')
                     ->label('Telepon')
@@ -82,7 +84,6 @@ class PegawaisTable
                     ->toggleable(),
                 TextColumn::make('masa_kerja')
                     ->label('Masa Kerja')
-                    ->suffix(' th')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 ToggleColumn::make('is_active')
@@ -101,25 +102,28 @@ class PegawaisTable
                     ->options([
                         'PNS' => 'PNS',
                         'PPPK' => 'PPPK',
-                        'Honorer' => 'Honorer',
-                        'Kontrak' => 'Kontrak',
+                        'GTY' => 'GTY',
+                        'GTT' => 'GTT',
+                        'PTY' => 'PTY',
+                        'PTT' => 'PTT',
                     ]),
                 SelectFilter::make('jenis_kelamin')
                     ->label('Jenis Kelamin')
                     ->options([
-                        'Laki-laki' => 'Laki-laki',
-                        'Perempuan' => 'Perempuan',
+                        'L' => 'Laki-laki',
+                        'P' => 'Perempuan',
                     ]),
                 SelectFilter::make('pendidikan_terakhir')
                     ->label('Pendidikan')
                     ->options([
                         'SD' => 'SD',
                         'SMP' => 'SMP',
-                        'SMA/SMK' => 'SMA/SMK',
+                        'SMA' => 'SMA',
                         'D1' => 'D1',
                         'D2' => 'D2',
                         'D3' => 'D3',
-                        'D4/S1' => 'D4/S1',
+                        'D4' => 'D4',
+                        'S1' => 'S1',
                         'S2' => 'S2',
                         'S3' => 'S3',
                     ]),
