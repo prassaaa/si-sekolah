@@ -66,7 +66,8 @@ class LaporanPembayaran extends Page implements HasSchemas, HasTable
 
                 $query = TagihanSiswa::query()
                     ->with(['siswa.kelas', 'jenisPembayaran', 'pembayarans'])
-                    ->where('semester_id', $semesterId);
+                    ->where('semester_id', $semesterId)
+                    ->where('status', '!=', 'batal');
 
                 if (filled($filters['jenis_pembayaran_id']['value'] ?? null)) {
                     $query->where('jenis_pembayaran_id', $filters['jenis_pembayaran_id']['value']);

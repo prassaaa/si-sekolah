@@ -103,12 +103,14 @@ class LaporanTagihanSiswa extends Page implements HasSchemas, HasTable
                     ->color(fn (string $state): string => match ($state) {
                         'lunas' => 'success',
                         'sebagian' => 'warning',
+                        'batal' => 'gray',
                         default => 'danger',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'belum_bayar' => 'Belum Bayar',
                         'sebagian' => 'Sebagian',
                         'lunas' => 'Lunas',
+                        'batal' => 'Batal',
                         default => ucfirst($state),
                     })
                     ->alignCenter(),
@@ -128,6 +130,7 @@ class LaporanTagihanSiswa extends Page implements HasSchemas, HasTable
                         'belum_bayar' => 'Belum Bayar',
                         'sebagian' => 'Sebagian',
                         'lunas' => 'Lunas',
+                        'batal' => 'Batal',
                     ]),
             ])
             ->deferFilters(false)

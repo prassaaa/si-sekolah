@@ -78,7 +78,7 @@ class PembayaranInfolist
                             TextEntry::make('referensi_pembayaran')
                                 ->label('Referensi Pembayaran')
                                 ->placeholder('-'),
-                            TextEntry::make('penerima.name')
+                            TextEntry::make('penerima.nama')
                                 ->label('Diterima Oleh')
                                 ->placeholder('-'),
                         ]),

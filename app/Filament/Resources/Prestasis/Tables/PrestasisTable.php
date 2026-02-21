@@ -16,85 +16,83 @@ class PrestasisTable
     {
         return $table
             ->columns([
-                TextColumn::make('siswa.nama')
-                    ->label('Siswa')
+                TextColumn::make("siswa.nama")
+                    ->label("Siswa")
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('nama_prestasi')
-                    ->label('Prestasi')
+                TextColumn::make("nama_prestasi")
+                    ->label("Prestasi")
                     ->searchable()
                     ->wrap(),
 
-                TextColumn::make('tingkat')
-                    ->label('Tingkat')
+                TextColumn::make("tingkat")
+                    ->label("Tingkat")
                     ->badge()
-                    ->formatStateUsing(fn (string $state) => match ($state) {
-                        'sekolah' => 'Sekolah',
-                        'kecamatan' => 'Kecamatan',
-                        'kabupaten' => 'Kabupaten',
-                        'provinsi' => 'Provinsi',
-                        'nasional' => 'Nasional',
-                        'internasional' => 'Internasional',
-                        default => $state,
-                    })
-                    ->color(fn (string $state) => match ($state) {
-                        'nasional', 'internasional' => 'success',
-                        'provinsi' => 'warning',
-                        default => 'info',
-                    }),
+                    ->formatStateUsing(
+                        fn(string $state) => match ($state) {
+                            "sekolah" => "Sekolah",
+                            "kecamatan" => "Kecamatan",
+                            "kabupaten" => "Kabupaten",
+                            "provinsi" => "Provinsi",
+                            "nasional" => "Nasional",
+                            "internasional" => "Internasional",
+                            default => $state,
+                        },
+                    )
+                    ->color(
+                        fn(string $state) => match ($state) {
+                            "nasional", "internasional" => "success",
+                            "provinsi" => "warning",
+                            default => "info",
+                        },
+                    ),
 
-                TextColumn::make('jenis')
-                    ->label('Jenis')
+                TextColumn::make("jenis")
+                    ->label("Jenis")
                     ->badge()
                     ->toggleable(),
 
-                TextColumn::make('peringkat')
-                    ->label('Peringkat')
+                TextColumn::make("peringkat")
+                    ->label("Peringkat")
                     ->badge()
-                    ->color('success')
+                    ->color("success")
                     ->toggleable(),
 
-                TextColumn::make('tanggal')
-                    ->label('Tanggal')
-                    ->date('d M Y')
+                TextColumn::make("tanggal")
+                    ->label("Tanggal")
+                    ->date("d M Y")
                     ->sortable(),
 
-                TextColumn::make('semester.nama')
-                    ->label('Semester')
+                TextColumn::make("semester.nama")
+                    ->label("Semester")
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('tingkat')
-                    ->options([
-                        'sekolah' => 'Sekolah',
-                        'kecamatan' => 'Kecamatan',
-                        'kabupaten' => 'Kabupaten',
-                        'provinsi' => 'Provinsi',
-                        'nasional' => 'Nasional',
-                        'internasional' => 'Internasional',
-                    ]),
-                SelectFilter::make('jenis')
-                    ->options([
-                        'akademik' => 'Akademik',
-                        'non_akademik' => 'Non Akademik',
-                        'olahraga' => 'Olahraga',
-                        'seni' => 'Seni',
-                        'keagamaan' => 'Keagamaan',
-                    ]),
-                SelectFilter::make('semester_id')
-                    ->label('Semester')
-                    ->relationship('semester', 'nama'),
-            ])
-            ->actions([
-                ViewAction::make(),
-                EditAction::make(),
-            ])
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                SelectFilter::make("tingkat")->options([
+                    "sekolah" => "Sekolah",
+                    "kecamatan" => "Kecamatan",
+                    "kabupaten" => "Kabupaten",
+                    "provinsi" => "Provinsi",
+                    "nasional" => "Nasional",
+                    "internasional" => "Internasional",
                 ]),
+                SelectFilter::make("jenis")->options([
+                    "akademik" => "Akademik",
+                    "non_akademik" => "Non Akademik",
+                    "olahraga" => "Olahraga",
+                    "seni" => "Seni",
+                    "keagamaan" => "Keagamaan",
+                    "lainnya" => "Lainnya",
+                ]),
+                SelectFilter::make("semester_id")
+                    ->label("Semester")
+                    ->relationship("semester", "nama"),
             ])
-            ->defaultSort('tanggal', 'desc');
+            ->recordActions([ViewAction::make(), EditAction::make()])
+            ->toolbarActions([
+                BulkActionGroup::make([DeleteBulkAction::make()]),
+            ])
+            ->defaultSort("tanggal", "desc");
     }
 }
