@@ -83,7 +83,7 @@ class LaporanTahfidz extends Page implements HasSchemas, HasTable
                         'total_ayat' => $items->sum('jumlah_ayat'),
                         'rata_rata_nilai' => round($items->avg('nilai'), 1),
                         'lulus' => $items->where('status', 'lulus')->count(),
-                        'belum_lulus' => $items->where('status', 'belum_lulus')->count(),
+                        'belum_lulus' => $items->whereIn('status', ['mengulang', 'pending'])->count(),
                     ];
                 })->sortBy('kelas')->values();
 

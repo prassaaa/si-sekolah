@@ -94,11 +94,17 @@ class LaporanGaji extends Page implements HasSchemas, HasTable
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'dibayar' => 'success',
-                        'disetujui' => 'info',
+                        'paid' => 'success',
+                        'approved' => 'info',
+                        'draft' => 'gray',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'draft' => 'Draft',
+                        'approved' => 'Approved',
+                        'paid' => 'Paid',
+                        default => ucfirst($state),
+                    })
                     ->alignCenter(),
             ])
             ->filters([
@@ -131,8 +137,8 @@ class LaporanGaji extends Page implements HasSchemas, HasTable
                     ->label('Status')
                     ->options([
                         'draft' => 'Draft',
-                        'disetujui' => 'Disetujui',
-                        'dibayar' => 'Dibayar',
+                        'approved' => 'Approved',
+                        'paid' => 'Paid',
                     ]),
             ])
             ->deferFilters(false)

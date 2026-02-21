@@ -18,8 +18,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class LaporanUnitPos extends Page implements HasSchemas, HasTable
 {
@@ -59,12 +59,40 @@ class LaporanUnitPos extends Page implements HasSchemas, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                Pembayaran::query()
+            ->records(function (array $filters): Collection {
+                $unitPosId = $filters['unit_pos_id']['value'] ?? null;
+                $tanggalMulai = $filters['tanggal']['tanggal_mulai'] ?? null;
+                $tanggalSelesai = $filters['tanggal']['tanggal_selesai'] ?? null;
+
+                $query = Pembayaran::query()
                     ->with(['tagihanSiswa.siswa', 'tagihanSiswa.jenisPembayaran'])
-                    ->where('status', 'berhasil')
-                    ->orderBy('tanggal_bayar', 'desc')
-            )
+                    ->where('status', 'berhasil');
+
+                if (filled($unitPosId)) {
+                    $query->where('unit_pos_id', $unitPosId);
+                    $this->unitPosNama = UnitPos::query()->find($unitPosId)?->nama;
+                } else {
+                    $this->unitPosNama = null;
+                }
+
+                if (filled($tanggalMulai)) {
+                    $query->whereDate('tanggal_bayar', '>=', $tanggalMulai);
+                }
+
+                if (filled($tanggalSelesai)) {
+                    $query->whereDate('tanggal_bayar', '<=', $tanggalSelesai);
+                }
+
+                $records = $query->orderByDesc('tanggal_bayar')->get();
+
+                $this->summary = [
+                    'total_unit' => $records->pluck('unit_pos_id')->filter()->unique()->count(),
+                    'total_transaksi' => $records->count(),
+                    'total_nominal' => $records->sum('jumlah_bayar'),
+                ];
+
+                return $records;
+            })
             ->columns([
                 TextColumn::make('tanggal_bayar')
                     ->label('Tanggal')
@@ -101,11 +129,6 @@ class LaporanUnitPos extends Page implements HasSchemas, HasTable
                             ->label('Sampai Tanggal')
                             ->default(now()),
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when($data['tanggal_mulai'], fn (Builder $q, $date) => $q->where('tanggal_bayar', '>=', $date))
-                            ->when($data['tanggal_selesai'], fn (Builder $q, $date) => $q->where('tanggal_bayar', '<=', $date));
-                    })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
 
