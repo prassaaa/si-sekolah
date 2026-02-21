@@ -28,7 +28,9 @@ class FinancialOverview extends StatsOverviewWidget
             'tanggal_bayar',
             '>=',
             $bulanIni,
-        )->sum('jumlah_bayar');
+        )
+            ->where('status', 'berhasil')
+            ->sum('jumlah_bayar');
         $tagihanBelumLunas = TagihanSiswa::whereIn('status', [
             'belum_bayar',
             'sebagian',

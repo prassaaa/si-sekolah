@@ -23,7 +23,7 @@ class PendingApprovals extends StatsOverviewWidget
         $izinPulang = IzinPulang::where('status', 'pending')->count();
         $buktiTransfer = BuktiTransfer::where('status', 'pending')->count();
         $tahfidz = Tahfidz::where('status', 'pending')->count();
-        $pelanggaran = Pelanggaran::where('status', 'pending')->count();
+        $pelanggaran = Pelanggaran::where('status', 'proses')->count();
         $konseling = Konseling::where('perlu_tindak_lanjut', true)->count();
 
         return [

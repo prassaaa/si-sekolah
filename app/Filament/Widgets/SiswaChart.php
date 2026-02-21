@@ -23,20 +23,22 @@ class SiswaChart extends ChartWidget
 
         $labels = [
             'aktif' => 'Aktif',
-            'alumni' => 'Alumni',
+            'lulus' => 'Lulus',
             'pindah' => 'Pindah',
             'dikeluarkan' => 'Dikeluarkan',
-            'mengundurkan_diri' => 'Mengundurkan Diri',
+            'dropout' => 'Dropout',
+            'tidak_aktif' => 'Tidak Aktif',
         ];
 
         $data = [];
         $chartLabels = [];
         $colors = [
             'aktif' => 'rgba(34, 197, 94, 0.8)',
-            'alumni' => 'rgba(59, 130, 246, 0.8)',
+            'lulus' => 'rgba(59, 130, 246, 0.8)',
             'pindah' => 'rgba(249, 115, 22, 0.8)',
             'dikeluarkan' => 'rgba(239, 68, 68, 0.8)',
-            'mengundurkan_diri' => 'rgba(107, 114, 128, 0.8)',
+            'dropout' => 'rgba(168, 85, 247, 0.8)',
+            'tidak_aktif' => 'rgba(107, 114, 128, 0.8)',
         ];
 
         foreach ($labels as $key => $label) {
