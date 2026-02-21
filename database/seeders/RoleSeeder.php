@@ -17,7 +17,7 @@ class RoleSeeder extends Seeder
         'User', 'Role', 'Activity', 'Sekolah', 'Informasi',
         'JabatanPegawai', 'Pegawai', 'TahunAjaran', 'Semester',
         'MataPelajaran', 'JamPelajaran', 'Kelas', 'Siswa',
-        'JadwalPelajaran', 'Tahfidz', 'IzinKeluar', 'IzinPulang',
+        'JadwalPelajaran', 'Absensi', 'Tahfidz', 'IzinKeluar', 'IzinPulang',
         'Prestasi', 'Pelanggaran', 'Konseling', 'KenaikanKelas', 'Kelulusan',
         'KategoriPembayaran', 'JenisPembayaran', 'TagihanSiswa', 'Pembayaran',
         'Akun', 'JurnalUmum', 'SaldoAwal', 'KasMasuk', 'KasKeluar',
@@ -204,6 +204,7 @@ class RoleSeeder extends Seeder
             $this->fullCrud('MataPelajaran'),
             $this->fullCrud('JamPelajaran'),
             $this->fullCrud('JadwalPelajaran'),
+            $this->fullCrud('Absensi'),
             $this->fullCrud('KenaikanKelas'),
             $this->fullCrud('Kelulusan'),
 
@@ -270,6 +271,9 @@ class RoleSeeder extends Seeder
 
             // Tahfidz - Create & Update, no delete
             $this->noDelete('Tahfidz'),
+
+            // Absensi - Create & Update, no delete
+            $this->noDelete('Absensi'),
 
             // Prestasi & Pelanggaran - Create only
             $this->createOnly('Prestasi'),

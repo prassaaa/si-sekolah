@@ -23,6 +23,10 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class InputAbsensi extends Page
 {
@@ -104,13 +108,15 @@ class InputAbsensi extends Page
                             ->label('')
                             ->schema([
                                 Hidden::make('siswa_id'),
+                                Hidden::make('nama_siswa')
+                                    ->dehydrated(false),
                                 Placeholder::make('no')
                                     ->label('No')
-                                    ->content(fn ($get, $component) => collect($this->data['absensi'] ?? [])
+                                    ->content(fn ($get): int => collect($this->data['absensi'] ?? [])
                                         ->search(fn ($item) => ($item['siswa_id'] ?? null) == $get('siswa_id')) + 1),
-                                Placeholder::make('nama_siswa')
+                                Placeholder::make('nama_siswa_display')
                                     ->label('Nama Siswa')
-                                    ->content(fn ($get): string => Siswa::find($get('siswa_id'))?->nama_lengkap ?? '-'),
+                                    ->content(fn ($get): string => $get('nama_siswa') ?? '-'),
                                 Select::make('status')
                                     ->label('Status')
                                     ->options(Absensi::statusOptions())
@@ -180,6 +186,7 @@ class InputAbsensi extends Page
             $existingRecord = $existing->get($siswa->id);
             $absensiData[] = [
                 'siswa_id' => $siswa->id,
+                'nama_siswa' => $siswa->nama_lengkap,
                 'status' => $existingRecord?->status ?? 'hadir',
                 'keterangan' => $existingRecord?->keterangan ?? '',
             ];
@@ -192,34 +199,78 @@ class InputAbsensi extends Page
     {
         $data = $this->form->getState();
 
-        if (empty($data['jadwal_pelajaran_id']) || empty($data['tanggal']) || empty($data['absensi'])) {
-            Notification::make()
-                ->title('Pilih jadwal pelajaran dan tanggal terlebih dahulu')
-                ->warning()
-                ->send();
+        $validator = Validator::make($data, [
+            'jadwal_pelajaran_id' => ['required', 'integer', 'exists:jadwal_pelajarans,id'],
+            'tanggal' => ['required', 'date'],
+            'absensi' => ['required', 'array', 'min:1'],
+            'absensi.*.siswa_id' => ['required', 'integer', 'distinct', 'exists:siswas,id'],
+            'absensi.*.status' => ['required', Rule::in(array_keys(Absensi::statusOptions()))],
+            'absensi.*.keterangan' => ['nullable', 'string'],
+        ]);
 
-            return;
+        $validated = $validator->validate();
+
+        $jadwal = JadwalPelajaran::query()
+            ->whereKey($validated['jadwal_pelajaran_id'])
+            ->where('is_active', true)
+            ->first();
+
+        if (! $jadwal) {
+            throw ValidationException::withMessages([
+                'jadwal_pelajaran_id' => 'Jadwal pelajaran tidak ditemukan atau tidak aktif.',
+            ]);
         }
 
-        $tanggal = Carbon::parse($data['tanggal'])->startOfDay();
+        $submittedSiswaIds = collect($validated['absensi'])
+            ->pluck('siswa_id')
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values();
 
-        foreach ($data['absensi'] as $item) {
-            Absensi::updateOrCreate(
-                [
-                    'jadwal_pelajaran_id' => $data['jadwal_pelajaran_id'],
-                    'siswa_id' => $item['siswa_id'],
-                    'tanggal' => $tanggal,
-                ],
-                [
-                    'status' => $item['status'],
-                    'keterangan' => $item['keterangan'] ?: null,
-                ],
-            );
+        $activeSiswaIdsInKelas = Siswa::query()
+            ->where('kelas_id', $jadwal->kelas_id)
+            ->where('is_active', true)
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->values();
+
+        $invalidSiswaIds = $submittedSiswaIds->diff($activeSiswaIdsInKelas)->values();
+
+        if ($invalidSiswaIds->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'absensi' => 'Terdapat siswa yang tidak sesuai dengan kelas jadwal yang dipilih.',
+            ]);
         }
+
+        $missingSiswaIds = $activeSiswaIdsInKelas->diff($submittedSiswaIds)->values();
+
+        if ($missingSiswaIds->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'absensi' => 'Daftar siswa belum lengkap. Muat ulang data siswa sebelum menyimpan.',
+            ]);
+        }
+
+        $tanggal = Carbon::parse($validated['tanggal'])->startOfDay();
+
+        DB::transaction(function () use ($validated, $tanggal): void {
+            foreach ($validated['absensi'] as $item) {
+                Absensi::updateOrCreate(
+                    [
+                        'jadwal_pelajaran_id' => $validated['jadwal_pelajaran_id'],
+                        'siswa_id' => (int) $item['siswa_id'],
+                        'tanggal' => $tanggal,
+                    ],
+                    [
+                        'status' => $item['status'],
+                        'keterangan' => filled($item['keterangan'] ?? null) ? trim((string) $item['keterangan']) : null,
+                    ],
+                );
+            }
+        });
 
         Notification::make()
             ->title('Absensi berhasil disimpan')
-            ->body('Data absensi untuk '.count($data['absensi']).' siswa telah disimpan.')
+            ->body('Data absensi untuk '.count($validated['absensi']).' siswa telah disimpan.')
             ->success()
             ->send();
     }

@@ -60,6 +60,7 @@ class AbsensiForm
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->exists('jadwal_pelajarans', 'id')
                             ->live(),
                         Select::make('siswa_id')
                             ->label('Siswa')
@@ -81,7 +82,8 @@ class AbsensiForm
                             })
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->exists('siswas', 'id'),
                     ]),
                     Grid::make(2)->schema([
                         DatePicker::make('tanggal')->label('Tanggal')
