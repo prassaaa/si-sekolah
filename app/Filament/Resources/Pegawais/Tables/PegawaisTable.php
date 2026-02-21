@@ -19,127 +19,134 @@ class PegawaisTable
     {
         return $table
             ->columns([
-                ImageColumn::make('foto')
-                    ->label('')
+                ImageColumn::make("foto")
+                    ->label("")
                     ->circular()
-                    ->size(40)
-                    ->defaultImageUrl(fn ($record): string => 'https://ui-avatars.com/api/?name='.urlencode($record->nama).'&size=40&background=random'),
-                TextColumn::make('nip')
-                    ->label('NIP')
+                    ->imageSize(40)
+                    ->defaultImageUrl(
+                        fn(
+                            $record,
+                        ): string => "https://ui-avatars.com/api/?name=" .
+                            urlencode($record->nama) .
+                            "&size=40&background=random",
+                    ),
+                TextColumn::make("nip")
+                    ->label("NIP")
                     ->searchable()
                     ->copyable()
-                    ->placeholder('-')
+                    ->placeholder("-")
                     ->toggleable(),
-                TextColumn::make('nama')
-                    ->label('Nama Lengkap')
+                TextColumn::make("nama")
+                    ->label("Nama Lengkap")
                     ->searchable()
                     ->sortable()
-                    ->weight('bold')
-                    ->description(fn ($record): string => $record->jabatan?->nama ?? '-'),
-                TextColumn::make('jabatan.nama')
-                    ->label('Jabatan')
+                    ->weight("bold")
+                    ->description(
+                        fn($record): string => $record->jabatan?->nama ?? "-",
+                    ),
+                TextColumn::make("jabatan.nama")
+                    ->label("Jabatan")
                     ->sortable()
                     ->badge()
-                    ->color('primary')
+                    ->color("primary")
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('status_kepegawaian')
-                    ->label('Status')
+                TextColumn::make("status_kepegawaian")
+                    ->label("Status")
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'PNS' => 'success',
-                        'PPPK' => 'info',
-                        'GTY' => 'primary',
-                        'GTT' => 'warning',
-                        'PTY' => 'gray',
-                        'PTT' => 'gray',
-                        default => 'gray',
-                    }),
-                TextColumn::make('jenis_kelamin')
-                    ->label('L/P')
-                    ->formatStateUsing(fn (string $state): string => $state)
+                    ->color(
+                        fn(string $state): string => match ($state) {
+                            "PNS" => "success",
+                            "PPPK" => "info",
+                            "GTY" => "primary",
+                            "GTT" => "warning",
+                            "PTY" => "gray",
+                            "PTT" => "gray",
+                            default => "gray",
+                        },
+                    ),
+                TextColumn::make("jenis_kelamin")
+                    ->label("L/P")
+                    ->formatStateUsing(fn(string $state): string => $state)
                     ->badge()
-                    ->color(fn (string $state): string => $state === 'L' ? 'info' : 'pink')
+                    ->color(
+                        fn(string $state): string => $state === "L"
+                            ? "info"
+                            : "pink",
+                    )
                     ->toggleable(),
-                TextColumn::make('telepon')
-                    ->label('Telepon')
+                TextColumn::make("telepon")
+                    ->label("Telepon")
                     ->searchable()
                     ->copyable()
-                    ->placeholder('-')
+                    ->placeholder("-")
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('email')
-                    ->label('Email')
+                TextColumn::make("email")
+                    ->label("Email")
                     ->searchable()
                     ->copyable()
-                    ->placeholder('-')
+                    ->placeholder("-")
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('pendidikan_terakhir')
-                    ->label('Pendidikan')
+                TextColumn::make("pendidikan_terakhir")
+                    ->label("Pendidikan")
                     ->badge()
-                    ->color('gray')
+                    ->color("gray")
                     ->toggleable(),
-                TextColumn::make('tanggal_masuk')
-                    ->label('Mulai Kerja')
-                    ->date('d/m/Y')
+                TextColumn::make("tanggal_masuk")
+                    ->label("Mulai Kerja")
+                    ->date("d/m/Y")
                     ->sortable()
                     ->toggleable(),
-                TextColumn::make('masa_kerja')
-                    ->label('Masa Kerja')
+                TextColumn::make("masa_kerja")
+                    ->label("Masa Kerja")
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                ToggleColumn::make('is_active')
-                    ->label('Aktif')
-                    ->sortable(),
+                ToggleColumn::make("is_active")->label("Aktif")->sortable(),
             ])
-            ->defaultSort('nama', 'asc')
+            ->defaultSort("nama", "asc")
             ->filters([
-                SelectFilter::make('jabatan_id')
-                    ->label('Jabatan')
-                    ->relationship('jabatan', 'nama')
+                SelectFilter::make("jabatan_id")
+                    ->label("Jabatan")
+                    ->relationship("jabatan", "nama")
                     ->searchable()
                     ->preload(),
-                SelectFilter::make('status_kepegawaian')
-                    ->label('Status Kepegawaian')
+                SelectFilter::make("status_kepegawaian")
+                    ->label("Status Kepegawaian")
                     ->options([
-                        'PNS' => 'PNS',
-                        'PPPK' => 'PPPK',
-                        'GTY' => 'GTY',
-                        'GTT' => 'GTT',
-                        'PTY' => 'PTY',
-                        'PTT' => 'PTT',
+                        "PNS" => "PNS",
+                        "PPPK" => "PPPK",
+                        "GTY" => "GTY",
+                        "GTT" => "GTT",
+                        "PTY" => "PTY",
+                        "PTT" => "PTT",
                     ]),
-                SelectFilter::make('jenis_kelamin')
-                    ->label('Jenis Kelamin')
+                SelectFilter::make("jenis_kelamin")
+                    ->label("Jenis Kelamin")
                     ->options([
-                        'L' => 'Laki-laki',
-                        'P' => 'Perempuan',
+                        "L" => "Laki-laki",
+                        "P" => "Perempuan",
                     ]),
-                SelectFilter::make('pendidikan_terakhir')
-                    ->label('Pendidikan')
+                SelectFilter::make("pendidikan_terakhir")
+                    ->label("Pendidikan")
                     ->options([
-                        'SD' => 'SD',
-                        'SMP' => 'SMP',
-                        'SMA' => 'SMA',
-                        'D1' => 'D1',
-                        'D2' => 'D2',
-                        'D3' => 'D3',
-                        'D4' => 'D4',
-                        'S1' => 'S1',
-                        'S2' => 'S2',
-                        'S3' => 'S3',
+                        "SD" => "SD",
+                        "SMP" => "SMP",
+                        "SMA" => "SMA",
+                        "D1" => "D1",
+                        "D2" => "D2",
+                        "D3" => "D3",
+                        "D4" => "D4",
+                        "S1" => "S1",
+                        "S2" => "S2",
+                        "S3" => "S3",
                     ]),
-                TernaryFilter::make('is_active')
-                    ->label('Status Aktif')
-                    ->trueLabel('Aktif')
-                    ->falseLabel('Non-Aktif'),
+                TernaryFilter::make("is_active")
+                    ->label("Status Aktif")
+                    ->trueLabel("Aktif")
+                    ->falseLabel("Non-Aktif"),
             ])
-            ->actions([
-                ViewAction::make(),
-                EditAction::make(),
-            ])
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+            ->recordActions([ViewAction::make(), EditAction::make()])
+            ->toolbarActions([
+                BulkActionGroup::make([DeleteBulkAction::make()]),
             ]);
     }
 }

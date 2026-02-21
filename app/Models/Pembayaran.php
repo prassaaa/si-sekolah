@@ -16,23 +16,23 @@ class Pembayaran extends Model
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'tagihan_siswa_id',
-        'nomor_transaksi',
-        'tanggal_bayar',
-        'jumlah_bayar',
-        'metode_pembayaran',
-        'referensi_pembayaran',
-        'diterima_oleh',
-        'unit_pos_id',
-        'keterangan',
-        'status',
+        "tagihan_siswa_id",
+        "nomor_transaksi",
+        "tanggal_bayar",
+        "jumlah_bayar",
+        "metode_pembayaran",
+        "referensi_pembayaran",
+        "diterima_oleh",
+        "unit_pos_id",
+        "keterangan",
+        "status",
     ];
 
     protected function casts(): array
     {
         return [
-            'tanggal_bayar' => 'date',
-            'jumlah_bayar' => 'decimal:2',
+            "tanggal_bayar" => "date",
+            "jumlah_bayar" => "decimal:2",
         ];
     }
 
@@ -41,16 +41,25 @@ class Pembayaran extends Model
         return LogOptions::defaults()->logFillable()->logOnlyDirty();
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\TagihanSiswa, \App\Models\Pembayaran>
+     */
     public function tagihanSiswa(): BelongsTo
     {
         return $this->belongsTo(TagihanSiswa::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Pegawai, \App\Models\Pembayaran>
+     */
     public function penerima(): BelongsTo
     {
-        return $this->belongsTo(Pegawai::class, 'diterima_oleh');
+        return $this->belongsTo(Pegawai::class, "diterima_oleh");
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\UnitPos, \App\Models\Pembayaran>
+     */
     public function unitPos(): BelongsTo
     {
         return $this->belongsTo(UnitPos::class);
@@ -59,11 +68,11 @@ class Pembayaran extends Model
     public function getMetodeInfoAttribute(): string
     {
         return match ($this->metode_pembayaran) {
-            'tunai' => 'Tunai',
-            'transfer' => 'Transfer Bank',
-            'qris' => 'QRIS',
-            'virtual_account' => 'Virtual Account',
-            'lainnya' => 'Lainnya',
+            "tunai" => "Tunai",
+            "transfer" => "Transfer Bank",
+            "qris" => "QRIS",
+            "virtual_account" => "Virtual Account",
+            "lainnya" => "Lainnya",
             default => $this->metode_pembayaran,
         };
     }
@@ -71,28 +80,28 @@ class Pembayaran extends Model
     public function getStatusInfoAttribute(): array
     {
         return match ($this->status) {
-            'pending' => ['label' => 'Pending', 'color' => 'warning'],
-            'berhasil' => ['label' => 'Berhasil', 'color' => 'success'],
-            'gagal' => ['label' => 'Gagal', 'color' => 'danger'],
-            'batal' => ['label' => 'Batal', 'color' => 'gray'],
-            default => ['label' => $this->status, 'color' => 'gray'],
+            "pending" => ["label" => "Pending", "color" => "warning"],
+            "berhasil" => ["label" => "Berhasil", "color" => "success"],
+            "gagal" => ["label" => "Gagal", "color" => "danger"],
+            "batal" => ["label" => "Batal", "color" => "gray"],
+            default => ["label" => $this->status, "color" => "gray"],
         };
     }
 
     protected static function booted(): void
     {
         static::created(function (Pembayaran $pembayaran) {
-            if ($pembayaran->status === 'berhasil') {
+            if ($pembayaran->status === "berhasil") {
                 static::applyPaymentToTagihan($pembayaran);
             }
         });
 
         static::updated(function (Pembayaran $pembayaran) {
             if (
-                ! $pembayaran->wasChanged([
-                    'status',
-                    'jumlah_bayar',
-                    'tagihan_siswa_id',
+                !$pembayaran->wasChanged([
+                    "status",
+                    "jumlah_bayar",
+                    "tagihan_siswa_id",
                 ])
             ) {
                 return;
@@ -102,13 +111,13 @@ class Pembayaran extends Model
         });
 
         static::deleted(function (Pembayaran $pembayaran) {
-            if ($pembayaran->status === 'berhasil') {
+            if ($pembayaran->status === "berhasil") {
                 static::reversePaymentFromTagihan($pembayaran);
             }
         });
 
         static::restored(function (Pembayaran $pembayaran) {
-            if ($pembayaran->status === 'berhasil') {
+            if ($pembayaran->status === "berhasil") {
                 static::applyPaymentToTagihan($pembayaran);
             }
         });
@@ -135,37 +144,40 @@ class Pembayaran extends Model
         int $tagihanId,
         float $amount,
     ): void {
-        if (! $tagihanId || $amount === 0.0) {
+        if (!$tagihanId || $amount === 0.0) {
             return;
         }
 
         DB::transaction(function () use ($tagihanId, $amount) {
             $tagihan = TagihanSiswa::query()->lockForUpdate()->find($tagihanId);
-            if (! $tagihan) {
+            if (!$tagihan) {
                 return;
             }
 
-            $tagihan->total_terbayar = (float) $tagihan->total_terbayar + $amount;
+            $tagihan->total_terbayar =
+                (float) $tagihan->total_terbayar + $amount;
             $tagihan->sisa_tagihan = (float) $tagihan->sisa_tagihan - $amount;
             $tagihan->save();
             $tagihan->refresh();
+            /** @phpstan-ignore-next-line */
             $tagihan->updateStatus();
         });
     }
 
-    private static function reconcileUpdatedPayment(Pembayaran $pembayaran): void
-    {
-        $oldStatus = (string) $pembayaran->getOriginal('status');
+    private static function reconcileUpdatedPayment(
+        Pembayaran $pembayaran,
+    ): void {
+        $oldStatus = (string) $pembayaran->getOriginal("status");
         $newStatus = (string) $pembayaran->status;
-        $oldTagihanId = (int) $pembayaran->getOriginal('tagihan_siswa_id');
+        $oldTagihanId = (int) $pembayaran->getOriginal("tagihan_siswa_id");
         $newTagihanId = (int) $pembayaran->tagihan_siswa_id;
-        $oldJumlah = (float) $pembayaran->getOriginal('jumlah_bayar');
+        $oldJumlah = (float) $pembayaran->getOriginal("jumlah_bayar");
         $newJumlah = (float) $pembayaran->jumlah_bayar;
 
-        $oldApplied = $oldStatus === 'berhasil';
-        $newApplied = $newStatus === 'berhasil';
+        $oldApplied = $oldStatus === "berhasil";
+        $newApplied = $newStatus === "berhasil";
 
-        if (! $oldApplied && ! $newApplied) {
+        if (!$oldApplied && !$newApplied) {
             return;
         }
 
@@ -175,17 +187,17 @@ class Pembayaran extends Model
             $oldTagihanId,
             $newTagihanId,
             $oldJumlah,
-            $newJumlah
+            $newJumlah,
         ) {
             $tagihanIds = array_values(
                 array_unique(array_filter([$oldTagihanId, $newTagihanId])),
             );
 
             $tagihans = TagihanSiswa::query()
-                ->whereIn('id', $tagihanIds)
+                ->whereIn("id", $tagihanIds)
                 ->lockForUpdate()
                 ->get()
-                ->keyBy('id');
+                ->keyBy("id");
 
             if ($oldApplied && $oldTagihanId) {
                 $oldTagihan = $tagihans->get($oldTagihanId);
@@ -211,6 +223,7 @@ class Pembayaran extends Model
 
             foreach ($tagihans as $tagihan) {
                 $tagihan->refresh();
+                /** @phpstan-ignore-next-line */
                 $tagihan->updateStatus();
             }
         });
