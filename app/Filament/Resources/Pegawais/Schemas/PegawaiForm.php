@@ -21,7 +21,11 @@ class PegawaiForm
                 Section::make('Data Kepegawaian')
                     ->icon('heroicon-o-identification')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                            'xl' => 3,
+                        ])->schema([
                             TextInput::make('nip')
                                 ->label('NIP')
                                 ->maxLength(30)
@@ -38,7 +42,11 @@ class PegawaiForm
                                 ->searchable()
                                 ->preload(),
                         ]),
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                            'xl' => 3,
+                        ])->schema([
                             Select::make('status_kepegawaian')
                                 ->label('Status Kepegawaian')
                                 ->options([
@@ -66,7 +74,11 @@ class PegawaiForm
                 Section::make('Data Pribadi')
                     ->icon('heroicon-o-user')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                            'xl' => 3,
+                        ])->schema([
                             TextInput::make('nama')
                                 ->label('Nama Lengkap')
                                 ->required()
@@ -93,7 +105,11 @@ class PegawaiForm
                                 ->required()
                                 ->native(false),
                         ]),
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                            'xl' => 3,
+                        ])->schema([
                             TextInput::make('tempat_lahir')
                                 ->label('Tempat Lahir')
                                 ->maxLength(255),
@@ -110,7 +126,10 @@ class PegawaiForm
                                 ->default('Belum Menikah')
                                 ->native(false),
                         ]),
-                        Grid::make(2)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                        ])->schema([
                             TextInput::make('jumlah_tanggungan')
                                 ->label('Jumlah Tanggungan')
                                 ->numeric()
@@ -122,7 +141,10 @@ class PegawaiForm
                                 ->maxLength(255)
                                 ->unique(ignoreRecord: true),
                         ]),
-                        Grid::make(2)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                        ])->schema([
                             TextInput::make('telepon')
                                 ->label('Telepon')
                                 ->tel()
@@ -140,7 +162,11 @@ class PegawaiForm
                 Section::make('Pendidikan')
                     ->icon('heroicon-o-academic-cap')
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                            'xl' => 3,
+                        ])->schema([
                             Select::make('pendidikan_terakhir')
                                 ->label('Pendidikan Terakhir')
                                 ->options([
@@ -173,7 +199,10 @@ class PegawaiForm
                 Section::make('Data Bank & BPJS')
                     ->icon('heroicon-o-credit-card')
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                        ])->schema([
                             TextInput::make('nama_bank')
                                 ->label('Nama Bank')
                                 ->maxLength(50),
@@ -181,7 +210,11 @@ class PegawaiForm
                                 ->label('No. Rekening')
                                 ->maxLength(30),
                         ]),
-                        Grid::make(3)->schema([
+                        Grid::make([
+                            'default' => 1,
+                            'md' => 2,
+                            'xl' => 3,
+                        ])->schema([
                             TextInput::make('npwp')
                                 ->label('NPWP')
                                 ->maxLength(30),
@@ -206,7 +239,10 @@ class PegawaiForm
                             ->label('Aktif')
                             ->default(true),
                     ])
-                    ->columns(2),
+                    ->columns([
+                        'default' => 1,
+                        'md' => 2,
+                    ]),
             ]);
     }
 }
