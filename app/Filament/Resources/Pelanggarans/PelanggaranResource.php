@@ -37,12 +37,12 @@ class PelanggaranResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('status', 'pending')->count();
+        return static::getModel()::where('status', 'proses')->count();
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        return static::getModel()::where('status', 'pending')->count() > 0 ? 'danger' : 'primary';
+        return static::getModel()::where('status', 'proses')->count() > 0 ? 'danger' : 'primary';
     }
 
     public static function form(Schema $schema): Schema

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\TabunganSiswas;
 
 use App\Filament\Resources\TabunganSiswas\Pages\CreateTabunganSiswa;
-use App\Filament\Resources\TabunganSiswas\Pages\EditTabunganSiswa;
 use App\Filament\Resources\TabunganSiswas\Pages\ListTabunganSiswas;
 use App\Filament\Resources\TabunganSiswas\Schemas\TabunganSiswaForm;
 use App\Filament\Resources\TabunganSiswas\Tables\TabunganSiswasTable;
@@ -13,8 +12,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
 class TabunganSiswaResource extends Resource
@@ -53,15 +50,6 @@ class TabunganSiswaResource extends Resource
         return [
             'index' => ListTabunganSiswas::route('/'),
             'create' => CreateTabunganSiswa::route('/create'),
-            'edit' => EditTabunganSiswa::route('/{record}/edit'),
         ];
-    }
-
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
-        return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
     }
 }
