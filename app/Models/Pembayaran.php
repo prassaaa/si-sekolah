@@ -88,23 +88,17 @@ class Pembayaran extends Model
         });
 
         static::updated(function (Pembayaran $pembayaran) {
-            if (! $pembayaran->wasChanged('status')) {
+            if (
+                ! $pembayaran->wasChanged([
+                    'status',
+                    'jumlah_bayar',
+                    'tagihan_siswa_id',
+                ])
+            ) {
                 return;
             }
 
-            $oldStatus = $pembayaran->getOriginal('status');
-            $newStatus = $pembayaran->status;
-
-            if ($oldStatus !== 'berhasil' && $newStatus === 'berhasil') {
-                static::applyPaymentToTagihan($pembayaran);
-            }
-
-            if (
-                $oldStatus === 'berhasil' &&
-                in_array($newStatus, ['batal', 'gagal'])
-            ) {
-                static::reversePaymentFromTagihan($pembayaran);
-            }
+            static::reconcileUpdatedPayment($pembayaran);
         });
 
         static::deleted(function (Pembayaran $pembayaran) {
@@ -112,28 +106,113 @@ class Pembayaran extends Model
                 static::reversePaymentFromTagihan($pembayaran);
             }
         });
+
+        static::restored(function (Pembayaran $pembayaran) {
+            if ($pembayaran->status === 'berhasil') {
+                static::applyPaymentToTagihan($pembayaran);
+            }
+        });
     }
 
     private static function applyPaymentToTagihan(Pembayaran $pembayaran): void
     {
-        DB::transaction(function () use ($pembayaran) {
-            $tagihan = $pembayaran->tagihanSiswa()->lockForUpdate()->first();
-            $tagihan->increment('total_terbayar', $pembayaran->jumlah_bayar);
-            $tagihan->decrement('sisa_tagihan', $pembayaran->jumlah_bayar);
-            $tagihan->refresh();
-            $tagihan->updateStatus();
-        });
+        static::applyAmountToTagihan(
+            (int) $pembayaran->tagihan_siswa_id,
+            (float) $pembayaran->jumlah_bayar,
+        );
     }
 
     private static function reversePaymentFromTagihan(
         Pembayaran $pembayaran,
     ): void {
-        DB::transaction(function () use ($pembayaran) {
-            $tagihan = $pembayaran->tagihanSiswa()->lockForUpdate()->first();
-            $tagihan->decrement('total_terbayar', $pembayaran->jumlah_bayar);
-            $tagihan->increment('sisa_tagihan', $pembayaran->jumlah_bayar);
+        static::applyAmountToTagihan(
+            (int) $pembayaran->tagihan_siswa_id,
+            -1 * (float) $pembayaran->jumlah_bayar,
+        );
+    }
+
+    private static function applyAmountToTagihan(
+        int $tagihanId,
+        float $amount,
+    ): void {
+        if (! $tagihanId || $amount === 0.0) {
+            return;
+        }
+
+        DB::transaction(function () use ($tagihanId, $amount) {
+            $tagihan = TagihanSiswa::query()->lockForUpdate()->find($tagihanId);
+            if (! $tagihan) {
+                return;
+            }
+
+            $tagihan->total_terbayar = (float) $tagihan->total_terbayar + $amount;
+            $tagihan->sisa_tagihan = (float) $tagihan->sisa_tagihan - $amount;
+            $tagihan->save();
             $tagihan->refresh();
             $tagihan->updateStatus();
+        });
+    }
+
+    private static function reconcileUpdatedPayment(Pembayaran $pembayaran): void
+    {
+        $oldStatus = (string) $pembayaran->getOriginal('status');
+        $newStatus = (string) $pembayaran->status;
+        $oldTagihanId = (int) $pembayaran->getOriginal('tagihan_siswa_id');
+        $newTagihanId = (int) $pembayaran->tagihan_siswa_id;
+        $oldJumlah = (float) $pembayaran->getOriginal('jumlah_bayar');
+        $newJumlah = (float) $pembayaran->jumlah_bayar;
+
+        $oldApplied = $oldStatus === 'berhasil';
+        $newApplied = $newStatus === 'berhasil';
+
+        if (! $oldApplied && ! $newApplied) {
+            return;
+        }
+
+        DB::transaction(function () use (
+            $oldApplied,
+            $newApplied,
+            $oldTagihanId,
+            $newTagihanId,
+            $oldJumlah,
+            $newJumlah
+        ) {
+            $tagihanIds = array_values(
+                array_unique(array_filter([$oldTagihanId, $newTagihanId])),
+            );
+
+            $tagihans = TagihanSiswa::query()
+                ->whereIn('id', $tagihanIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            if ($oldApplied && $oldTagihanId) {
+                $oldTagihan = $tagihans->get($oldTagihanId);
+                if ($oldTagihan) {
+                    $oldTagihan->total_terbayar =
+                        (float) $oldTagihan->total_terbayar - $oldJumlah;
+                    $oldTagihan->sisa_tagihan =
+                        (float) $oldTagihan->sisa_tagihan + $oldJumlah;
+                    $oldTagihan->save();
+                }
+            }
+
+            if ($newApplied && $newTagihanId) {
+                $newTagihan = $tagihans->get($newTagihanId);
+                if ($newTagihan) {
+                    $newTagihan->total_terbayar =
+                        (float) $newTagihan->total_terbayar + $newJumlah;
+                    $newTagihan->sisa_tagihan =
+                        (float) $newTagihan->sisa_tagihan - $newJumlah;
+                    $newTagihan->save();
+                }
+            }
+
+            foreach ($tagihans as $tagihan) {
+                $tagihan->refresh();
+                $tagihan->updateStatus();
+            }
         });
     }
 }
