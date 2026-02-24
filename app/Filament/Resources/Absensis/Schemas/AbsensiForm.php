@@ -26,7 +26,6 @@ class AbsensiForm
                         Select::make('kelas_id')
                             ->label('Kelas')
                             ->options(fn () => Kelas::query()
-                                ->whereHas('jadwalPelajarans', fn ($q) => $q->where('is_active', true))
                                 ->ordered()
                                 ->pluck('nama', 'id'))
                             ->searchable()
@@ -58,8 +57,9 @@ class AbsensiForm
                                         $j->id => $j->jadwal_lengkap,
                                     ]);
                             })
+                            ->placeholder(fn ($get) => $get('kelas_id') ? 'Pilih jadwal pelajaran' : 'Pilih kelas terlebih dahulu')
+                            ->disabled(fn ($get) => ! $get('kelas_id'))
                             ->searchable()
-                            ->preload()
                             ->required()
                             ->exists('jadwal_pelajarans', 'id')
                             ->live(),
@@ -81,8 +81,9 @@ class AbsensiForm
                                         $s->id => $s->nama_lengkap,
                                     ]);
                             })
+                            ->placeholder(fn ($get) => $get('kelas_id') ? 'Pilih siswa' : 'Pilih kelas terlebih dahulu')
+                            ->disabled(fn ($get) => ! $get('kelas_id'))
                             ->searchable()
-                            ->preload()
                             ->required()
                             ->live()
                             ->exists('siswas', 'id'),
@@ -101,13 +102,14 @@ class AbsensiForm
                     Placeholder::make('status_absensi_existing')
                         ->label('Status Data Absensi')
                         ->hiddenOn('edit')
+                        ->visible(fn ($get) => $get('jadwal_pelajaran_id') && $get('siswa_id') && $get('tanggal'))
                         ->content(function ($get): string {
                             $jadwalId = $get('jadwal_pelajaran_id');
                             $siswaId = $get('siswa_id');
                             $tanggal = $get('tanggal');
 
                             if (! $jadwalId || ! $siswaId || ! $tanggal) {
-                                return 'Pilih jadwal, siswa, dan tanggal untuk cek data absensi.';
+                                return '';
                             }
 
                             $existing = Absensi::query()
