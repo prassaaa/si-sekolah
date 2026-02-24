@@ -30,8 +30,9 @@ class JadwalPelajaranInfolist
                                 ->color('info'),
                         ]),
                         Grid::make(3)->schema([
-                            TextEntry::make('jamPelajaran.nama')
+                            TextEntry::make('jamPelajaran.jam_ke')
                                 ->label('Jam Pelajaran')
+                                ->formatStateUsing(fn ($record) => $record->jamPelajaran?->label)
                                 ->weight(FontWeight::Bold),
                             TextEntry::make('waktu')
                                 ->label('Waktu'),

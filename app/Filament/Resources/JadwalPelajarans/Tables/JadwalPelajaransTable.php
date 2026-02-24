@@ -35,8 +35,9 @@ class JadwalPelajaransTable
                     ->badge()
                     ->color('info')
                     ->sortable(),
-                TextColumn::make('jamPelajaran.nama')
+                TextColumn::make('jamPelajaran.jam_ke')
                     ->label('Jam')
+                    ->formatStateUsing(fn ($record) => $record->jamPelajaran?->label)
                     ->sortable(),
                 TextColumn::make('waktu')
                     ->label('Waktu')

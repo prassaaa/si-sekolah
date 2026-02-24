@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\JadwalPelajarans\Schemas;
 
 use App\Models\JadwalPelajaran;
+use App\Models\JamPelajaran;
 use App\Models\Semester;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -43,9 +44,8 @@ class JadwalPelajaranForm
                                 ->options(JadwalPelajaran::hariOptions()),
                             Select::make('jam_pelajaran_id')
                                 ->label('Jam Pelajaran')
-                                ->relationship('jamPelajaran', 'nama')
+                                ->options(fn () => JamPelajaran::ordered()->get()->mapWithKeys(fn ($j) => [$j->id => $j->label]))
                                 ->searchable()
-                                ->preload()
                                 ->required(),
                         ]),
                         Grid::make(2)->schema([
