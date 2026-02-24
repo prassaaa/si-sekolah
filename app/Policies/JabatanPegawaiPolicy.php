@@ -1,71 +1,69 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Models\JabatanPegawai;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class JabatanPegawaiPolicy
 {
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('ViewAny:JabatanPegawai');
+        return $authUser->can('ViewAny:JabatanPegawai');
     }
 
-    public function view(User $user, JabatanPegawai $jabatanPegawai): bool
+    public function view(AuthUser $authUser, JabatanPegawai $jabatanPegawai): bool
     {
-        return $user->can('View:JabatanPegawai');
+        return $authUser->can('View:JabatanPegawai');
     }
 
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('Create:JabatanPegawai');
+        return $authUser->can('Create:JabatanPegawai');
     }
 
-    public function update(User $user, JabatanPegawai $jabatanPegawai): bool
+    public function update(AuthUser $authUser, JabatanPegawai $jabatanPegawai): bool
     {
-        return $user->can('Update:JabatanPegawai');
+        return $authUser->can('Update:JabatanPegawai');
     }
 
-    public function delete(User $user, JabatanPegawai $jabatanPegawai): bool
+    public function delete(AuthUser $authUser, JabatanPegawai $jabatanPegawai): bool
     {
-        return $user->can('Delete:JabatanPegawai');
+        return $authUser->can('Delete:JabatanPegawai');
     }
 
-    public function deleteAny(User $user): bool
+    public function restore(AuthUser $authUser, JabatanPegawai $jabatanPegawai): bool
     {
-        return $user->can('DeleteAny:JabatanPegawai');
+        return $authUser->can('Restore:JabatanPegawai');
     }
 
-    public function restore(User $user, JabatanPegawai $jabatanPegawai): bool
+    public function forceDelete(AuthUser $authUser, JabatanPegawai $jabatanPegawai): bool
     {
-        return $user->can('Restore:JabatanPegawai');
+        return $authUser->can('ForceDelete:JabatanPegawai');
     }
 
-    public function restoreAny(User $user): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('RestoreAny:JabatanPegawai');
+        return $authUser->can('ForceDeleteAny:JabatanPegawai');
     }
 
-    public function forceDelete(
-        User $user,
-        JabatanPegawai $jabatanPegawai,
-    ): bool {
-        return $user->can('ForceDelete:JabatanPegawai');
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:JabatanPegawai');
     }
 
-    public function forceDeleteAny(User $user): bool
+    public function replicate(AuthUser $authUser, JabatanPegawai $jabatanPegawai): bool
     {
-        return $user->can('ForceDeleteAny:JabatanPegawai');
+        return $authUser->can('Replicate:JabatanPegawai');
     }
 
-    public function replicate(User $user, JabatanPegawai $jabatanPegawai): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('Replicate:JabatanPegawai');
-    }
-
-    public function reorder(User $user): bool
-    {
-        return $user->can('Reorder:JabatanPegawai');
+        return $authUser->can('Reorder:JabatanPegawai');
     }
 }
