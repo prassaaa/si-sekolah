@@ -162,7 +162,7 @@ class JadwalPelajaran extends Model
         return sprintf(
             '%s, %s - %s',
             $this->hari,
-            $this->jamPelajaran?->nama ?? '-',
+            $this->jamPelajaran?->label ?? '-',
             $this->mataPelajaran?->nama ?? '-',
         );
     }
