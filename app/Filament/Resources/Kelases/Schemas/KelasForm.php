@@ -27,7 +27,7 @@ class KelasForm
                                 ->searchable()
                                 ->preload()
                                 ->required()
-                                ->default(fn () => TahunAjaran::where('is_aktif', true)->first()?->id),
+                                ->default(fn () => TahunAjaran::active()->first()?->id),
                             TextInput::make('nama')
                                 ->label('Nama Kelas')
                                 ->required()
