@@ -7,6 +7,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -160,6 +161,40 @@ class SekolahForm
                         Toggle::make('is_active')
                             ->label('Aktif')
                             ->default(true),
+                    ])
+                    ->columns(2),
+
+                Section::make('Konfigurasi Presensi RFID')
+                    ->description('Pengaturan jam masuk, batas terlambat, dan parameter scan RFID')
+                    ->schema([
+                        TimePicker::make('jam_masuk_default')
+                            ->label('Jam Masuk Default')
+                            ->seconds(false)
+                            ->default('07:00')
+                            ->required()
+                            ->helperText('Patokan jam masuk normal sekolah'),
+                        TextInput::make('batas_terlambat_menit')
+                            ->label('Batas Terlambat (menit)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(180)
+                            ->default(15)
+                            ->required()
+                            ->helperText('Tap setelah jam_masuk_default + N menit dianggap terlambat'),
+                        TimePicker::make('jam_pulang_minimal')
+                            ->label('Jam Pulang Minimal')
+                            ->seconds(false)
+                            ->default('12:00')
+                            ->required()
+                            ->helperText('Tap kedua sebelum jam ini akan ditolak (belum waktunya pulang)'),
+                        TextInput::make('debounce_scan_detik')
+                            ->label('Debounce Scan (detik)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(600)
+                            ->default(60)
+                            ->required()
+                            ->helperText('Window untuk menolak tap ulang dari kartu yang sama'),
                     ])
                     ->columns(2),
             ]);

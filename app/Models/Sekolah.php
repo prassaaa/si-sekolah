@@ -40,6 +40,10 @@ class Sekolah extends Model
         'no_sk_operasional',
         'tanggal_sk_operasional',
         'is_active',
+        'jam_masuk_default',
+        'batas_terlambat_menit',
+        'jam_pulang_minimal',
+        'debounce_scan_detik',
     ];
 
     protected function casts(): array
@@ -49,6 +53,10 @@ class Sekolah extends Model
             'tanggal_sk_operasional' => 'date',
             'tahun_berdiri' => 'integer',
             'is_active' => 'boolean',
+            'jam_masuk_default' => 'datetime:H:i:s',
+            'jam_pulang_minimal' => 'datetime:H:i:s',
+            'batas_terlambat_menit' => 'integer',
+            'debounce_scan_detik' => 'integer',
         ];
     }
 

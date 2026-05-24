@@ -2,18 +2,22 @@
 
 namespace App\Models;
 
+use Database\Factories\SiswaFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Siswa extends Model
 {
-    /** @use HasFactory<\Database\Factories\SiswaFactory> */
+    /** @use HasFactory<SiswaFactory> */
     use HasFactory;
 
     use LogsActivity;
@@ -211,13 +215,31 @@ class Siswa extends Model
         return $this->hasMany(Absensi::class);
     }
 
+    public function presensiHarians(): HasMany
+    {
+        return $this->hasMany(PresensiHarian::class);
+    }
+
+    public function kartuRfids(): MorphMany
+    {
+        return $this->morphMany(KartuRfid::class, 'owner');
+    }
+
+    /**
+     * @return MorphOne<KartuRfid, $this>
+     */
+    public function kartuRfidAktif(): MorphOne
+    {
+        return $this->morphOne(KartuRfid::class, 'owner')->where('status', 'aktif');
+    }
+
     // =====================
     // SCOPES
     // =====================
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Siswa>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Siswa>
+     * @param  Builder<Siswa>  $query
+     * @return Builder<Siswa>
      */
     public function scopeActive($query)
     {
@@ -225,8 +247,8 @@ class Siswa extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Siswa>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Siswa>
+     * @param  Builder<Siswa>  $query
+     * @return Builder<Siswa>
      */
     public function scopeStatusAktif($query)
     {
@@ -234,8 +256,8 @@ class Siswa extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Siswa>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Siswa>
+     * @param  Builder<Siswa>  $query
+     * @return Builder<Siswa>
      */
     public function scopeLakiLaki($query)
     {
@@ -243,8 +265,8 @@ class Siswa extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Siswa>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Siswa>
+     * @param  Builder<Siswa>  $query
+     * @return Builder<Siswa>
      */
     public function scopePerempuan($query)
     {
@@ -252,8 +274,8 @@ class Siswa extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Siswa>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Siswa>
+     * @param  Builder<Siswa>  $query
+     * @return Builder<Siswa>
      */
     public function scopeKelas($query, int $kelasId)
     {
@@ -261,8 +283,8 @@ class Siswa extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Siswa>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Siswa>
+     * @param  Builder<Siswa>  $query
+     * @return Builder<Siswa>
      */
     public function scopeTahunMasuk($query, int $tahun)
     {

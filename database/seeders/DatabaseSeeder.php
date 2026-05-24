@@ -49,6 +49,12 @@ class DatabaseSeeder extends Seeder
             KenaikanKelasSeeder::class,
             KelulusanSeeder::class,
 
+            // Presensi Harian & RFID
+            RfidDeviceSeeder::class,
+            KartuRfidSeeder::class,
+            PresensiHarianSeeder::class,
+            PresensiHarianPegawaiSeeder::class,
+
             // Keuangan - Master Data
             AkunSeeder::class,
             KategoriPembayaranSeeder::class,

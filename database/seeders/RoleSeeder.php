@@ -23,6 +23,8 @@ class RoleSeeder extends Seeder
         'Akun', 'JurnalUmum', 'SaldoAwal', 'KasMasuk', 'KasKeluar',
         'BuktiTransfer', 'SettingGaji', 'SlipGaji', 'Pajak', 'UnitPos',
         'PosBayar', 'PembayaranPaket', 'TabunganSiswa',
+        'PresensiHarian', 'KartuRfid', 'RfidDevice', 'RfidScanLog',
+        'PresensiHarianPegawai',
     ];
 
     /**
@@ -49,6 +51,10 @@ class RoleSeeder extends Seeder
     {
         foreach ($this->allResources as $resource) {
             $actions = $resource === 'Activity' ? ['ViewAny', 'View'] : $this->allActions;
+
+            if ($resource === 'RfidScanLog') {
+                $actions = ['ViewAny', 'View'];
+            }
 
             foreach ($actions as $action) {
                 Permission::firstOrCreate(['name' => "{$action}:{$resource}"]);
@@ -225,6 +231,13 @@ class RoleSeeder extends Seeder
             // PENGATURAN
             $this->noDelete('Sekolah'), // Can't delete school settings
             $this->fullCrud('Informasi'),
+
+            // PRESENSI HARIAN & RFID
+            $this->fullCrud('PresensiHarian'),
+            $this->fullCrud('PresensiHarianPegawai'),
+            $this->fullCrud('KartuRfid'),
+            $this->fullCrud('RfidDevice'),
+            $this->viewOnly('RfidScanLog'),
         );
     }
 
@@ -249,6 +262,9 @@ class RoleSeeder extends Seeder
             // View Only - Referensi
             $this->viewOnly('Siswa'),
             $this->viewOnly('Kelas'),
+
+            // PRESENSI HARIAN - View only (cek pola alpha)
+            $this->viewOnly('PresensiHarian'),
         );
     }
 
@@ -304,6 +320,9 @@ class RoleSeeder extends Seeder
 
             // Konseling - View only
             $this->viewOnly('Konseling'),
+
+            // PRESENSI HARIAN - View only (pantau anak walinya)
+            $this->viewOnly('PresensiHarian'),
         );
     }
 
@@ -323,6 +342,11 @@ class RoleSeeder extends Seeder
             // View Only - Referensi
             $this->viewOnly('Siswa'),
             $this->viewOnly('Kelas'),
+
+            // PRESENSI HARIAN - Override manual + monitoring
+            $this->noDelete('PresensiHarian'),
+            $this->viewOnly('KartuRfid'),
+            $this->viewOnly('RfidScanLog'),
         );
     }
 }

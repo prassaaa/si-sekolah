@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -73,6 +76,24 @@ class Pegawai extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function presensiHarianPegawais(): HasMany
+    {
+        return $this->hasMany(PresensiHarianPegawai::class);
+    }
+
+    public function kartuRfids(): MorphMany
+    {
+        return $this->morphMany(KartuRfid::class, 'owner');
+    }
+
+    /**
+     * @return MorphOne<KartuRfid, $this>
+     */
+    public function kartuRfidAktif(): MorphOne
+    {
+        return $this->morphOne(KartuRfid::class, 'owner')->where('status', 'aktif');
     }
 
     public function getNamaLengkapAttribute(): string
