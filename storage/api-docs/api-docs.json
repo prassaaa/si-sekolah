@@ -1,0 +1,199 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "SI Sekolah RFID API",
+        "description": "API endpoint untuk hardware RFID reader (ESP32 + RC522) yang terintegrasi dengan sistem presensi harian SI Sekolah. Klik **Authorize** dulu untuk paste API token, lalu coba endpoint via **Try it out**.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://43.133.156.101:8081",
+            "description": "Production VPS"
+        },
+        {
+            "url": "http://localhost:8000",
+            "description": "Local development"
+        }
+    ],
+    "paths": {
+        "/api/rfid/scan": {
+            "post": {
+                "tags": [
+                    "RFID Scan"
+                ],
+                "summary": "Submit hasil tap kartu RFID",
+                "description": "Endpoint utama untuk hardware reader (ESP32 + RC522). Server otomatis route ke presensi siswa atau pegawai berdasarkan owner kartu. Selalu tulis ke rfid_scan_logs untuk audit.",
+                "operationId": "99ca2e12e7b47a5e66eccf6f7fc54c25",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "uid"
+                                ],
+                                "properties": {
+                                    "uid": {
+                                        "description": "UID kartu (hex, server normalize uppercase tanpa separator)",
+                                        "type": "string",
+                                        "example": "04A1B2C3",
+                                        "maxLength": 32
+                                    },
+                                    "scanned_at": {
+                                        "description": "Optional, default now() server",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-05-24T07:05:32+07:00"
+                                    },
+                                    "device_kode": {
+                                        "description": "Optional, double-check device",
+                                        "type": "string",
+                                        "example": "GERBANG-IN-01",
+                                        "maxLength": 50
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Request diproses (lihat success + jenis untuk detail)",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "examples": {
+                                    "masuk": {
+                                        "summary": "Tap masuk berhasil (hadir)",
+                                        "value": {
+                                            "success": true,
+                                            "jenis": "masuk",
+                                            "pesan": "Selamat datang Ahmad Setiawan",
+                                            "pemilik": {
+                                                "nama": "Ahmad Setiawan",
+                                                "kelas": "VII-A",
+                                                "tipe": "siswa"
+                                            },
+                                            "presensi": {
+                                                "status": "hadir",
+                                                "jam_masuk": "06:55:00",
+                                                "terlambat_menit": null
+                                            }
+                                        }
+                                    },
+                                    "terlambat": {
+                                        "summary": "Tap masuk berhasil (terlambat)",
+                                        "value": {
+                                            "success": true,
+                                            "jenis": "masuk",
+                                            "pesan": "Selamat datang Ahmad, Anda terlambat 25 menit",
+                                            "pemilik": {
+                                                "nama": "Ahmad Setiawan",
+                                                "kelas": "VII-A",
+                                                "tipe": "siswa"
+                                            },
+                                            "presensi": {
+                                                "status": "terlambat",
+                                                "jam_masuk": "07:25:00",
+                                                "terlambat_menit": 25
+                                            }
+                                        }
+                                    },
+                                    "pulang": {
+                                        "summary": "Tap pulang berhasil",
+                                        "value": {
+                                            "success": true,
+                                            "jenis": "pulang",
+                                            "pesan": "Selamat jalan Ahmad Setiawan",
+                                            "pemilik": {
+                                                "nama": "Ahmad Setiawan",
+                                                "tipe": "siswa"
+                                            },
+                                            "presensi": {
+                                                "status": "hadir",
+                                                "jam_masuk": "06:55:00",
+                                                "jam_pulang": "13:05:00"
+                                            }
+                                        }
+                                    },
+                                    "tidak_dikenal": {
+                                        "summary": "UID tidak terdaftar",
+                                        "value": {
+                                            "success": false,
+                                            "jenis": "tidak_dikenal",
+                                            "pesan": "Kartu tidak terdaftar"
+                                        }
+                                    },
+                                    "ditolak": {
+                                        "summary": "Kartu nonaktif/hilang",
+                                        "value": {
+                                            "success": false,
+                                            "jenis": "ditolak",
+                                            "pesan": "Kartu berstatus hilang, hubungi TU"
+                                        }
+                                    },
+                                    "duplikat": {
+                                        "summary": "Tap dalam debounce window (60s default)",
+                                        "value": {
+                                            "success": false,
+                                            "jenis": "duplikat",
+                                            "pesan": "Tap terlalu cepat (debounce window)"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token tidak ada / salah / device nonaktif",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        },
+                                        "reason": {
+                                            "type": "string",
+                                            "example": "Missing bearer token"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (uid kosong / format salah)"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "description": "Token API dari RfidDevice yang dibuat di Filament panel. Token plain hanya tampil sekali saat Create. Kalau hilang, gunakan action Regenerate Token di Filament.",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "RFID Scan",
+            "description": "RFID Scan"
+        }
+    ]
+}
