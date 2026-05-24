@@ -169,6 +169,11 @@ Buat file baru di Arduino IDE: **File → New Sketch**, copy kode di bawah, save
 const char* WIFI_SSID = "NamaWiFiSekolah";
 const char* WIFI_PASSWORD = "passwordWiFi";
 
+// API_URL bisa pakai HTTPS domain ATAU HTTP IP+port
+// Contoh HTTPS (recommended untuk production):
+//   const char* API_URL = "https://sekolah.example.com/api/rfid/scan";
+// Contoh HTTP IP+port (dev/staging, atau kalau belum ada domain):
+//   const char* API_URL = "http://203.0.113.45:8000/api/rfid/scan";
 const char* API_URL = "https://sekolah.example.com/api/rfid/scan";
 const char* API_TOKEN = "aB3cD4eF5gH6iJ7kL8mN9oP0qR1sT2uV3wX4yZ5aB6cD7eF8gH9iJ0kL1mN2oP3qR";
 const char* DEVICE_KODE = "GERBANG-IN-01";
@@ -796,4 +801,69 @@ A: Tidak. Setiap reader punya 1 token yang terikat ke 1 instalasi sistem. Kalau 
 
 **Q: Bisa integrasikan dengan sistem absensi pelajaran (per-mata pelajaran)?**
 A: Saat ini independent by design. Tapi report bisa cross-check kedua sumber data di dashboard.
+
+
+---
+
+## 14. Pakai HTTP IP+Port (Tanpa Domain)
+
+Kalau VPS belum punya domain, bisa langsung pakai IP + port. **HTTPClient library otomatis detect HTTP vs HTTPS dari URL prefix** — tidak perlu modifikasi firmware lain selain URL.
+
+### Format URL
+
+```cpp
+// Sebelum (HTTPS dengan domain):
+const char* API_URL = "https://sekolah.example.com/api/rfid/scan";
+
+// Sesudah (HTTP dengan IP+port):
+const char* API_URL = "http://203.0.113.45:8000/api/rfid/scan";
+```
+
+Sesuaikan IP dan port dengan yang aktual di VPS-mu.
+
+### Verifikasi Sebelum Upload Firmware
+
+Cek dari laptop yang join WiFi sekolah:
+
+```bash
+curl -X POST http://VPS_IP:PORT/api/rfid/scan \
+  -H "Authorization: Bearer your-token-here" \
+  -H "Content-Type: application/json" \
+  -d '{"uid":"04A1B2C3","scanned_at":"2026-05-24T07:00:00+07:00"}'
+```
+
+Kalau response 200/401 OK (server respond, walau token salah), berarti reachable. Kalau timeout, cek firewall VPS.
+
+### ⚠️ Trade-off Keamanan
+
+| Aspek | HTTPS Domain | HTTP IP+Port |
+|---|---|---|
+| API token | Encrypted in transit | **Plain text — bisa di-sniff** |
+| Setup effort | Perlu domain + cert | Langsung pakai |
+| Cocok untuk | Production | Dev / testing / staging awal |
+| Risk kalau WiFi sekolah open | Low | **Tinggi** (token bisa dicuri) |
+| Risk kalau WiFi WPA2 password kuat | Low | Medium |
+
+### Migrasi dari HTTP ke HTTPS Nanti
+
+Saat sudah punya domain, tinggal:
+1. Setup Caddy/Nginx + Let's Encrypt cert (5 menit)
+2. Edit firmware: ganti `http://IP:PORT/...` ke `https://domain/...`
+3. Upload ulang firmware ke setiap reader
+4. Token tidak perlu di-regenerate — backend tetap sama
+
+### Setup HTTPS Tercepat dengan Caddy
+
+```caddy
+# /etc/caddy/Caddyfile
+sekolah.example.com {
+    reverse_proxy 127.0.0.1:8000
+}
+```
+
+```bash
+sudo systemctl reload caddy
+```
+
+Caddy auto generate Let's Encrypt cert dan handle renewal otomatis. Tidak perlu config tambahan.
 
