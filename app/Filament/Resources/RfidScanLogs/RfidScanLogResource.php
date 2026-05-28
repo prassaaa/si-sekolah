@@ -27,7 +27,7 @@ class RfidScanLogResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Log Scan RFID';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Pengaturan';
+    protected static UnitEnum|string|null $navigationGroup = 'Sistem';
 
     protected static ?int $navigationSort = 6;
 
