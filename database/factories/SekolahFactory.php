@@ -6,7 +6,7 @@ use App\Models\Sekolah;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Sekolah>
+ * @extends Factory<Sekolah>
  */
 class SekolahFactory extends Factory
 {
@@ -49,6 +49,8 @@ class SekolahFactory extends Factory
             'no_sk_operasional' => fake()->numerify('SK/###/####/####'),
             'tanggal_sk_operasional' => fake()->date(),
             'is_active' => true,
+            'tarif_denda_sarpras_per_hari' => 0,
+            'maks_denda_persen' => 50,
         ];
     }
 

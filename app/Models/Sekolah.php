@@ -44,6 +44,8 @@ class Sekolah extends Model
         'batas_terlambat_menit',
         'jam_pulang_minimal',
         'debounce_scan_detik',
+        'tarif_denda_sarpras_per_hari',
+        'maks_denda_persen',
     ];
 
     protected function casts(): array
@@ -57,6 +59,8 @@ class Sekolah extends Model
             'jam_pulang_minimal' => 'datetime:H:i:s',
             'batas_terlambat_menit' => 'integer',
             'debounce_scan_detik' => 'integer',
+            'tarif_denda_sarpras_per_hari' => 'decimal:2',
+            'maks_denda_persen' => 'integer',
         ];
     }
 

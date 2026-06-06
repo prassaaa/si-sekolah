@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Kelas;
 use App\Models\Pegawai;
+use App\Models\Ruangan;
 use App\Models\TahunAjaran;
 use Illuminate\Database\Seeder;
 
@@ -49,6 +50,12 @@ class KelasSeeder extends Seeder
                 $waliKelasId = $gurus[$guruIndex % count($gurus)];
             }
 
+            $ruanganNama = $data['ruangan'] ?? 'Ruang '.$data['nama'];
+            $ruangan = Ruangan::firstOrCreate(
+                ['nama' => $ruanganNama],
+                ['kode' => 'R-'.strtoupper($data['nama']), 'jenis' => 'kelas', 'is_active' => true],
+            );
+
             Kelas::create([
                 'tahun_ajaran_id' => $tahunAjaran->id,
                 'nama' => $data['nama'],
@@ -56,7 +63,7 @@ class KelasSeeder extends Seeder
                 'jurusan' => $data['jurusan'] ?? null,
                 'wali_kelas_id' => $waliKelasId,
                 'kapasitas' => $data['kapasitas'] ?? 32,
-                'ruangan' => $data['ruangan'] ?? 'Ruang '.$data['nama'],
+                'ruangan_id' => $ruangan->id,
                 'urutan' => $data['urutan'],
                 'is_active' => true,
                 'keterangan' => null,

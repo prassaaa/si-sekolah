@@ -61,6 +61,14 @@ class Ruangan extends Model
     }
 
     /**
+     * @return HasMany<Kelas, $this>
+     */
+    public function kelas(): HasMany
+    {
+        return $this->hasMany(Kelas::class);
+    }
+
+    /**
      * @return HasMany<SarprasBarang, $this>
      */
     public function barangs(): HasMany

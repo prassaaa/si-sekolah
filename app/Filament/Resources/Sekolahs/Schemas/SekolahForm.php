@@ -197,6 +197,27 @@ class SekolahForm
                             ->helperText('Window untuk menolak tap ulang dari kartu yang sama'),
                     ])
                     ->columns(2),
+
+                Section::make('Konfigurasi Denda Sarpras')
+                    ->description('Pengaturan tarif denda keterlambatan pengembalian sarana & prasarana')
+                    ->schema([
+                        TextInput::make('tarif_denda_sarpras_per_hari')
+                            ->label('Tarif Denda per Hari per Unit')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0)
+                            ->prefix('Rp')
+                            ->helperText('Nominal denda per hari keterlambatan per unit barang'),
+                        TextInput::make('maks_denda_persen')
+                            ->label('Batas Maksimal Denda')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->default(50)
+                            ->suffix('%')
+                            ->helperText('Maksimal denda sebagai persentase dari harga perolehan barang'),
+                    ])
+                    ->columns(2),
             ]);
     }
 }

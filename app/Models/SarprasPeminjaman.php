@@ -39,6 +39,8 @@ class SarprasPeminjaman extends Model
         'status',
         'petugas_id',
         'catatan',
+        'denda',
+        'hari_telat',
     ];
 
     /**
@@ -51,6 +53,8 @@ class SarprasPeminjaman extends Model
             'tanggal_pinjam' => 'date',
             'tanggal_harus_kembali' => 'date',
             'tanggal_kembali' => 'date',
+            'denda' => 'decimal:2',
+            'hari_telat' => 'integer',
         ];
     }
 
@@ -121,6 +125,7 @@ class SarprasPeminjaman extends Model
     /**
      * Catat pengembalian barang: simpan kondisi & tanggal kembali, lalu
      * pulihkan ketersediaan barang (status/stok) di bawah transaksi + lock.
+     * Hitung denda jika terlambat: min(maks, hari_telat × tarif × jumlah).
      */
     public function kembalikan(string $kondisiKembali): void
     {
@@ -135,15 +140,35 @@ class SarprasPeminjaman extends Model
                 ->lockForUpdate()
                 ->findOrFail($peminjaman->sarpras_barang_id);
 
-            $tanggalKembali = now();
-            $status = $tanggalKembali->startOfDay()->greaterThan($peminjaman->tanggal_harus_kembali)
-                ? 'terlambat'
-                : 'dikembalikan';
+            $tanggalKembali = now()->startOfDay();
+            $hariTelat = (int) max(0, $tanggalKembali->diffInDays($peminjaman->tanggal_harus_kembali, false) * -1);
+
+            $denda = '0.00';
+
+            if ($hariTelat > 0) {
+                $sekolah = Sekolah::query()->first();
+                $tarif = $sekolah ? (string) $sekolah->tarif_denda_sarpras_per_hari : '0';
+                $maksPersen = $sekolah ? (int) $sekolah->maks_denda_persen : 50;
+
+                if (bccomp($tarif, '0', 2) > 0) {
+                    $hargaPerolehan = (string) $barang->harga_perolehan;
+                    $jumlah = (string) $peminjaman->jumlah;
+
+                    $dendaHitung = bcmul(bcmul((string) $hariTelat, $tarif, 2), $jumlah, 2);
+                    $maksDenda = bcmul($hargaPerolehan, bcdiv((string) $maksPersen, '100', 4), 2);
+
+                    $denda = bccomp($dendaHitung, $maksDenda, 2) <= 0 ? $dendaHitung : $maksDenda;
+                }
+            }
+
+            $status = $hariTelat > 0 ? 'terlambat' : 'dikembalikan';
 
             $peminjaman->forceFill([
                 'tanggal_kembali' => $tanggalKembali,
                 'kondisi_kembali' => $kondisiKembali,
                 'status' => $status,
+                'hari_telat' => $hariTelat,
+                'denda' => $denda,
             ])->save();
 
             if ($barang->isBahan()) {

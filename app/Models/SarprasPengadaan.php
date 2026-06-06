@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Sarpras\SarprasJournalPoster;
 use Database\Factories\SarprasPengadaanFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -162,7 +163,18 @@ class SarprasPengadaan extends Model
             $pengadaan->save();
 
             $this->forceFill(['status' => 'diterima']);
+
+            app(SarprasJournalPoster::class)->postPengadaan($pengadaan);
         });
+    }
+
+    /**
+     * Reverse the procurement journal entry. Use when a received pengadaan is
+     * cancelled. Safe no-op when no journal was posted.
+     */
+    public function reverseJurnal(): void
+    {
+        app(SarprasJournalPoster::class)->reversePengadaan($this);
     }
 
     protected static function booted(): void

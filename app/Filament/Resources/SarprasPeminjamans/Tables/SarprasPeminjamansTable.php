@@ -52,6 +52,18 @@ class SarprasPeminjamansTable
                     ->date('d M Y')
                     ->sortable(),
 
+                TextColumn::make('hari_telat')
+                    ->label('Hari Terlambat')
+                    ->suffix(' hari')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('denda')
+                    ->label('Denda')
+                    ->money('IDR')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -109,8 +121,14 @@ class SarprasPeminjamansTable
                     ->action(function (SarprasPeminjaman $record, array $data): void {
                         $record->kembalikan($data['kondisi_kembali']);
 
+                        $fresh = $record->fresh();
+                        $body = $fresh->hari_telat > 0
+                            ? "Terlambat {$fresh->hari_telat} hari — denda: Rp ".number_format((float) $fresh->denda, 0, ',', '.')
+                            : 'Dikembalikan tepat waktu';
+
                         Notification::make()
                             ->title('Barang berhasil dikembalikan')
+                            ->body($body)
                             ->success()
                             ->send();
                     }),

@@ -47,6 +47,19 @@ class SarprasPeminjamanInfolist
                 ]),
             ]),
 
+            Section::make('Denda Keterlambatan')->schema([
+                Grid::make(2)->schema([
+                    TextEntry::make('hari_telat')
+                        ->label('Hari Terlambat')
+                        ->suffix(' hari')
+                        ->placeholder('0'),
+                    TextEntry::make('denda')
+                        ->label('Denda')
+                        ->money('IDR')
+                        ->placeholder('Rp 0'),
+                ]),
+            ]),
+
             Section::make('Petugas & Catatan')->schema([
                 TextEntry::make('petugas.nama')->label('Petugas')->placeholder('-'),
                 TextEntry::make('catatan')->label('Catatan')->placeholder('-')->columnSpanFull(),

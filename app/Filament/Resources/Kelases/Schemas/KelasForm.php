@@ -82,10 +82,12 @@ class KelasForm
                                 ->preload()
                                 ->placeholder('Pilih wali kelas')
                                 ->helperText('Guru yang menjadi wali kelas'),
-                            TextInput::make('ruangan')
+                            Select::make('ruangan_id')
                                 ->label('Ruangan')
-                                ->maxLength(50)
-                                ->placeholder('Ruang 7A'),
+                                ->relationship('ruanganModel', 'nama')
+                                ->searchable()
+                                ->preload()
+                                ->nullable(),
                         ]),
                         Grid::make(2)->schema([
                             TextInput::make('urutan')

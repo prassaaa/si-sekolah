@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SarprasBarangs\Schemas;
 
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -127,6 +128,37 @@ class SarprasBarangForm
                                 ->label('Satuan')
                                 ->default('unit')
                                 ->maxLength(50),
+                        ]),
+                    ]),
+
+                Section::make('Penyusutan')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            Select::make('metode_susut')
+                                ->label('Metode Penyusutan')
+                                ->options([
+                                    'tanpa' => 'Tanpa Penyusutan',
+                                    'garis_lurus' => 'Garis Lurus',
+                                    'saldo_menurun' => 'Saldo Menurun',
+                                ])
+                                ->default('tanpa'),
+                            DatePicker::make('tanggal_perolehan')
+                                ->label('Tanggal Perolehan')
+                                ->nullable(),
+                        ]),
+                        Grid::make(2)->schema([
+                            TextInput::make('umur_ekonomis_bulan')
+                                ->label('Umur Ekonomis (bulan)')
+                                ->numeric()
+                                ->minValue(1)
+                                ->nullable()
+                                ->helperText('Kosongkan untuk memakai default kategori.'),
+                            TextInput::make('nilai_residu')
+                                ->label('Nilai Residu (Rp)')
+                                ->numeric()
+                                ->minValue(0)
+                                ->default(0)
+                                ->prefix('Rp'),
                         ]),
                     ]),
 

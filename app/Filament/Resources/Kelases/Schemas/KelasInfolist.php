@@ -49,7 +49,7 @@ class KelasInfolist
                             TextEntry::make('waliKelas.nama')
                                 ->label('Wali Kelas')
                                 ->placeholder('Belum ditentukan'),
-                            TextEntry::make('ruangan')
+                            TextEntry::make('ruanganModel.nama')
                                 ->label('Ruangan')
                                 ->placeholder('-'),
                             TextEntry::make('jumlah_siswa')

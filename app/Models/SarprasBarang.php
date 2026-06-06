@@ -38,6 +38,10 @@ class SarprasBarang extends Model
         'foto',
         'keterangan',
         'is_active',
+        'metode_susut',
+        'umur_ekonomis_bulan',
+        'nilai_residu',
+        'tanggal_perolehan',
     ];
 
     /**
@@ -50,6 +54,10 @@ class SarprasBarang extends Model
             'harga_perolehan' => 'decimal:2',
             'jumlah' => 'integer',
             'is_active' => 'boolean',
+            'metode_susut' => 'string',
+            'umur_ekonomis_bulan' => 'integer',
+            'nilai_residu' => 'decimal:2',
+            'tanggal_perolehan' => 'date',
         ];
     }
 
@@ -117,6 +125,58 @@ class SarprasBarang extends Model
     public function scopeTersedia(Builder $query): Builder
     {
         return $query->where('status', 'tersedia');
+    }
+
+    /**
+     * Default economic life (in months) per kategori, keyed by kode or nama.
+     *
+     * @return array<string, int>
+     */
+    public static function defaultUmurEkonomisMap(): array
+    {
+        return [
+            'ELK' => 48,
+            'ELEKTRONIK' => 48,
+            'MBL' => 96,
+            'MEUBELAIR' => 96,
+            'KDR' => 96,
+            'KENDARAAN' => 96,
+            'BGN' => 240,
+            'BANGUNAN' => 240,
+        ];
+    }
+
+    /**
+     * Resolve the economic life in months: explicit value wins, otherwise the
+     * kategori default. Returns null when no default is known (no depreciation).
+     */
+    public function resolveUmurEkonomisBulan(): ?int
+    {
+        if ($this->umur_ekonomis_bulan !== null && $this->umur_ekonomis_bulan > 0) {
+            return $this->umur_ekonomis_bulan;
+        }
+
+        $kategori = $this->kategori;
+
+        if (! $kategori) {
+            return null;
+        }
+
+        $map = static::defaultUmurEkonomisMap();
+
+        return $map[strtoupper((string) $kategori->kode)]
+            ?? $map[strtoupper((string) $kategori->nama)]
+            ?? null;
+    }
+
+    /**
+     * Whether this item should be depreciated at all.
+     */
+    public function isDepreciable(): bool
+    {
+        return $this->metode_susut !== null
+            && $this->metode_susut !== 'tanpa'
+            && $this->resolveUmurEkonomisBulan() !== null;
     }
 
     public function isAset(): bool

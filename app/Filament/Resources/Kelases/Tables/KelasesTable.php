@@ -17,6 +17,7 @@ class KelasesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('ruanganModel'))
             ->columns([
                 TextColumn::make('tahunAjaran.kode')
                     ->label('Tahun Ajaran')
@@ -53,7 +54,7 @@ class KelasesTable
                     ->alignCenter()
                     ->badge()
                     ->color('success'),
-                TextColumn::make('ruangan')
+                TextColumn::make('ruanganModel.nama')
                     ->label('Ruangan')
                     ->placeholder('-')
                     ->toggleable(isToggledHiddenByDefault: true),

@@ -4,11 +4,12 @@ namespace Database\Factories;
 
 use App\Models\Kelas;
 use App\Models\Pegawai;
+use App\Models\Ruangan;
 use App\Models\TahunAjaran;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Kelas>
+ * @extends Factory<Kelas>
  */
 class KelasFactory extends Factory
 {
@@ -31,11 +32,21 @@ class KelasFactory extends Factory
             'jurusan' => $tingkat >= 10 ? fake()->randomElement(['IPA', 'IPS', 'Bahasa', null]) : null,
             'wali_kelas_id' => null,
             'kapasitas' => fake()->numberBetween(25, 40),
-            'ruangan' => 'Ruang '.$tingkat.$suffix,
+            'ruangan_id' => Ruangan::factory()->state(['jenis' => 'kelas']),
             'urutan' => fake()->numberBetween(1, 100),
             'is_active' => true,
             'keterangan' => null,
         ];
+    }
+
+    /**
+     * Tanpa ruangan (ruangan_id null)
+     */
+    public function withoutRuangan(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'ruangan_id' => null,
+        ]);
     }
 
     /**
@@ -61,7 +72,6 @@ class KelasFactory extends Factory
                 'nama' => $tingkat.$suffix,
                 'tingkat' => $tingkat,
                 'jurusan' => null,
-                'ruangan' => 'Ruang SD '.$tingkat.$suffix,
             ];
         });
     }
@@ -79,7 +89,6 @@ class KelasFactory extends Factory
                 'nama' => $tingkat.$suffix,
                 'tingkat' => $tingkat,
                 'jurusan' => null,
-                'ruangan' => 'Ruang SMP '.$tingkat.$suffix,
             ];
         });
     }
@@ -98,7 +107,6 @@ class KelasFactory extends Factory
                 'nama' => 'X'.($tingkat - 9).' '.$jurusan.' '.$suffix,
                 'tingkat' => $tingkat,
                 'jurusan' => $jurusan,
-                'ruangan' => 'Ruang SMA '.($tingkat - 9).$jurusan.$suffix,
             ];
         });
     }

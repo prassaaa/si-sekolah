@@ -26,6 +26,7 @@ class Kelas extends Model
         'wali_kelas_id',
         'kapasitas',
         'ruangan',
+        'ruangan_id',
         'urutan',
         'is_active',
         'keterangan',
@@ -58,6 +59,11 @@ class Kelas extends Model
     public function waliKelas(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'wali_kelas_id');
+    }
+
+    public function ruanganModel(): BelongsTo
+    {
+        return $this->belongsTo(Ruangan::class, 'ruangan_id');
     }
 
     public function siswas(): HasMany
