@@ -24,7 +24,9 @@
       "Bash(php artisan make:model:*)",
       "Bash(php artisan make:seeder:*)",
       "Bash(rtk find *)",
-      "Bash(rtk ls *)"
+      "Bash(rtk ls *)",
+      "Bash(rtk read *)",
+      "Bash(rtk grep *)"
     ]
   },
   "enableAllProjectMcpServers": true,
