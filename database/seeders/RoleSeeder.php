@@ -25,6 +25,8 @@ class RoleSeeder extends Seeder
         'PosBayar', 'PembayaranPaket', 'TabunganSiswa',
         'PresensiHarian', 'KartuRfid', 'RfidDevice', 'RfidScanLog',
         'PresensiHarianPegawai',
+        'SarprasKategori', 'Ruangan', 'SarprasBarang', 'SarprasPeminjaman',
+        'SarprasPemeliharaan', 'SarprasPengadaan', 'SarprasPenghapusan',
     ];
 
     /**
@@ -95,9 +97,35 @@ class RoleSeeder extends Seeder
         $petugasPiket = Role::firstOrCreate(['name' => 'petugas_piket']);
         $petugasPiket->syncPermissions($this->getPetugasPiketPermissions());
 
+        // 8. Petugas Sarpras - Kelola sarana & prasarana
+        $petugasSarpras = Role::firstOrCreate(['name' => 'petugas_sarpras']);
+        $petugasSarpras->syncPermissions($this->getPetugasSarprasPermissions());
+
         // Keep admin role for backward compatibility (same as tata_usaha)
         $admin = Role::firstOrCreate(['name' => 'admin']);
         $admin->syncPermissions($this->getTataUsahaPermissions());
+    }
+
+    /**
+     * Get Petugas Sarpras permissions.
+     * Focus: Sarana & Prasarana (kategori, ruangan, barang, peminjaman, pemeliharaan, pengadaan, penghapusan).
+     *
+     * @return array<string>
+     */
+    private function getPetugasSarprasPermissions(): array
+    {
+        return array_merge(
+            $this->fullCrud('SarprasKategori'),
+            $this->fullCrud('Ruangan'),
+            $this->fullCrud('SarprasBarang'),
+            $this->fullCrud('SarprasPeminjaman'),
+            $this->fullCrud('SarprasPemeliharaan'),
+            $this->fullCrud('SarprasPengadaan'),
+            $this->fullCrud('SarprasPenghapusan'),
+            // Konteks read-only untuk relasi peminjam
+            $this->viewOnly('Siswa'),
+            $this->viewOnly('Pegawai'),
+        );
     }
 
     /**

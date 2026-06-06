@@ -77,6 +77,19 @@ class DatabaseSeeder extends Seeder
 
             // Akuntansi
             JurnalUmumSeeder::class,
+
+            // Sarpras - Master Data (dependensi awal)
+            SarprasKategoriSeeder::class,
+            RuanganSeeder::class,
+
+            // Sarpras - Inventaris (bergantung pada kategori + ruangan)
+            SarprasBarangSeeder::class,
+
+            // Sarpras - Transaksi (bergantung pada barang + user/siswa/pegawai)
+            SarprasPeminjamanSeeder::class,
+            SarprasPemeliharaanSeeder::class,
+            SarprasPengadaanSeeder::class,
+            SarprasPenghapusanSeeder::class,
         ]);
     }
 }
