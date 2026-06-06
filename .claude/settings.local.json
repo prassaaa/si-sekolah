@@ -22,7 +22,9 @@
       "mcp__laravel-boost__tinker",
       "mcp__laravel-boost__last-error",
       "Bash(php artisan make:model:*)",
-      "Bash(php artisan make:seeder:*)"
+      "Bash(php artisan make:seeder:*)",
+      "Bash(rtk find *)",
+      "Bash(rtk ls *)"
     ]
   },
   "enableAllProjectMcpServers": true,
