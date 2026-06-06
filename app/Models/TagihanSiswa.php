@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\TagihanSiswaFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class TagihanSiswa extends Model
 {
-    /** @use HasFactory<\Database\Factories\TagihanSiswaFactory> */
+    /** @use HasFactory<TagihanSiswaFactory> */
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
@@ -93,14 +94,56 @@ class TagihanSiswa extends Model
         };
     }
 
+    protected const MONEY_SCALE = 2;
+
+    /**
+     * Recompute sisa_tagihan and status from total_tagihan and total_terbayar
+     * using precise decimal math. sisa_tagihan is clamped at zero so an
+     * overpayment never produces a negative remaining balance. A batal tagihan
+     * is never flipped to another status.
+     */
     public function updateStatus(): void
     {
-        if ($this->sisa_tagihan <= 0) {
-            $this->update(['status' => 'lunas']);
-        } elseif ($this->total_terbayar > 0) {
-            $this->update(['status' => 'sebagian']);
-        } else {
-            $this->update(['status' => 'belum_bayar']);
+        if ($this->status === 'batal') {
+            return;
         }
+
+        $total = (string) $this->total_tagihan;
+        $terbayar = (string) $this->total_terbayar;
+
+        $sisa = bcsub($total, $terbayar, self::MONEY_SCALE);
+        if (bccomp($sisa, '0', self::MONEY_SCALE) < 0) {
+            $sisa = '0.00';
+        }
+
+        $isLunas =
+            bccomp($terbayar, $total, self::MONEY_SCALE) >= 0 &&
+            bccomp($terbayar, '0', self::MONEY_SCALE) > 0;
+
+        if ($isLunas) {
+            $status = 'lunas';
+        } elseif (bccomp($terbayar, '0', self::MONEY_SCALE) > 0) {
+            $status = 'sebagian';
+        } else {
+            $status = 'belum_bayar';
+        }
+
+        $this->update([
+            'sisa_tagihan' => $sisa,
+            'status' => $status,
+        ]);
+    }
+
+    /**
+     * Whether the recorded payments exceed the total tagihan. Useful for
+     * surfacing overpayment that has been clamped on sisa_tagihan.
+     */
+    public function isOverpaid(): bool
+    {
+        return bccomp(
+            (string) $this->total_terbayar,
+            (string) $this->total_tagihan,
+            self::MONEY_SCALE,
+        ) > 0;
     }
 }

@@ -10,10 +10,10 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class TahfidzForm
@@ -86,6 +86,13 @@ class TahfidzForm
                                 ->minValue(1)
                                 ->required()
                                 ->live(onBlur: true)
+                                ->rule(fn (Get $get) => function ($attribute, $value, $fail) use ($get) {
+                                    $ayatMulai = (int) $get('ayat_mulai');
+                                    $ayatSelesai = (int) $value;
+                                    if ($ayatMulai > 0 && $ayatSelesai > 0 && $ayatSelesai < $ayatMulai) {
+                                        $fail('Ayat selesai harus lebih besar atau sama dengan ayat mulai.');
+                                    }
+                                })
                                 ->afterStateUpdated(fn (Get $get, Set $set) => self::calculateJumlahAyat($get, $set)),
 
                             TextInput::make('jumlah_ayat')

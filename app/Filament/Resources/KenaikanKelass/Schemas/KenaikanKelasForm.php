@@ -12,7 +12,9 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 class KenaikanKelasForm
 {
@@ -37,7 +39,13 @@ class KenaikanKelasForm
                                 ->searchable()
                                 ->preload()
                                 ->required()
-                                ->getOptionLabelFromRecordUsing(fn (Semester $record) => "{$record->tahunAjaran?->nama} - {$record->nama}"),
+                                ->getOptionLabelFromRecordUsing(fn (Semester $record) => "{$record->tahunAjaran?->nama} - {$record->nama}")
+                                ->unique(
+                                    table: 'kenaikan_kelas',
+                                    column: 'semester_id',
+                                    ignoreRecord: true,
+                                    modifyRuleUsing: fn (Unique $rule, Get $get) => $rule->where('siswa_id', $get('siswa_id')),
+                                ),
                         ]),
                     ]),
 
@@ -56,6 +64,7 @@ class KenaikanKelasForm
                                 ->options(fn () => Kelas::with('tahunAjaran')->get()->mapWithKeys(fn ($k) => [$k->id => $k->tahunAjaran?->nama.' - '.$k->nama]))
                                 ->searchable()
                                 ->preload()
+                                ->different('kelas_asal_id')
                                 ->helperText('Kosongkan jika siswa tinggal kelas atau mutasi'),
                         ]),
                     ]),

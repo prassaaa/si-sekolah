@@ -96,6 +96,10 @@ class Pegawai extends Model
         return $this->morphOne(KartuRfid::class, 'owner')->where('status', 'aktif');
     }
 
+    /**
+     * Alias untuk nama — digunakan pada relasi dot-notation Filament (pegawai.nama_lengkap).
+     * Mengembalikan nama pegawai secara langsung; gunakan field `nama` jika mengakses model langsung.
+     */
     public function getNamaLengkapAttribute(): string
     {
         return $this->nama;
@@ -116,7 +120,9 @@ class Pegawai extends Model
             return null;
         }
 
-        $diff = $this->tanggal_masuk->diff(now());
+        // Use tanggal_keluar as end point for resigned staff; fall back to today for active staff.
+        $end = $this->tanggal_keluar ?? now();
+        $diff = $this->tanggal_masuk->diff($end);
 
         return $diff->y.' tahun '.$diff->m.' bulan';
     }

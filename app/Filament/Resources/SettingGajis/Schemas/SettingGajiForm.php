@@ -34,7 +34,8 @@ class SettingGajiForm
                             ->required()
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(1),
                     ]),
 
                 Section::make('Tunjangan')
@@ -43,27 +44,32 @@ class SettingGajiForm
                             ->label('Tunjangan Jabatan')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(0),
                         TextInput::make('tunjangan_kehadiran')
                             ->label('Tunjangan Kehadiran')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(0),
                         TextInput::make('tunjangan_transport')
                             ->label('Tunjangan Transport')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(0),
                         TextInput::make('tunjangan_makan')
                             ->label('Tunjangan Makan')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(0),
                         TextInput::make('tunjangan_lainnya')
                             ->label('Tunjangan Lainnya')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(0),
                     ])->columns(3),
 
                 Section::make('Potongan')
@@ -72,17 +78,20 @@ class SettingGajiForm
                             ->label('Potongan BPJS')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(0),
                         TextInput::make('potongan_pph21')
                             ->label('Potongan PPh21')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(0),
                         TextInput::make('potongan_lainnya')
                             ->label('Potongan Lainnya')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0),
+                            ->default(0)
+                            ->minValue(0),
                     ])->columns(3),
             ]);
     }

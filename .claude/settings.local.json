@@ -26,7 +26,13 @@
       "Bash(rtk find *)",
       "Bash(rtk ls *)",
       "Bash(rtk read *)",
-      "Bash(rtk grep *)"
+      "Bash(rtk grep *)",
+      "Bash(rtk wc *)",
+      "Bash(grep -v '^.*:[0-9]*:$table->\\\\\\(id\\\\|string\\\\|enum\\\\|text\\\\|date\\\\|year\\\\|decimal\\\\|boolean\\\\|timestamps\\\\|softDeletes\\\\|foreignId\\\\\\)')",
+      "mcp__plugin_oh-my-claudecode_t__lsp_diagnostics",
+      "mcp__plugin_oh-my-claudecode_t__state_clear",
+      "Bash(php artisan *)",
+      "Bash(php -r \"echo function_exists\\('bcadd'\\) ? 'bcmath ON' : 'bcmath OFF';\")"
     ]
   },
   "enableAllProjectMcpServers": true,

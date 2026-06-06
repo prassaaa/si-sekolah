@@ -19,7 +19,7 @@ class RfidScanRequest extends FormRequest
     {
         return [
             'uid' => ['required', 'string', 'max:32'],
-            'scanned_at' => ['nullable', 'date'],
+            'scanned_at' => ['nullable', 'date', 'before:+2 minutes', 'after:-1 day'],
             'device_kode' => ['nullable', 'string', 'max:50'],
         ];
     }
@@ -32,6 +32,8 @@ class RfidScanRequest extends FormRequest
         return [
             'uid.required' => 'UID kartu wajib diisi.',
             'scanned_at.date' => 'Format scanned_at tidak valid (gunakan ISO 8601).',
+            'scanned_at.before' => 'Waktu scan tidak boleh terlalu jauh di masa depan.',
+            'scanned_at.after' => 'Waktu scan terlalu lama (lebih dari 1 hari).',
         ];
     }
 }

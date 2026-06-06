@@ -149,7 +149,9 @@ class KartuRfid extends Model
         });
 
         static::updating(function (KartuRfid $kartu): void {
-            if (! $kartu->isDirty('status')) {
+            $ownershipChanged = $kartu->isDirty('owner_id') || $kartu->isDirty('owner_type');
+
+            if (! $kartu->isDirty('status') && ! $ownershipChanged) {
                 return;
             }
 

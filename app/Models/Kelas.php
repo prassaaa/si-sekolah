@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\KelasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Kelas extends Model
 {
-    /** @use HasFactory<\Database\Factories\KelasFactory> */
+    /** @use HasFactory<KelasFactory> */
     use HasFactory, LogsActivity;
 
     protected $table = 'kelas';
@@ -101,8 +102,13 @@ class Kelas extends Model
         return implode(' - ', $parts);
     }
 
+    /**
+     * Count of active students in this class.
+     * Prefers an eagerly-loaded `siswas_count` (via withCount) to avoid N+1.
+     * Only active students are counted to reflect the real "jumlah siswa" figure.
+     */
     public function getJumlahSiswaAttribute(): int
     {
-        return $this->siswas()->count();
+        return $this->siswas_count ?? $this->siswas()->where('is_active', true)->count();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\SemesterFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Semester extends Model
 {
-    /** @use HasFactory<\Database\Factories\SemesterFactory> */
+    /** @use HasFactory<SemesterFactory> */
     use HasFactory, LogsActivity;
 
     protected $fillable = [
@@ -83,7 +84,9 @@ class Semester extends Model
     public function activate(): void
     {
         DB::transaction(function () {
-            self::where('id', '!=', $this->id)->update(['is_active' => false]);
+            self::where('tahun_ajaran_id', $this->tahun_ajaran_id)
+                ->where('id', '!=', $this->id)
+                ->update(['is_active' => false]);
             $this->update(['is_active' => true]);
         });
     }

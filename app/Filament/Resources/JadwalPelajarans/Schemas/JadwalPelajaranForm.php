@@ -10,7 +10,9 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 class JadwalPelajaranForm
 {
@@ -46,7 +48,16 @@ class JadwalPelajaranForm
                                 ->label('Jam Pelajaran')
                                 ->options(fn () => JamPelajaran::ordered()->get()->mapWithKeys(fn ($j) => [$j->id => $j->label]))
                                 ->searchable()
-                                ->required(),
+                                ->required()
+                                ->unique(
+                                    table: 'jadwal_pelajarans',
+                                    column: 'jam_pelajaran_id',
+                                    ignoreRecord: true,
+                                    modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
+                                        ->where('semester_id', $get('semester_id'))
+                                        ->where('kelas_id', $get('kelas_id'))
+                                        ->where('hari', $get('hari')),
+                                ),
                         ]),
                         Grid::make(2)->schema([
                             Select::make('mata_pelajaran_id')
@@ -60,7 +71,26 @@ class JadwalPelajaranForm
                                 ->relationship('guru', 'nama')
                                 ->searchable()
                                 ->preload()
-                                ->placeholder('Pilih guru'),
+                                ->placeholder('Pilih guru')
+                                ->rule(fn (Get $get) => function ($attribute, $value, $fail) use ($get) {
+                                    if (! $value) {
+                                        return;
+                                    }
+
+                                    $exists = JadwalPelajaran::query()
+                                        ->where('guru_id', $value)
+                                        ->where('hari', $get('hari'))
+                                        ->where('jam_pelajaran_id', $get('jam_pelajaran_id'))
+                                        ->when(
+                                            request()->route('record'),
+                                            fn ($q) => $q->where('id', '!=', request()->route('record'))
+                                        )
+                                        ->exists();
+
+                                    if ($exists) {
+                                        $fail('Guru ini sudah dijadwalkan pada hari dan jam yang sama.');
+                                    }
+                                }),
                         ]),
                     ]),
 

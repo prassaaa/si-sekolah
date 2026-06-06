@@ -104,6 +104,32 @@ it('auto-deactivates other active cards when status updated to aktif', function 
     expect($kartuB->fresh()->status)->toBe('aktif');
 });
 
+it('deactivates new owner existing active card when active card owner changes', function () {
+    $siswaLama = Siswa::factory()->create();
+    $siswaBaru = Siswa::factory()->create();
+
+    $kartuBaru = KartuRfid::create([
+        'owner_type' => Siswa::class,
+        'owner_id' => $siswaBaru->id,
+        'uid' => '05D4E5F6',
+        'status' => 'aktif',
+        'diaktifkan_pada' => now(),
+    ]);
+
+    $kartuPindah = KartuRfid::create([
+        'owner_type' => Siswa::class,
+        'owner_id' => $siswaLama->id,
+        'uid' => '04A1B2C3',
+        'status' => 'aktif',
+        'diaktifkan_pada' => now(),
+    ]);
+
+    $kartuPindah->update(['owner_id' => $siswaBaru->id]);
+
+    expect($kartuBaru->fresh()->status)->toBe('nonaktif');
+    expect($kartuPindah->fresh()->status)->toBe('aktif');
+});
+
 it('byUid scope normalizes input', function () {
     $siswa = Siswa::factory()->create();
 

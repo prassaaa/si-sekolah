@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Observers\KasMasukObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+#[ObservedBy(KasMasukObserver::class)]
 class KasMasuk extends Model
 {
     use HasFactory, LogsActivity, SoftDeletes;

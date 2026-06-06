@@ -11,7 +11,9 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 class KelulusanForm
 {
@@ -36,7 +38,13 @@ class KelulusanForm
                                 ->searchable()
                                 ->preload()
                                 ->required()
-                                ->getOptionLabelFromRecordUsing(fn (TahunAjaran $record) => $record->nama),
+                                ->getOptionLabelFromRecordUsing(fn (TahunAjaran $record) => $record->nama)
+                                ->unique(
+                                    table: 'kelulusans',
+                                    column: 'tahun_ajaran_id',
+                                    ignoreRecord: true,
+                                    modifyRuleUsing: fn (Unique $rule, Get $get) => $rule->where('siswa_id', $get('siswa_id')),
+                                ),
                         ]),
                     ]),
 

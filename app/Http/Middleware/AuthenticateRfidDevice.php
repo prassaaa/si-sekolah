@@ -23,8 +23,14 @@ class AuthenticateRfidDevice
             return $this->unauthorized('Missing bearer token');
         }
 
+        $prefix = substr($token, 0, 8);
+
         $device = RfidDevice::query()
             ->where('is_active', true)
+            ->where(function ($query) use ($prefix): void {
+                $query->where('token_prefix', $prefix)
+                    ->orWhereNull('token_prefix');
+            })
             ->get()
             ->first(fn (RfidDevice $candidate) => $candidate->verifyToken($token));
 

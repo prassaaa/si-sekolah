@@ -6,6 +6,7 @@ use App\Filament\Widgets\Laporan\LaporanPembayaranStats;
 use App\Models\JenisPembayaran;
 use App\Models\Semester;
 use App\Models\TagihanSiswa;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -75,26 +76,36 @@ class LaporanPembayaran extends Page implements HasSchemas, HasTable
 
                 $tagihans = $query->get();
 
-                $tanggalMulai = $filters['tanggal']['tanggal_mulai'] ?? null;
-                $tanggalSelesai = $filters['tanggal']['tanggal_selesai'] ?? null;
+                $tanggalMulai = ($filters['tanggal']['tanggal_mulai'] ?? null)
+                    ? Carbon::parse($filters['tanggal']['tanggal_mulai'])->startOfDay()
+                    : null;
+                $tanggalSelesai = ($filters['tanggal']['tanggal_selesai'] ?? null)
+                    ? Carbon::parse($filters['tanggal']['tanggal_selesai'])->endOfDay()
+                    : null;
 
                 $data = $tagihans->groupBy('jenis_pembayaran_id')->map(function ($items) use ($tanggalMulai, $tanggalSelesai) {
                     $jenis = $items->first()->jenisPembayaran;
-                    $pembayarans = $items->flatMap(fn ($t) => $t->pembayarans);
+
+                    $pembayaransBerhasil = $items
+                        ->flatMap(fn ($t) => $t->pembayarans)
+                        ->where('status', 'berhasil');
 
                     if ($tanggalMulai) {
-                        $pembayarans = $pembayarans->filter(fn ($p) => $p->tanggal_bayar >= $tanggalMulai);
+                        $pembayaransBerhasil = $pembayaransBerhasil->filter(fn ($p) => $p->tanggal_bayar >= $tanggalMulai);
                     }
 
                     if ($tanggalSelesai) {
-                        $pembayarans = $pembayarans->filter(fn ($p) => $p->tanggal_bayar <= $tanggalSelesai);
+                        $pembayaransBerhasil = $pembayaransBerhasil->filter(fn ($p) => $p->tanggal_bayar <= $tanggalSelesai);
                     }
+
+                    $totalTagihan = $items->sum('total_tagihan');
+                    $totalTerbayar = $pembayaransBerhasil->sum('jumlah_bayar');
 
                     return [
                         'jenis' => $jenis?->nama ?? '-',
-                        'total_tagihan' => $items->sum('total_tagihan'),
-                        'total_terbayar' => $pembayarans->where('status', 'berhasil')->sum('jumlah_bayar'),
-                        'total_sisa' => $items->sum('sisa_tagihan'),
+                        'total_tagihan' => $totalTagihan,
+                        'total_terbayar' => $totalTerbayar,
+                        'total_sisa' => $totalTagihan - $totalTerbayar,
                         'jumlah_siswa' => $items->pluck('siswa_id')->unique()->count(),
                         'lunas' => $items->where('status', 'lunas')->count(),
                         'belum_lunas' => $items->whereIn('status', ['belum_bayar', 'sebagian'])->count(),
@@ -162,11 +173,11 @@ class LaporanPembayaran extends Page implements HasSchemas, HasTable
                         $indicators = [];
 
                         if ($data['tanggal_mulai'] ?? null) {
-                            $indicators[] = 'Dari: '.\Carbon\Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
+                            $indicators[] = 'Dari: '.Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
                         }
 
                         if ($data['tanggal_selesai'] ?? null) {
-                            $indicators[] = 'Sampai: '.\Carbon\Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
+                            $indicators[] = 'Sampai: '.Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
                         }
 
                         return $indicators;

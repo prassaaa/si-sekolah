@@ -48,16 +48,17 @@ class PresensiScanService
                 ]);
         }
 
-        $sekolah = Sekolah::query()->first();
+        $sekolah = $this->resolveSekolah();
+        $debounceSeconds = $this->resolveDebounceSeconds($sekolah);
 
-        if ($sekolah && $this->isDuplicateScan($normalizedUid, $scannedAt, (int) $sekolah->debounce_scan_detik)) {
-            return $this->respondAndLog($device, $normalizedUid, $kartu, $owner, 'duplikat',
-                'Tap terlalu cepat (debounce window)', $scannedAt, $rawPayload, [
-                    'success' => false,
-                ]);
-        }
+        return DB::transaction(function () use ($device, $kartu, $owner, $sekolah, $debounceSeconds, $scannedAt, $normalizedUid, $rawPayload) {
+            if ($this->isDuplicateScan($normalizedUid, $scannedAt, $debounceSeconds)) {
+                return $this->respondAndLog($device, $normalizedUid, $kartu, $owner, 'duplikat',
+                    'Tap terlalu cepat (debounce window)', $scannedAt, $rawPayload, [
+                        'success' => false,
+                    ]);
+            }
 
-        return DB::transaction(function () use ($device, $kartu, $owner, $sekolah, $scannedAt, $normalizedUid, $rawPayload) {
             $presensiClass = $owner instanceof Pegawai ? PresensiHarianPegawai::class : PresensiHarian::class;
             $foreignKey = $owner instanceof Pegawai ? 'pegawai_id' : 'siswa_id';
 
@@ -74,6 +75,13 @@ class PresensiScanService
             if ($existing->jam_pulang !== null) {
                 return $this->respondAndLog($device, $normalizedUid, $kartu, $owner, 'duplikat',
                     'Sudah tap masuk dan pulang hari ini', $scannedAt, $rawPayload, [
+                        'success' => false,
+                    ]);
+            }
+
+            if ($existing->jam_masuk === null) {
+                return $this->respondAndLog($device, $normalizedUid, $kartu, $owner, 'ditolak',
+                    'Sudah ada catatan kehadiran manual hari ini', $scannedAt, $rawPayload, [
                         'success' => false,
                     ]);
             }
@@ -174,6 +182,30 @@ class PresensiScanService
             ]);
     }
 
+    /**
+     * Default debounce window used when no Sekolah row exists or its value is
+     * non-positive, so debounce protection is never silently disabled.
+     */
+    private const DEFAULT_DEBOUNCE_SECONDS = 3;
+
+    private function resolveSekolah(): ?Sekolah
+    {
+        return Sekolah::query()->orderBy('id')->first();
+    }
+
+    private function resolveDebounceSeconds(?Sekolah $sekolah): int
+    {
+        $configured = (int) ($sekolah?->debounce_scan_detik ?? 0);
+
+        return $configured > 0 ? $configured : self::DEFAULT_DEBOUNCE_SECONDS;
+    }
+
+    /**
+     * The upper bound is inclusive (`<=`) so a tap with a timestamp identical to
+     * a prior logged scan is still caught as a duplicate. The matching log is
+     * written before this check runs again, so the current tap never matches
+     * itself.
+     */
     private function isDuplicateScan(string $uid, CarbonImmutable $scannedAt, int $debounceSeconds): bool
     {
         if ($debounceSeconds <= 0) {
@@ -184,7 +216,7 @@ class PresensiScanService
             ->where('uid', $uid)
             ->whereIn('jenis', ['masuk', 'pulang'])
             ->where('scanned_at', '>=', $scannedAt->subSeconds($debounceSeconds))
-            ->where('scanned_at', '<', $scannedAt)
+            ->where('scanned_at', '<=', $scannedAt)
             ->exists();
     }
 

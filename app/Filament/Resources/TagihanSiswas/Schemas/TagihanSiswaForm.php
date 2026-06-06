@@ -13,6 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Set;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
 
@@ -117,7 +118,15 @@ class TagihanSiswaForm
                         ->numeric()
                         ->prefix('Rp')
                         ->default(0)
+                        ->minValue(0)
                         ->live(onBlur: true)
+                        ->rule(fn (Get $get) => function ($attribute, $value, $fail) use ($get) {
+                            $nominal = floatval($get('nominal') ?? 0);
+                            $diskon = floatval($value ?? 0);
+                            if ($diskon > $nominal) {
+                                $fail('Diskon tidak boleh melebihi nominal tagihan.');
+                            }
+                        })
                         ->afterStateUpdated(function (Set $set, $state, $get) {
                             $nominal = floatval($get('nominal') ?? 0);
                             $diskon = floatval($state ?? 0);

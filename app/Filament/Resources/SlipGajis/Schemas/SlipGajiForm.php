@@ -3,13 +3,16 @@
 namespace App\Filament\Resources\SlipGajis\Schemas;
 
 use App\Models\SettingGaji;
+use App\Models\SlipGaji;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Set;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class SlipGajiForm
@@ -62,7 +65,9 @@ class SlipGajiForm
                                     ->label('Tahun')
                                     ->numeric()
                                     ->default(date('Y'))
-                                    ->required(),
+                                    ->required()
+                                    ->minValue(2000)
+                                    ->maxValue((int) date('Y') + 1),
                                 Select::make('bulan')
                                     ->label('Bulan')
                                     ->options([
@@ -124,8 +129,35 @@ class SlipGajiForm
                             ->columnSpanFull(),
                     ]),
 
-                TextInput::make('detail_tunjangan')->hidden()->dehydrated(),
-                TextInput::make('detail_potongan')->hidden()->dehydrated(),
+                Hidden::make('detail_tunjangan')->dehydrated(),
+                Hidden::make('detail_potongan')->dehydrated(),
+
+                TextInput::make('_duplicate_guard')
+                    ->hidden()
+                    ->dehydrated(false)
+                    ->rule(fn (Get $get) => function ($attribute, $value, $fail) use ($get) {
+                        $pegawaiId = $get('pegawai_id');
+                        $tahun = $get('tahun');
+                        $bulan = $get('bulan');
+
+                        if (! $pegawaiId || ! $tahun || ! $bulan) {
+                            return;
+                        }
+
+                        $exists = SlipGaji::query()
+                            ->where('pegawai_id', $pegawaiId)
+                            ->where('tahun', $tahun)
+                            ->where('bulan', $bulan)
+                            ->when(
+                                request()->route('record'),
+                                fn ($q) => $q->where('id', '!=', request()->route('record'))
+                            )
+                            ->exists();
+
+                        if ($exists) {
+                            $fail('Slip gaji untuk pegawai, tahun, dan bulan ini sudah ada.');
+                        }
+                    }),
             ]);
     }
 }

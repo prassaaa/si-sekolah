@@ -6,6 +6,7 @@ use App\Models\KasKeluar;
 use App\Models\KasMasuk;
 use App\Models\Pembayaran;
 use App\Models\TagihanSiswa;
+use App\Services\Accounting\FinancialService;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +37,8 @@ class FinancialOverview extends StatsOverviewWidget
             'sebagian',
         ])->sum('sisa_tagihan');
 
-        $saldoBersih = $kasMasuk - $kasKeluar;
+        $saldoBersih = (float) app(FinancialService::class)
+            ->netIncome($bulanIni, now());
 
         return [
             Stat::make(
@@ -90,26 +92,31 @@ class FinancialOverview extends StatsOverviewWidget
     }
 
     /**
+     * Rolling 5-month total for a kas table, oldest month first.
+     *
+     * The window ends in the current month and spans the previous four months,
+     * correctly crossing year boundaries. Soft-deleted rows are excluded.
+     *
      * @return array<int, float>
      */
     private static function getMonthlyTrend(
         string $table,
         string $column,
     ): array {
-        $results = DB::table($table)
-            ->selectRaw(
-                'MONTH(tanggal) as bulan, SUM('.$column.') as total',
-            )
-            ->whereYear('tanggal', now()->year)
-            ->where('tanggal', '<=', now())
-            ->groupByRaw('MONTH(tanggal)')
-            ->orderBy('bulan')
-            ->pluck('total', 'bulan');
-
         $trend = [];
-        $startMonth = max(1, now()->month - 4);
-        for ($i = $startMonth; $i <= now()->month; $i++) {
-            $trend[] = (float) ($results[$i] ?? 0);
+
+        for ($offset = 4; $offset >= 0; $offset--) {
+            $month = now()->startOfMonth()->subMonths($offset);
+
+            $total = DB::table($table)
+                ->whereNull('deleted_at')
+                ->whereBetween('tanggal', [
+                    $month->copy()->startOfMonth(),
+                    $month->copy()->endOfMonth(),
+                ])
+                ->sum($column);
+
+            $trend[] = (float) $total;
         }
 
         return $trend;

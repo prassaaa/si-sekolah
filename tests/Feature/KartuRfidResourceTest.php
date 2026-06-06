@@ -80,7 +80,7 @@ it('rejects duplicate UID', function () {
         ->assertHasFormErrors(['uid']);
 });
 
-it('auto-deactivates previous active card on new active card creation', function () {
+it('excludes owners that already have an active card from the create owner options', function () {
     $siswa = Siswa::factory()->create();
     $kartuLama = KartuRfid::factory()->create([
         'owner_type' => Siswa::class,
@@ -97,9 +97,11 @@ it('auto-deactivates previous active card on new active card creation', function
             'status' => 'aktif',
             'diaktifkan_pada' => now()->toDateTimeString(),
         ])
-        ->call('create');
+        ->call('create')
+        ->assertHasFormErrors(['owner_id']);
 
-    expect($kartuLama->fresh()->status)->toBe('nonaktif');
+    expect($kartuLama->fresh()->status)->toBe('aktif');
+    expect(KartuRfid::where('uid', '05D4E5F6')->exists())->toBeFalse();
 });
 
 it('renders the edit page and updates a kartu', function () {

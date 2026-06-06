@@ -175,3 +175,51 @@ it('always writes a scan log regardless of outcome', function () {
 
     expect(RfidScanLog::count())->toBe(2);
 });
+
+it('returns duplikat when two taps share the identical timestamp', function () {
+    [$service, $device] = makeServiceContext();
+    $siswa = Siswa::factory()->create();
+    KartuRfid::factory()->create(['owner_type' => Siswa::class, 'owner_id' => $siswa->id, 'uid' => '04A1B2C3']);
+
+    $first = $service->handle($device, '04A1B2C3', Carbon::parse('2026-05-24 06:55:00'));
+    $second = $service->handle($device, '04A1B2C3', Carbon::parse('2026-05-24 06:55:00'));
+
+    expect($first['jenis'])->toBe('masuk');
+    expect($second['jenis'])->toBe('duplikat');
+});
+
+it('applies default debounce when no Sekolah row exists', function () {
+    Sekolah::query()->delete();
+
+    $service = new PresensiScanService;
+    $device = RfidDevice::factory()->create();
+    $siswa = Siswa::factory()->create();
+    KartuRfid::factory()->create(['owner_type' => Siswa::class, 'owner_id' => $siswa->id, 'uid' => '04A1B2C3']);
+
+    $first = $service->handle($device, '04A1B2C3', Carbon::parse('2026-05-24 06:55:00'));
+    $second = $service->handle($device, '04A1B2C3', Carbon::parse('2026-05-24 06:55:01'));
+
+    expect($first['jenis'])->toBe('masuk');
+    expect($second['jenis'])->toBe('duplikat');
+});
+
+it('does not treat a manual presensi with null jam_masuk as an open masuk for pulang', function () {
+    [$service, $device] = makeServiceContext();
+    $siswa = Siswa::factory()->create();
+    KartuRfid::factory()->create(['owner_type' => Siswa::class, 'owner_id' => $siswa->id, 'uid' => '04A1B2C3']);
+
+    PresensiHarian::factory()->for($siswa)->create([
+        'tanggal' => '2026-05-24',
+        'jam_masuk' => null,
+        'jam_pulang' => null,
+        'status' => 'izin',
+    ]);
+
+    $result = $service->handle($device, '04A1B2C3', Carbon::parse('2026-05-24 13:05:00'));
+
+    expect($result['jenis'])->toBe('ditolak');
+    expect($result['success'])->toBeFalse();
+
+    $record = PresensiHarian::where('siswa_id', $siswa->id)->first();
+    expect($record->jam_pulang)->toBeNull();
+});

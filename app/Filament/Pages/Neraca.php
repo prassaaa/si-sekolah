@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Akun;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -62,12 +63,13 @@ class Neraca extends Page implements HasSchemas, HasTable
 
                 $akuns = Akun::whereIn('tipe', ['aset', 'liabilitas', 'ekuitas'])
                     ->when($tipe, fn ($q) => $q->where('tipe', $tipe))
+                    ->orderBy('kode')
                     ->get();
 
-                return $akuns->map(function ($akun) use ($saldoPerAkun) {
-                    $saldo = $saldoPerAkun[$akun->id] ?? 0;
+                $rows = $akuns->map(function ($akun) use ($saldoPerAkun) {
+                    $saldo = $saldoPerAkun[$akun->id] ?? '0';
 
-                    if ($saldo == 0) {
+                    if (bccomp($saldo, '0', 2) === 0) {
                         return null;
                     }
 
@@ -82,6 +84,42 @@ class Neraca extends Page implements HasSchemas, HasTable
                         'saldo' => $saldo,
                     ];
                 })->filter()->values();
+
+                $totalAset = '0';
+                $totalLiabilitasEkuitas = '0';
+
+                foreach ($akuns as $akun) {
+                    $saldo = $saldoPerAkun[$akun->id] ?? '0';
+
+                    if ($akun->tipe === 'aset') {
+                        $totalAset = bcadd($totalAset, $saldo, 2);
+                    } else {
+                        $totalLiabilitasEkuitas = bcadd($totalLiabilitasEkuitas, $saldo, 2);
+                    }
+                }
+
+                $selisih = bcsub($totalAset, $totalLiabilitasEkuitas, 2);
+                $balanced = bccomp($selisih, '0', 2) === 0;
+
+                if (! $tipe) {
+                    $rows->push([
+                        'akun' => 'TOTAL ASET',
+                        'tipe' => 'Total',
+                        'saldo' => $totalAset,
+                    ]);
+                    $rows->push([
+                        'akun' => 'TOTAL KEWAJIBAN + MODAL',
+                        'tipe' => 'Total',
+                        'saldo' => $totalLiabilitasEkuitas,
+                    ]);
+                    $rows->push([
+                        'akun' => $balanced ? 'SEIMBANG (Balanced)' : 'TIDAK SEIMBANG (Selisih)',
+                        'tipe' => $balanced ? 'Seimbang' : 'Selisih',
+                        'saldo' => $selisih,
+                    ]);
+                }
+
+                return $rows;
             })
             ->columns([
                 TextColumn::make('akun')
@@ -93,6 +131,9 @@ class Neraca extends Page implements HasSchemas, HasTable
                         'Aset' => 'success',
                         'Kewajiban' => 'danger',
                         'Modal' => 'info',
+                        'Total' => 'primary',
+                        'Seimbang' => 'success',
+                        'Selisih' => 'danger',
                         default => 'gray',
                     }),
                 TextColumn::make('saldo')
@@ -120,7 +161,7 @@ class Neraca extends Page implements HasSchemas, HasTable
                             return null;
                         }
 
-                        return 'Per: '.\Carbon\Carbon::parse($data['tanggal'])->translatedFormat('d M Y');
+                        return 'Per: '.Carbon::parse($data['tanggal'])->translatedFormat('d M Y');
                     }),
             ])
             ->deferFilters(false)
@@ -131,7 +172,13 @@ class Neraca extends Page implements HasSchemas, HasTable
     }
 
     /**
-     * @return array<int, float>
+     * Balance per account as of a date, driven by each account's posisi_normal.
+     *
+     * A debit-normal account's balance is opening + (debit - kredit); a
+     * credit-normal account's balance is opening + (kredit - debit). Soft
+     * deleted saldo_awals and jurnal_umums rows are excluded.
+     *
+     * @return array<int, string>
      */
     private function calculateSaldoPerAkun(string $tanggal): array
     {
@@ -143,7 +190,7 @@ class Neraca extends Page implements HasSchemas, HasTable
             ->pluck('total', 'akun_id')
             ->toArray();
 
-        $jurnalDebit = DB::table('jurnal_umums')
+        $jurnal = DB::table('jurnal_umums')
             ->select(
                 'akun_id',
                 DB::raw(
@@ -164,22 +211,17 @@ class Neraca extends Page implements HasSchemas, HasTable
 
         $result = [];
         foreach ($akuns as $akun) {
-            $awal = (float) ($saldoAwal[$akun->id] ?? 0);
-            $jurnal = $jurnalDebit[$akun->id] ?? null;
+            $awal = (string) ($saldoAwal[$akun->id] ?? '0');
+            $row = $jurnal[$akun->id] ?? null;
 
-            if ($akun->tipe === 'aset') {
-                $jurnalSaldo = $jurnal
-                    ? (float) $jurnal->total_debit -
-                        (float) $jurnal->total_kredit
-                    : 0;
-            } else {
-                $jurnalSaldo = $jurnal
-                    ? (float) $jurnal->total_kredit -
-                        (float) $jurnal->total_debit
-                    : 0;
-            }
+            $debit = (string) ($row->total_debit ?? '0');
+            $kredit = (string) ($row->total_kredit ?? '0');
 
-            $result[$akun->id] = $awal + $jurnalSaldo;
+            $jurnalSaldo = $akun->posisi_normal === 'debit'
+                ? bcsub($debit, $kredit, 2)
+                : bcsub($kredit, $debit, 2);
+
+            $result[$akun->id] = bcadd($awal, $jurnalSaldo, 2);
         }
 
         return $result;

@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\BuktiTransfers\Schemas;
 
+use App\Models\TagihanSiswa;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class BuktiTransferForm
@@ -23,13 +25,17 @@ class BuktiTransferForm
                             ->label('Siswa')
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->live(),
                         Select::make('tagihan_siswa_id')
-                            ->relationship('tagihanSiswa', 'id')
                             ->label('Tagihan (Opsional)')
                             ->searchable()
                             ->preload()
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "#{$record->id} - Rp ".number_format($record->nominal, 0, ',', '.')),
+                            ->options(fn (Get $get) => TagihanSiswa::query()
+                                ->when($get('siswa_id'), fn ($q, $siswaId) => $q->where('siswa_id', $siswaId))
+                                ->get()
+                                ->mapWithKeys(fn ($record) => [$record->id => "#{$record->id} - Rp ".number_format($record->nominal, 0, ',', '.')])
+                            ),
                         TextInput::make('nama_pengirim')
                             ->label('Nama Pengirim')
                             ->required()

@@ -2,16 +2,19 @@
 
 namespace App\Models;
 
+use Database\Factories\JurnalUmumFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class JurnalUmum extends Model
 {
-    /** @use HasFactory<\Database\Factories\JurnalUmumFactory> */
+    /** @use HasFactory<JurnalUmumFactory> */
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
@@ -63,8 +66,20 @@ class JurnalUmum extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<JurnalUmum>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<JurnalUmum>
+     * Polymorphic source document (e.g. SlipGaji, pembayaran, etc.).
+     * The morph type is stored in `jenis_referensi` and the FK in `referensi_id`.
+     * Register a morphMap in a ServiceProvider to map string keys to model classes.
+     *
+     * @return MorphTo<Model, $this>
+     */
+    public function referensiModel(): MorphTo
+    {
+        return $this->morphTo('referensiModel', 'jenis_referensi', 'referensi_id');
+    }
+
+    /**
+     * @param  Builder<JurnalUmum>  $query
+     * @return Builder<JurnalUmum>
      */
     public function scopeByPeriode($query, $startDate, $endDate)
     {
@@ -72,8 +87,8 @@ class JurnalUmum extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<JurnalUmum>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<JurnalUmum>
+     * @param  Builder<JurnalUmum>  $query
+     * @return Builder<JurnalUmum>
      */
     public function scopeDebitOnly($query)
     {
@@ -81,8 +96,8 @@ class JurnalUmum extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<JurnalUmum>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<JurnalUmum>
+     * @param  Builder<JurnalUmum>  $query
+     * @return Builder<JurnalUmum>
      */
     public function scopeKreditOnly($query)
     {

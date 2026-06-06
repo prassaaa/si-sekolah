@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\Laporan\LaporanPembayaranPerTanggalStats;
 use App\Models\Pembayaran;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -73,7 +74,9 @@ class LaporanPembayaranPerTanggal extends Page implements HasSchemas, HasTable
                         'jumlah_transaksi' => $items->count(),
                         'tunai' => $items->where('metode_pembayaran', 'tunai')->sum('jumlah_bayar'),
                         'transfer' => $items->where('metode_pembayaran', 'transfer')->sum('jumlah_bayar'),
-                        'lainnya' => $items->whereNotIn('metode_pembayaran', ['tunai', 'transfer'])->sum('jumlah_bayar'),
+                        'qris' => $items->where('metode_pembayaran', 'qris')->sum('jumlah_bayar'),
+                        'virtual_account' => $items->where('metode_pembayaran', 'virtual_account')->sum('jumlah_bayar'),
+                        'lainnya' => $items->whereNotIn('metode_pembayaran', ['tunai', 'transfer', 'qris', 'virtual_account'])->sum('jumlah_bayar'),
                         'total' => $items->sum('jumlah_bayar'),
                     ];
                 })->values();
@@ -82,7 +85,9 @@ class LaporanPembayaranPerTanggal extends Page implements HasSchemas, HasTable
                     'total_transaksi' => $pembayarans->count(),
                     'total_tunai' => $pembayarans->where('metode_pembayaran', 'tunai')->sum('jumlah_bayar'),
                     'total_transfer' => $pembayarans->where('metode_pembayaran', 'transfer')->sum('jumlah_bayar'),
-                    'total_lainnya' => $pembayarans->whereNotIn('metode_pembayaran', ['tunai', 'transfer'])->sum('jumlah_bayar'),
+                    'total_qris' => $pembayarans->where('metode_pembayaran', 'qris')->sum('jumlah_bayar'),
+                    'total_virtual_account' => $pembayarans->where('metode_pembayaran', 'virtual_account')->sum('jumlah_bayar'),
+                    'total_lainnya' => $pembayarans->whereNotIn('metode_pembayaran', ['tunai', 'transfer', 'qris', 'virtual_account'])->sum('jumlah_bayar'),
                     'grand_total' => $pembayarans->sum('jumlah_bayar'),
                 ];
 
@@ -103,6 +108,16 @@ class LaporanPembayaranPerTanggal extends Page implements HasSchemas, HasTable
                     ->color('success'),
                 TextColumn::make('transfer')
                     ->label('Transfer')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->color('info'),
+                TextColumn::make('qris')
+                    ->label('QRIS')
+                    ->money('IDR')
+                    ->alignEnd()
+                    ->color('info'),
+                TextColumn::make('virtual_account')
+                    ->label('Virtual Account')
                     ->money('IDR')
                     ->alignEnd()
                     ->color('info'),
@@ -131,11 +146,11 @@ class LaporanPembayaranPerTanggal extends Page implements HasSchemas, HasTable
                         $indicators = [];
 
                         if ($data['tanggal_mulai'] ?? null) {
-                            $indicators[] = 'Dari: '.\Carbon\Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
+                            $indicators[] = 'Dari: '.Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
                         }
 
                         if ($data['tanggal_selesai'] ?? null) {
-                            $indicators[] = 'Sampai: '.\Carbon\Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
+                            $indicators[] = 'Sampai: '.Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
                         }
 
                         return $indicators;

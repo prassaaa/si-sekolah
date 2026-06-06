@@ -4,6 +4,9 @@ namespace App\Filament\Pages;
 
 use App\Models\Akun;
 use App\Models\JurnalUmum;
+use App\Models\SaldoAwal;
+use App\Services\Accounting\FinancialService;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -57,31 +60,26 @@ class PerubahanModal extends Page implements HasSchemas, HasTable
                     return collect();
                 }
 
-                $akunModal = Akun::where('tipe', 'ekuitas')->pluck('id');
-                $modalAwal = JurnalUmum::query()
-                    ->whereIn('akun_id', $akunModal)
+                $akunModalIds = Akun::where('tipe', 'ekuitas')->pluck('id');
+
+                $saldoAwalEkuitas = SaldoAwal::query()
+                    ->whereIn('akun_id', $akunModalIds)
                     ->where('tanggal', '<', $tanggalMulai)
-                    ->selectRaw('SUM(kredit) - SUM(debit) as saldo')
+                    ->sum('saldo');
+
+                $jurnalModalAwal = JurnalUmum::query()
+                    ->whereIn('akun_id', $akunModalIds)
+                    ->where('tanggal', '<', $tanggalMulai)
+                    ->selectRaw('COALESCE(SUM(kredit), 0) - COALESCE(SUM(debit), 0) as saldo')
                     ->value('saldo') ?? 0;
 
-                $akunPendapatan = Akun::where('tipe', 'pendapatan')->pluck('id');
-                $akunBeban = Akun::where('tipe', 'beban')->pluck('id');
+                $modalAwal = bcadd((string) $saldoAwalEkuitas, (string) $jurnalModalAwal, 2);
 
-                $pendapatan = JurnalUmum::query()
-                    ->whereIn('akun_id', $akunPendapatan)
-                    ->whereBetween('tanggal', [$tanggalMulai, $tanggalAkhir])
-                    ->selectRaw('SUM(kredit) - SUM(debit) as total')
-                    ->value('total') ?? 0;
+                $labaRugi = app(FinancialService::class)->netIncome($tanggalMulai, $tanggalAkhir);
 
-                $beban = JurnalUmum::query()
-                    ->whereIn('akun_id', $akunBeban)
-                    ->whereBetween('tanggal', [$tanggalMulai, $tanggalAkhir])
-                    ->selectRaw('SUM(debit) - SUM(kredit) as total')
-                    ->value('total') ?? 0;
+                $prive = $this->calculatePrive($tanggalMulai, $tanggalAkhir);
 
-                $labaRugi = $pendapatan - $beban;
-                $prive = 0;
-                $modalAkhir = $modalAwal + $labaRugi - $prive;
+                $modalAkhir = bcsub(bcadd($modalAwal, $labaRugi, 2), $prive, 2);
 
                 return collect([
                     0 => ['uraian' => 'Modal Awal', 'nominal' => $modalAwal],
@@ -115,11 +113,11 @@ class PerubahanModal extends Page implements HasSchemas, HasTable
                         $indicators = [];
 
                         if ($data['tanggal_mulai'] ?? null) {
-                            $indicators[] = 'Dari: '.\Carbon\Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
+                            $indicators[] = 'Dari: '.Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
                         }
 
                         if ($data['tanggal_akhir'] ?? null) {
-                            $indicators[] = 'Sampai: '.\Carbon\Carbon::parse($data['tanggal_akhir'])->translatedFormat('d M Y');
+                            $indicators[] = 'Sampai: '.Carbon::parse($data['tanggal_akhir'])->translatedFormat('d M Y');
                         }
 
                         return $indicators;
@@ -130,5 +128,39 @@ class PerubahanModal extends Page implements HasSchemas, HasTable
             ->emptyStateHeading('Tidak ada data')
             ->emptyStateDescription('Silakan pilih rentang tanggal untuk melihat perubahan modal.')
             ->emptyStateIcon('heroicon-o-inbox');
+    }
+
+    /**
+     * Prive (owner withdrawal) for a period.
+     *
+     * ASSUMPTION: There is no dedicated "prive" flag in the schema. We identify
+     * prive accounts as ekuitas accounts that are debit-normal (a normal equity
+     * account is credit-normal; a debit-normal equity account is, by accounting
+     * convention, a contra-equity / drawing account such as the seeded "Prive"
+     * akun with kode 3-3001). Their prive amount over the period is the net
+     * debit movement (debit - kredit) on those accounts.
+     */
+    private function calculatePrive(string $tanggalMulai, string $tanggalAkhir): string
+    {
+        $akunPriveIds = Akun::query()
+            ->where('tipe', 'ekuitas')
+            ->where('posisi_normal', 'debit')
+            ->pluck('id');
+
+        if ($akunPriveIds->isEmpty()) {
+            return '0.00';
+        }
+
+        $row = JurnalUmum::query()
+            ->whereIn('akun_id', $akunPriveIds)
+            ->whereBetween('tanggal', [$tanggalMulai, $tanggalAkhir])
+            ->selectRaw('COALESCE(SUM(debit), 0) as total_debit, COALESCE(SUM(kredit), 0) as total_kredit')
+            ->first();
+
+        return bcsub(
+            (string) ($row->total_debit ?? '0'),
+            (string) ($row->total_kredit ?? '0'),
+            2,
+        );
     }
 }

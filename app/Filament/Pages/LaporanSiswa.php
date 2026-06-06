@@ -72,8 +72,9 @@ class LaporanSiswa extends Page implements HasSchemas, HasTable
 
                 $data = Siswa::query()
                     ->join('kelas', 'siswas.kelas_id', '=', 'kelas.id')
+                    ->whereNull('siswas.deleted_at')
                     ->when($kelasId, fn ($q) => $q->where('kelas_id', $kelasId))
-                    ->selectRaw('kelas.nama as kelas_nama, kelas.tingkat, COUNT(siswas.id) as total_siswa, SUM(CASE WHEN siswas.jenis_kelamin = "L" THEN 1 ELSE 0 END) as laki_laki, SUM(CASE WHEN siswas.jenis_kelamin = "P" THEN 1 ELSE 0 END) as perempuan, SUM(CASE WHEN siswas.status = "aktif" THEN 1 ELSE 0 END) as aktif, SUM(CASE WHEN siswas.status != "aktif" THEN 1 ELSE 0 END) as tidak_aktif')
+                    ->selectRaw("kelas.nama as kelas_nama, kelas.tingkat, COUNT(siswas.id) as total_siswa, SUM(CASE WHEN siswas.jenis_kelamin = 'L' THEN 1 ELSE 0 END) as laki_laki, SUM(CASE WHEN siswas.jenis_kelamin = 'P' THEN 1 ELSE 0 END) as perempuan, SUM(CASE WHEN siswas.status = 'aktif' THEN 1 ELSE 0 END) as aktif, SUM(CASE WHEN siswas.status != 'aktif' THEN 1 ELSE 0 END) as tidak_aktif")
                     ->groupBy('kelas.id', 'kelas.nama', 'kelas.tingkat')
                     ->orderBy('kelas.tingkat')
                     ->orderBy('kelas.nama')

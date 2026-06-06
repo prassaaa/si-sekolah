@@ -97,16 +97,24 @@ class SlipGaji extends Model
     {
         static::creating(function (SlipGaji $slip) {
             if (empty($slip->nomor)) {
-                $prefix = 'SG-'.date('Ym').'-';
+                // Use the slip's own tahun/bulan for back-dated numbering correctness.
+                $tahun = $slip->tahun ?? date('Y');
+                $bulan = $slip->bulan ?? date('n');
+                $ym = $tahun.str_pad($bulan, 2, '0', STR_PAD_LEFT);
+                $prefix = 'SG-'.$ym.'-';
 
-                $lastNomor = DB::table('slip_gajis')
-                    ->where('nomor', 'like', 'SG-'.date('Y').'%')
-                    ->max('nomor');
+                DB::transaction(function () use ($slip, $prefix, $ym) {
+                    // Lock the table row range to prevent race-condition collisions
+                    // on the unique `nomor` column when concurrent slips are created.
+                    $lastNomor = DB::table('slip_gajis')
+                        ->lockForUpdate()
+                        ->where('nomor', 'like', 'SG-'.$ym.'%')
+                        ->max('nomor');
 
-                $lastNumber = $lastNomor ? (int) substr($lastNomor, -4) : 0;
+                    $lastNumber = $lastNomor ? (int) substr($lastNomor, -4) : 0;
 
-                $slip->nomor =
-                    $prefix.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+                    $slip->nomor = $prefix.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+                });
             }
             if (! $slip->created_by) {
                 $slip->created_by = auth()->id();

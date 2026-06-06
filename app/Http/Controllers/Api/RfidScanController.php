@@ -111,8 +111,8 @@ class RfidScanController extends Controller
         $device = $request->attributes->get('rfid_device');
 
         $scannedAt = $request->input('scanned_at')
-            ? Carbon::parse($request->input('scanned_at'))
-            : Carbon::now();
+            ? Carbon::parse($request->input('scanned_at'))->setTimezone(config('app.timezone'))
+            : Carbon::now()->setTimezone(config('app.timezone'));
 
         $result = $this->service->handle(
             device: $device,

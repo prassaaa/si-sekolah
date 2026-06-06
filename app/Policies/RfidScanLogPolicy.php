@@ -36,4 +36,14 @@ class RfidScanLogPolicy
     {
         return false;
     }
+
+    public function replicate(User $user, RfidScanLog $rfidScanLog): bool
+    {
+        return false;
+    }
+
+    public function reorder(User $user): bool
+    {
+        return false;
+    }
 }

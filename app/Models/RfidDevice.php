@@ -26,6 +26,7 @@ class RfidDevice extends Model
         'jenis',
         'lokasi',
         'api_token',
+        'token_prefix',
         'terakhir_aktif',
         'is_active',
         'keterangan',
@@ -36,6 +37,7 @@ class RfidDevice extends Model
      */
     protected $hidden = [
         'api_token',
+        'token_prefix',
     ];
 
     /**
@@ -78,6 +80,7 @@ class RfidDevice extends Model
     {
         $plain = Str::random(60);
         $this->api_token = Hash::make($plain);
+        $this->token_prefix = substr($plain, 0, 8);
         $this->save();
 
         return $plain;

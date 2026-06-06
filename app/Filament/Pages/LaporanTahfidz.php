@@ -92,7 +92,7 @@ class LaporanTahfidz extends Page implements HasSchemas, HasTable
                     'total_setoran' => $data->sum('total_setoran'),
                     'total_murojaah' => $data->sum('total_murojaah'),
                     'total_ayat' => $data->sum('total_ayat'),
-                    'rata_rata_nilai' => round($data->avg('rata_rata_nilai'), 1),
+                    'rata_rata_nilai' => round($tahfidzs->avg('nilai') ?? 0, 1),
                 ];
 
                 return $data;

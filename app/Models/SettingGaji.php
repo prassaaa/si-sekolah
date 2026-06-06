@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -62,20 +64,74 @@ class SettingGaji extends Model
         return $this->hasMany(SlipGaji::class);
     }
 
-    public function getTotalTunjanganAttribute(): float
+    /**
+     * Only one active setting per pegawai is expected.
+     * Use activate() to switch the active setting for a pegawai.
+     */
+    public function scopeActiveForPegawai(Builder $query, int $pegawaiId): Builder
     {
-        return $this->tunjangan_jabatan + $this->tunjangan_kehadiran +
-               $this->tunjangan_transport + $this->tunjangan_makan +
-               $this->tunjangan_lainnya;
+        return $query->where('pegawai_id', $pegawaiId)->where('is_active', true);
     }
 
-    public function getTotalPotonganAttribute(): float
+    /**
+     * Activate this setting and deactivate all other settings for the same pegawai
+     * in a single transaction to preserve the one-active-per-pegawai invariant.
+     */
+    public function activate(): void
     {
-        return $this->potongan_bpjs + $this->potongan_pph21 + $this->potongan_lainnya;
+        DB::transaction(function () {
+            self::where('pegawai_id', $this->pegawai_id)
+                ->where('id', '!=', $this->id)
+                ->update(['is_active' => false]);
+            $this->update(['is_active' => true]);
+        });
     }
 
-    public function getGajiBersihAttribute(): float
+    /**
+     * Total tunjangan computed with bcmath to avoid float precision errors on decimal strings.
+     */
+    public function getTotalTunjanganAttribute(): string
     {
-        return $this->gaji_pokok + $this->total_tunjangan - $this->total_potongan;
+        $total = '0.00';
+        foreach ([
+            $this->tunjangan_jabatan,
+            $this->tunjangan_kehadiran,
+            $this->tunjangan_transport,
+            $this->tunjangan_makan,
+            $this->tunjangan_lainnya,
+        ] as $value) {
+            $total = bcadd($total, (string) ($value ?? '0'), 2);
+        }
+
+        return $total;
+    }
+
+    /**
+     * Total potongan computed with bcmath to avoid float precision errors on decimal strings.
+     */
+    public function getTotalPotonganAttribute(): string
+    {
+        $total = '0.00';
+        foreach ([
+            $this->potongan_bpjs,
+            $this->potongan_pph21,
+            $this->potongan_lainnya,
+        ] as $value) {
+            $total = bcadd($total, (string) ($value ?? '0'), 2);
+        }
+
+        return $total;
+    }
+
+    /**
+     * Gaji bersih computed with bcmath: gaji_pokok + total_tunjangan - total_potongan.
+     */
+    public function getGajiBersihAttribute(): string
+    {
+        return bcsub(
+            bcadd((string) ($this->gaji_pokok ?? '0'), $this->total_tunjangan, 2),
+            $this->total_potongan,
+            2,
+        );
     }
 }

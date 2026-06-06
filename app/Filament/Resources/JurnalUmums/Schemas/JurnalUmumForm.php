@@ -9,6 +9,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -72,6 +73,13 @@ class JurnalUmumForm
                             if ($state > 0) {
                                 $set('kredit', 0);
                             }
+                        })
+                        ->rule(fn (Get $get) => function ($attribute, $value, $fail) use ($get) {
+                            $debit = floatval($value ?? 0);
+                            $kredit = floatval($get('kredit') ?? 0);
+                            if ($debit === 0.0 && $kredit === 0.0) {
+                                $fail('Debit dan kredit tidak boleh keduanya bernilai 0.');
+                            }
                         }),
 
                     TextInput::make('kredit')
@@ -84,6 +92,13 @@ class JurnalUmumForm
                         ->afterStateUpdated(function ($state, $set, $get) {
                             if ($state > 0) {
                                 $set('debit', 0);
+                            }
+                        })
+                        ->rule(fn (Get $get) => function ($attribute, $value, $fail) use ($get) {
+                            $kredit = floatval($value ?? 0);
+                            $debit = floatval($get('debit') ?? 0);
+                            if ($debit === 0.0 && $kredit === 0.0) {
+                                $fail('Debit dan kredit tidak boleh keduanya bernilai 0.');
                             }
                         }),
                 ]),
@@ -111,8 +126,7 @@ class JurnalUmumForm
                         ->label('Dibuat Oleh')
                         ->relationship('creator', 'name')
                         ->default(fn () => Auth::id())
-                        ->disabled()
-                        ->dehydrated(),
+                        ->disabled(),
                 ])
                 ->collapsed(),
         ]);

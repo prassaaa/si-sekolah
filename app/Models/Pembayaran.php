@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PembayaranFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,27 +13,29 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Pembayaran extends Model
 {
-    /** @use HasFactory<\Database\Factories\PembayaranFactory> */
+    /** @use HasFactory<PembayaranFactory> */
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        "tagihan_siswa_id",
-        "nomor_transaksi",
-        "tanggal_bayar",
-        "jumlah_bayar",
-        "metode_pembayaran",
-        "referensi_pembayaran",
-        "diterima_oleh",
-        "unit_pos_id",
-        "keterangan",
-        "status",
+        'tagihan_siswa_id',
+        'nomor_transaksi',
+        'tanggal_bayar',
+        'jumlah_bayar',
+        'metode_pembayaran',
+        'referensi_pembayaran',
+        'diterima_oleh',
+        'unit_pos_id',
+        'keterangan',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
-            "tanggal_bayar" => "date",
-            "jumlah_bayar" => "decimal:2",
+            'tanggal_bayar' => 'date',
+            'jumlah_bayar' => 'decimal:2',
+            'applied_amount' => 'decimal:2',
+            'applied_at' => 'datetime',
         ];
     }
 
@@ -42,7 +45,7 @@ class Pembayaran extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\TagihanSiswa, \App\Models\Pembayaran>
+     * @return BelongsTo<TagihanSiswa, Pembayaran>
      */
     public function tagihanSiswa(): BelongsTo
     {
@@ -50,15 +53,15 @@ class Pembayaran extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Pegawai, \App\Models\Pembayaran>
+     * @return BelongsTo<Pegawai, Pembayaran>
      */
     public function penerima(): BelongsTo
     {
-        return $this->belongsTo(Pegawai::class, "diterima_oleh");
+        return $this->belongsTo(Pegawai::class, 'diterima_oleh');
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\UnitPos, \App\Models\Pembayaran>
+     * @return BelongsTo<UnitPos, Pembayaran>
      */
     public function unitPos(): BelongsTo
     {
@@ -68,11 +71,11 @@ class Pembayaran extends Model
     public function getMetodeInfoAttribute(): string
     {
         return match ($this->metode_pembayaran) {
-            "tunai" => "Tunai",
-            "transfer" => "Transfer Bank",
-            "qris" => "QRIS",
-            "virtual_account" => "Virtual Account",
-            "lainnya" => "Lainnya",
+            'tunai' => 'Tunai',
+            'transfer' => 'Transfer Bank',
+            'qris' => 'QRIS',
+            'virtual_account' => 'Virtual Account',
+            'lainnya' => 'Lainnya',
             default => $this->metode_pembayaran,
         };
     }
@@ -80,152 +83,176 @@ class Pembayaran extends Model
     public function getStatusInfoAttribute(): array
     {
         return match ($this->status) {
-            "pending" => ["label" => "Pending", "color" => "warning"],
-            "berhasil" => ["label" => "Berhasil", "color" => "success"],
-            "gagal" => ["label" => "Gagal", "color" => "danger"],
-            "batal" => ["label" => "Batal", "color" => "gray"],
-            default => ["label" => $this->status, "color" => "gray"],
+            'pending' => ['label' => 'Pending', 'color' => 'warning'],
+            'berhasil' => ['label' => 'Berhasil', 'color' => 'success'],
+            'gagal' => ['label' => 'Gagal', 'color' => 'danger'],
+            'batal' => ['label' => 'Batal', 'color' => 'gray'],
+            default => ['label' => $this->status, 'color' => 'gray'],
         };
     }
+
+    protected const MONEY_SCALE = 2;
 
     protected static function booted(): void
     {
         static::created(function (Pembayaran $pembayaran) {
-            if ($pembayaran->status === "berhasil") {
-                static::applyPaymentToTagihan($pembayaran);
-            }
+            static::reconcilePayment($pembayaran);
         });
 
         static::updated(function (Pembayaran $pembayaran) {
             if (
-                !$pembayaran->wasChanged([
-                    "status",
-                    "jumlah_bayar",
-                    "tagihan_siswa_id",
+                ! $pembayaran->wasChanged([
+                    'status',
+                    'jumlah_bayar',
+                    'tagihan_siswa_id',
                 ])
             ) {
                 return;
             }
 
-            static::reconcileUpdatedPayment($pembayaran);
+            static::reconcilePayment($pembayaran);
         });
 
         static::deleted(function (Pembayaran $pembayaran) {
-            if ($pembayaran->status === "berhasil") {
-                static::reversePaymentFromTagihan($pembayaran);
-            }
+            static::reversePayment($pembayaran);
         });
 
         static::restored(function (Pembayaran $pembayaran) {
-            if ($pembayaran->status === "berhasil") {
-                static::applyPaymentToTagihan($pembayaran);
+            static::reconcilePayment($pembayaran);
+        });
+
+        static::forceDeleted(function (Pembayaran $pembayaran) {
+            if (
+                bccomp(
+                    (string) ($pembayaran->applied_amount ?? '0'),
+                    '0',
+                    self::MONEY_SCALE,
+                ) > 0
+            ) {
+                static::reversePayment($pembayaran);
             }
         });
     }
 
-    private static function applyPaymentToTagihan(Pembayaran $pembayaran): void
+    /**
+     * Reconcile this payment against its tagihan using applied_amount as the
+     * source of truth. Reverses any previously applied amount (including from a
+     * tagihan reassignment) and applies the current amount when the payment is
+     * in a state that should be applied (status berhasil and not soft-deleted).
+     */
+    private static function reconcilePayment(Pembayaran $pembayaran): void
     {
-        static::applyAmountToTagihan(
-            (int) $pembayaran->tagihan_siswa_id,
-            (float) $pembayaran->jumlah_bayar,
-        );
-    }
-
-    private static function reversePaymentFromTagihan(
-        Pembayaran $pembayaran,
-    ): void {
-        static::applyAmountToTagihan(
-            (int) $pembayaran->tagihan_siswa_id,
-            -1 * (float) $pembayaran->jumlah_bayar,
-        );
-    }
-
-    private static function applyAmountToTagihan(
-        int $tagihanId,
-        float $amount,
-    ): void {
-        if (!$tagihanId || $amount === 0.0) {
-            return;
-        }
-
-        DB::transaction(function () use ($tagihanId, $amount) {
-            $tagihan = TagihanSiswa::query()->lockForUpdate()->find($tagihanId);
-            if (!$tagihan) {
-                return;
-            }
-
-            $tagihan->total_terbayar =
-                (float) $tagihan->total_terbayar + $amount;
-            $tagihan->sisa_tagihan = (float) $tagihan->sisa_tagihan - $amount;
-            $tagihan->save();
-            $tagihan->refresh();
-            /** @phpstan-ignore-next-line */
-            $tagihan->updateStatus();
-        });
-    }
-
-    private static function reconcileUpdatedPayment(
-        Pembayaran $pembayaran,
-    ): void {
-        $oldStatus = (string) $pembayaran->getOriginal("status");
-        $newStatus = (string) $pembayaran->status;
-        $oldTagihanId = (int) $pembayaran->getOriginal("tagihan_siswa_id");
+        $oldTagihanId = (int) $pembayaran->getOriginal('tagihan_siswa_id');
         $newTagihanId = (int) $pembayaran->tagihan_siswa_id;
-        $oldJumlah = (float) $pembayaran->getOriginal("jumlah_bayar");
-        $newJumlah = (float) $pembayaran->jumlah_bayar;
+        $oldApplied = (string) ($pembayaran->applied_amount ?? '0');
 
-        $oldApplied = $oldStatus === "berhasil";
-        $newApplied = $newStatus === "berhasil";
-
-        if (!$oldApplied && !$newApplied) {
-            return;
-        }
+        $shouldApply =
+            $pembayaran->status === 'berhasil' &&
+            $pembayaran->deleted_at === null;
+        $newApplied = $shouldApply
+            ? (string) ($pembayaran->jumlah_bayar ?? '0')
+            : '0';
 
         DB::transaction(function () use (
-            $oldApplied,
-            $newApplied,
+            $pembayaran,
             $oldTagihanId,
             $newTagihanId,
-            $oldJumlah,
-            $newJumlah,
+            $oldApplied,
+            $newApplied,
         ) {
             $tagihanIds = array_values(
-                array_unique(array_filter([$oldTagihanId, $newTagihanId])),
+                array_unique(
+                    array_filter([$oldTagihanId, $newTagihanId]),
+                ),
             );
 
             $tagihans = TagihanSiswa::query()
-                ->whereIn("id", $tagihanIds)
+                ->whereIn('id', $tagihanIds)
                 ->lockForUpdate()
                 ->get()
-                ->keyBy("id");
+                ->keyBy('id');
 
-            if ($oldApplied && $oldTagihanId) {
+            if (
+                $oldTagihanId &&
+                bccomp($oldApplied, '0', self::MONEY_SCALE) > 0
+            ) {
                 $oldTagihan = $tagihans->get($oldTagihanId);
                 if ($oldTagihan) {
-                    $oldTagihan->total_terbayar =
-                        (float) $oldTagihan->total_terbayar - $oldJumlah;
-                    $oldTagihan->sisa_tagihan =
-                        (float) $oldTagihan->sisa_tagihan + $oldJumlah;
-                    $oldTagihan->save();
+                    static::adjustTagihanTerbayar(
+                        $oldTagihan,
+                        bcmul($oldApplied, '-1', self::MONEY_SCALE),
+                    );
                 }
             }
 
-            if ($newApplied && $newTagihanId) {
+            if (
+                $newTagihanId &&
+                bccomp($newApplied, '0', self::MONEY_SCALE) > 0
+            ) {
                 $newTagihan = $tagihans->get($newTagihanId);
                 if ($newTagihan) {
-                    $newTagihan->total_terbayar =
-                        (float) $newTagihan->total_terbayar + $newJumlah;
-                    $newTagihan->sisa_tagihan =
-                        (float) $newTagihan->sisa_tagihan - $newJumlah;
-                    $newTagihan->save();
+                    static::adjustTagihanTerbayar($newTagihan, $newApplied);
                 }
             }
 
+            $pembayaran->applied_amount = $newApplied;
+            $pembayaran->applied_at =
+                bccomp($newApplied, '0', self::MONEY_SCALE) > 0
+                    ? now()
+                    : null;
+            $pembayaran->saveQuietly();
+
             foreach ($tagihans as $tagihan) {
-                $tagihan->refresh();
                 /** @phpstan-ignore-next-line */
                 $tagihan->updateStatus();
             }
         });
+    }
+
+    /**
+     * Reverse this payment's currently applied amount from its tagihan and
+     * reset the applied tracking columns. Safe to call when nothing is applied.
+     */
+    private static function reversePayment(Pembayaran $pembayaran): void
+    {
+        $applied = (string) ($pembayaran->applied_amount ?? '0');
+        $tagihanId = (int) $pembayaran->tagihan_siswa_id;
+
+        if (bccomp($applied, '0', self::MONEY_SCALE) <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($pembayaran, $tagihanId, $applied) {
+            if ($tagihanId) {
+                $tagihan = TagihanSiswa::query()
+                    ->lockForUpdate()
+                    ->find($tagihanId);
+                if ($tagihan) {
+                    static::adjustTagihanTerbayar(
+                        $tagihan,
+                        bcmul($applied, '-1', self::MONEY_SCALE),
+                    );
+                    /** @phpstan-ignore-next-line */
+                    $tagihan->updateStatus();
+                }
+            }
+
+            $pembayaran->applied_amount = '0.00';
+            $pembayaran->applied_at = null;
+            $pembayaran->saveQuietly();
+        });
+    }
+
+    private static function adjustTagihanTerbayar(
+        TagihanSiswa $tagihan,
+        string $delta,
+    ): void {
+        $tagihan->total_terbayar = bcadd(
+            (string) $tagihan->total_terbayar,
+            $delta,
+            self::MONEY_SCALE,
+        );
+        $tagihan->save();
+        $tagihan->refresh();
     }
 }

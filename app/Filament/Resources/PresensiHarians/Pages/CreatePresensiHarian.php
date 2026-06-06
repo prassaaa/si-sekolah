@@ -19,9 +19,17 @@ class CreatePresensiHarian extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $tanggal = $data['tanggal'] ?? null;
+
+        if (! $tanggal) {
+            throw ValidationException::withMessages([
+                'data.tanggal' => 'Tanggal wajib diisi.',
+            ]);
+        }
+
         $duplicate = PresensiHarian::query()
             ->where('siswa_id', $data['siswa_id'] ?? null)
-            ->whereDate('tanggal', $data['tanggal'] ?? null)
+            ->whereDate('tanggal', $tanggal)
             ->exists();
 
         if ($duplicate) {

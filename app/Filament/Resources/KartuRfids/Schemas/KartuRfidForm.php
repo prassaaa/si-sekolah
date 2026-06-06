@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\KartuRfids\Schemas;
 
+use App\Models\KartuRfid;
 use App\Models\Pegawai;
 use App\Models\Siswa;
 use Filament\Forms\Components\DateTimePicker;
@@ -34,12 +35,20 @@ class KartuRfidForm
                     ->required()
                     ->searchable()
                     ->preload()
-                    ->options(function ($get) {
+                    ->options(function ($get, $record) {
                         $type = $get('owner_type');
+
+                        $takenOwnerIds = KartuRfid::query()
+                            ->where('owner_type', $type)
+                            ->where('status', 'aktif')
+                            ->when($record, fn ($query) => $query->where('id', '!=', $record->id))
+                            ->pluck('owner_id')
+                            ->all();
 
                         if ($type === Pegawai::class) {
                             return Pegawai::query()
                                 ->where('is_active', true)
+                                ->whereNotIn('id', $takenOwnerIds)
                                 ->get()
                                 ->mapWithKeys(fn ($p) => [$p->id => "{$p->nip} - {$p->nama}"])
                                 ->toArray();
@@ -47,6 +56,7 @@ class KartuRfidForm
 
                         return Siswa::query()
                             ->where('is_active', true)
+                            ->whereNotIn('id', $takenOwnerIds)
                             ->get()
                             ->mapWithKeys(fn ($s) => [$s->id => "{$s->nis} - {$s->nama}"])
                             ->toArray();

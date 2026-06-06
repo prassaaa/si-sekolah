@@ -11,7 +11,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 class JenisPembayaranForm
 {
@@ -43,7 +45,13 @@ class JenisPembayaranForm
                             TextInput::make('kode')
                                 ->label('Kode')
                                 ->required()
-                                ->maxLength(20),
+                                ->maxLength(20)
+                                ->unique(
+                                    table: 'jenis_pembayarans',
+                                    column: 'kode',
+                                    ignoreRecord: true,
+                                    modifyRuleUsing: fn (Unique $rule, Get $get) => $rule->where('tahun_ajaran_id', $get('tahun_ajaran_id')),
+                                ),
 
                             TextInput::make('nama')
                                 ->label('Nama')

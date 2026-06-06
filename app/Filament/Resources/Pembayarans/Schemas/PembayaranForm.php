@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Pembayarans\Schemas;
 
 use App\Models\Pegawai;
+use App\Models\Pembayaran;
 use App\Models\TagihanSiswa;
 use App\Models\UnitPos;
 use Filament\Forms\Components\DatePicker;
@@ -29,9 +30,21 @@ class PembayaranForm
                         ->relationship(
                             'tagihanSiswa',
                             'nomor_tagihan',
-                            fn ($query) => $query
-                                ->where('status', '!=', 'lunas')
-                                ->where('status', '!=', 'batal'),
+                            fn ($query, ?Pembayaran $record) => $query->where(
+                                fn ($q) => $q
+                                    ->where(function ($inner) {
+                                        $inner
+                                            ->where('status', '!=', 'lunas')
+                                            ->where('status', '!=', 'batal');
+                                    })
+                                    ->when(
+                                        $record?->tagihan_siswa_id,
+                                        fn ($q, $id) => $q->orWhere(
+                                            'id',
+                                            $id,
+                                        ),
+                                    ),
+                            ),
                         )
                         ->searchable()
                         ->preload()

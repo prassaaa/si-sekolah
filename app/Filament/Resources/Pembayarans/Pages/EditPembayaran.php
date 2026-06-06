@@ -35,17 +35,23 @@ class EditPembayaran extends EditRecord
             ]);
         }
 
-        $jumlahBayar = (float) ($data['jumlah_bayar'] ?? 0);
-        $sisaTagihan = (float) $tagihan->sisa_tagihan;
+        $jumlahBayar = (string) ($data['jumlah_bayar'] ?? '0');
+        $available = (string) $tagihan->sisa_tagihan;
 
-        if (
-            $this->record->status === 'berhasil' &&
-            (int) $this->record->tagihan_siswa_id === (int) $tagihan->id
-        ) {
-            $sisaTagihan += (float) $this->record->jumlah_bayar;
+        if ((int) $this->record->tagihan_siswa_id === (int) $tagihan->id) {
+            $available = bcadd(
+                $available,
+                (string) ($this->record->applied_amount ?? '0'),
+                2,
+            );
         }
 
-        if ($jumlahBayar > $sisaTagihan) {
+        $willApply =
+            ($data['status'] ?? null) === 'berhasil'
+                ? $jumlahBayar
+                : '0';
+
+        if (bccomp($willApply, $available, 2) > 0) {
             throw ValidationException::withMessages([
                 'jumlah_bayar' => 'Jumlah bayar melebihi sisa tagihan.',
             ]);

@@ -4,9 +4,11 @@ namespace App\Filament\Resources\SaldoAwals\Schemas;
 
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Unique;
 
 class SaldoAwalForm
 {
@@ -19,7 +21,13 @@ class SaldoAwalForm
                     ->label('Akun')
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->unique(
+                        table: 'saldo_awals',
+                        column: 'akun_id',
+                        ignoreRecord: true,
+                        modifyRuleUsing: fn (Unique $rule, Get $get) => $rule->where('tahun_ajaran_id', $get('tahun_ajaran_id')),
+                    ),
                 Select::make('tahun_ajaran_id')
                     ->relationship('tahunAjaran', 'nama')
                     ->label('Tahun Ajaran')

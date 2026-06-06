@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class AbsensiResource extends Resource
@@ -49,6 +50,15 @@ class AbsensiResource extends Resource
     public static function table(Table $table): Table
     {
         return AbsensisTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with([
+            'jadwalPelajaran.kelas',
+            'jadwalPelajaran.mataPelajaran',
+            'siswa',
+        ]);
     }
 
     public static function getNavigationBadge(): ?string

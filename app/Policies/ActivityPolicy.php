@@ -19,51 +19,51 @@ class ActivityPolicy
 
     public function create(User $user): bool
     {
-        return $user->can('Create:Activity');
+        return false;
     }
 
     public function update(User $user, Activity $activity): bool
     {
-        return $user->can('Update:Activity');
+        return false;
     }
 
     public function delete(User $user, Activity $activity): bool
     {
-        return $user->can('Delete:Activity');
+        return false;
     }
 
     public function deleteAny(User $user): bool
     {
-        return $user->can('DeleteAny:Activity');
+        return false;
     }
 
     public function restore(User $user, Activity $activity): bool
     {
-        return $user->can('Restore:Activity');
+        return false;
     }
 
     public function restoreAny(User $user): bool
     {
-        return $user->can('RestoreAny:Activity');
+        return false;
     }
 
     public function forceDelete(User $user, Activity $activity): bool
     {
-        return $user->can('ForceDelete:Activity');
+        return false;
     }
 
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('ForceDeleteAny:Activity');
+        return false;
     }
 
     public function replicate(User $user, Activity $activity): bool
     {
-        return $user->can('Replicate:Activity');
+        return false;
     }
 
     public function reorder(User $user): bool
     {
-        return $user->can('Reorder:Activity');
+        return false;
     }
 }
