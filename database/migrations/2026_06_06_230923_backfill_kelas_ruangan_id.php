@@ -3,6 +3,7 @@
 use App\Models\Kelas;
 use App\Models\Ruangan;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 return new class extends Migration
@@ -13,6 +14,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasColumn('kelas', 'ruangan')) {
+            return;
+        }
+
         Kelas::query()
             ->whereNull('ruangan_id')
             ->whereNotNull('ruangan')
