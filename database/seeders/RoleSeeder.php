@@ -18,7 +18,7 @@ class RoleSeeder extends Seeder
         'JabatanPegawai', 'Pegawai', 'TahunAjaran', 'Semester',
         'MataPelajaran', 'JamPelajaran', 'Kelas', 'Siswa',
         'JadwalPelajaran', 'Absensi', 'Tahfidz', 'IzinKeluar', 'IzinPulang',
-        'Prestasi', 'Pelanggaran', 'Konseling', 'KenaikanKelas', 'Kelulusan',
+        'Prestasi', 'Pelanggaran', 'Konseling', 'Aduan', 'KenaikanKelas', 'Kelulusan',
         'KategoriPembayaran', 'JenisPembayaran', 'TagihanSiswa', 'Pembayaran',
         'Akun', 'JurnalUmum', 'SaldoAwal', 'KasMasuk', 'KasKeluar',
         'BuktiTransfer', 'SettingGaji', 'SlipGaji', 'Pajak', 'UnitPos',
@@ -251,6 +251,7 @@ class RoleSeeder extends Seeder
             $this->fullCrud('Prestasi'),
             $this->fullCrud('Pelanggaran'),
             $this->fullCrud('Konseling'),
+            $this->fullCrud('Aduan'),
 
             // KEPEGAWAIAN - Full CRUD
             $this->fullCrud('JabatanPegawai'),
@@ -281,6 +282,7 @@ class RoleSeeder extends Seeder
             // Full CRUD
             $this->fullCrud('Konseling'),
             $this->fullCrud('Pelanggaran'),
+            $this->fullCrud('Aduan'),
             $this->fullCrud('Prestasi'),
 
             // No Delete for Izin

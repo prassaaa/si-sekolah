@@ -36,7 +36,13 @@
       "Bash(rtk git *)",
       "Bash(xargs basename -a)",
       "Bash(grep -E \"^[A-Z].*\\\\.php$\")",
-      "Bash(sed 's/\\\\.php$//')"
+      "Bash(sed 's/\\\\.php$//')",
+      "Bash(rm -rf app/Filament/Resources/Walimurids)",
+      "Bash(rm -rf app/Filament/Resources/Aduans)",
+      "Bash(composer config *)",
+      "Bash(rtk composer *)",
+      "Bash(rtk curl *)",
+      "Bash(php -r ' *)"
     ]
   },
   "enableAllProjectMcpServers": true,

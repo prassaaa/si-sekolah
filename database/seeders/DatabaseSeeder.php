@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             PrestasiSeeder::class,
             PelanggaranSeeder::class,
             KonselingSeeder::class,
+            AduanSeeder::class,
             KenaikanKelasSeeder::class,
             KelulusanSeeder::class,
 

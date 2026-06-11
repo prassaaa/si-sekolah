@@ -175,6 +175,11 @@ class Siswa extends Model
         return $this->hasMany(Konseling::class);
     }
 
+    public function aduans(): HasMany
+    {
+        return $this->hasMany(Aduan::class);
+    }
+
     public function tahfidzs(): HasMany
     {
         return $this->hasMany(Tahfidz::class);

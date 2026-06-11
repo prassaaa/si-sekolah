@@ -7,7 +7,7 @@ use App\Models\TahunAjaran;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Semester>
+ * @extends Factory<Semester>
  */
 class SemesterFactory extends Factory
 {
@@ -20,8 +20,19 @@ class SemesterFactory extends Factory
      */
     public function definition(): array
     {
-        $semester = fake()->randomElement([1, 2]);
         $tahunAjaran = TahunAjaran::inRandomOrder()->first() ?? TahunAjaran::factory()->create();
+
+        $tersedia = array_values(array_diff(
+            [1, 2],
+            Semester::query()->where('tahun_ajaran_id', $tahunAjaran->id)->pluck('semester')->all(),
+        ));
+
+        if ($tersedia === []) {
+            $tahunAjaran = TahunAjaran::factory()->create();
+            $tersedia = [1, 2];
+        }
+
+        $semester = fake()->randomElement($tersedia);
 
         return [
             'tahun_ajaran_id' => $tahunAjaran->id,

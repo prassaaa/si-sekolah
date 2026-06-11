@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Siswas\Tables;
 
+use App\Models\Siswa;
+use App\Services\Kesiswaan\BukuPribadiService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -12,6 +15,7 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SiswasTable
 {
@@ -102,6 +106,18 @@ class SiswasTable
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('bukuPribadi')
+                    ->label('Buku Pribadi')
+                    ->icon('heroicon-o-printer')
+                    ->color('gray')
+                    ->action(function (Siswa $record): StreamedResponse {
+                        $service = app(BukuPribadiService::class);
+
+                        return response()->streamDownload(
+                            fn () => print ($service->pdf($record)->output()),
+                            $service->filename($record),
+                        );
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
