@@ -32,7 +32,11 @@
       "mcp__plugin_oh-my-claudecode_t__lsp_diagnostics",
       "mcp__plugin_oh-my-claudecode_t__state_clear",
       "Bash(php artisan *)",
-      "Bash(php -r \"echo function_exists\\('bcadd'\\) ? 'bcmath ON' : 'bcmath OFF';\")"
+      "Bash(php -r \"echo function_exists\\('bcadd'\\) ? 'bcmath ON' : 'bcmath OFF';\")",
+      "Bash(rtk git *)",
+      "Bash(xargs basename -a)",
+      "Bash(grep -E \"^[A-Z].*\\\\.php$\")",
+      "Bash(sed 's/\\\\.php$//')"
     ]
   },
   "enableAllProjectMcpServers": true,
