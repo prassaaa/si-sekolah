@@ -132,6 +132,38 @@ it('pdf() renders without exception for siswa with no relations and no sekolah r
         ->not->toThrow(Throwable::class);
 });
 
+it('preview route streams pdf inline for authorized user', function (): void {
+    $siswa = Siswa::factory()->create();
+
+    $response = $this->get(route('siswa.buku-pribadi', $siswa));
+
+    $response->assertSuccessful();
+    expect($response->headers->get('content-type'))->toContain('application/pdf');
+});
+
+it('preview route forbids user without View:Siswa permission', function (): void {
+    $siswa = Siswa::factory()->create();
+
+    $this->actingAs(User::factory()->create());
+
+    $this->get(route('siswa.buku-pribadi', $siswa))->assertForbidden();
+});
+
+it('preview route forbids guest', function (): void {
+    $siswa = Siswa::factory()->create();
+
+    auth()->logout();
+
+    $this->get(route('siswa.buku-pribadi', $siswa))->assertForbidden();
+});
+
+it('ViewSiswa has pratinjauBukuPribadi action', function (): void {
+    $siswa = Siswa::factory()->create();
+
+    Livewire::test(ViewSiswa::class, ['record' => $siswa->getRouteKey()])
+        ->assertActionExists('pratinjauBukuPribadi');
+});
+
 it('ViewSiswa has cetakBukuPribadi action', function (): void {
     $siswa = Siswa::factory()->create();
 

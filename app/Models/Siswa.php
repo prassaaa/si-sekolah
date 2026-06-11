@@ -325,7 +325,7 @@ class Siswa extends Model
             return '-';
         }
 
-        return $this->tempat_lahir.', '.$this->tanggal_lahir->format('d F Y');
+        return $this->tempat_lahir.', '.$this->tanggal_lahir->translatedFormat('d F Y');
     }
 
     /**

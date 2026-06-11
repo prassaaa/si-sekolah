@@ -106,6 +106,11 @@ class SiswasTable
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('pratinjauBukuPribadi')
+                    ->label('Pratinjau')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->url(fn (Siswa $record): string => route('siswa.buku-pribadi', $record), shouldOpenInNewTab: true),
                 Action::make('bukuPribadi')
                     ->label('Buku Pribadi')
                     ->icon('heroicon-o-printer')

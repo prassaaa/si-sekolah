@@ -4,6 +4,7 @@ namespace App\Services\Kesiswaan;
 
 use App\Models\Sekolah;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPDF;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,6 +18,7 @@ class BukuPribadiService
      * @return array{
      *     siswa: Siswa,
      *     sekolah: Sekolah|null,
+     *     tahun_ajaran: TahunAjaran|null,
      *     konselings: Collection,
      *     pelanggarans: Collection,
      *     total_poin: int,
@@ -48,6 +50,7 @@ class BukuPribadiService
         return [
             'siswa' => $siswa,
             'sekolah' => Sekolah::query()->first(),
+            'tahun_ajaran' => TahunAjaran::query()->where('is_active', true)->first(),
             'konselings' => $siswa->konselings,
             'pelanggarans' => $siswa->pelanggarans,
             'total_poin' => $totalPoin,

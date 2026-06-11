@@ -19,6 +19,11 @@ class ViewSiswa extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('pratinjauBukuPribadi')
+                ->label('Pratinjau Buku Pribadi')
+                ->icon('heroicon-o-eye')
+                ->color('gray')
+                ->url(fn (): string => route('siswa.buku-pribadi', $this->getRecord()), shouldOpenInNewTab: true),
             Action::make('cetakBukuPribadi')
                 ->label('Cetak Buku Pribadi')
                 ->icon('heroicon-o-printer')
