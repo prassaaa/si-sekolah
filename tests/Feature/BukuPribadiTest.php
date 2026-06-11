@@ -100,6 +100,20 @@ it('filename() contains nis and slug of nama', function (): void {
         ->toEndWith('.pdf');
 });
 
+it('filename() contains no slash or backslash even when nis has them', function (): void {
+    $siswa = Siswa::factory()->create([
+        'nis' => '0061/2024',
+        'nama' => 'Budi\\Santoso',
+    ]);
+
+    $filename = app(BukuPribadiService::class)->filename($siswa);
+
+    expect($filename)
+        ->not->toContain('/')
+        ->not->toContain('\\')
+        ->toEndWith('.pdf');
+});
+
 it('pdf() renders without exception for siswa with no relations and no sekolah row', function (): void {
     $siswa = Siswa::factory()->create();
 

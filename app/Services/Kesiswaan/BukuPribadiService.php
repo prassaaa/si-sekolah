@@ -71,6 +71,6 @@ class BukuPribadiService
      */
     public function filename(Siswa $siswa): string
     {
-        return 'buku-pribadi-'.$siswa->nis.'-'.Str::slug($siswa->nama).'.pdf';
+        return 'buku-pribadi-'.Str::slug($siswa->nis.' '.$siswa->nama).'.pdf';
     }
 }
