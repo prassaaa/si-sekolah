@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\Siswas\Pages\ViewSiswa;
+use App\Models\Kelas;
 use App\Models\Pelanggaran;
 use App\Models\PresensiHarian;
 use App\Models\Sekolah;
@@ -112,6 +113,16 @@ it('filename() contains no slash or backslash even when nis has them', function 
         ->not->toContain('/')
         ->not->toContain('\\')
         ->toEndWith('.pdf');
+});
+
+it('pdf() renders for siswa that belongs to a kelas', function (): void {
+    $siswa = Siswa::factory()->create([
+        'kelas_id' => Kelas::factory()->create()->id,
+    ]);
+
+    $output = app(BukuPribadiService::class)->pdf($siswa)->output();
+
+    expect(str_starts_with($output, '%PDF'))->toBeTrue();
 });
 
 it('pdf() renders without exception for siswa with no relations and no sekolah row', function (): void {

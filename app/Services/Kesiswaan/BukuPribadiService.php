@@ -28,7 +28,7 @@ class BukuPribadiService
     public function data(Siswa $siswa): array
     {
         $siswa->loadMissing([
-            'kelas.ruangan',
+            'kelas',
             'konselings.konselor',
             'konselings.semester',
             'pelanggarans.semester',
