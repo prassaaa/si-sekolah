@@ -8,11 +8,17 @@ use App\Models\User;
 use App\Services\Accounting\FinancialService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    Permission::firstOrCreate(['name' => 'View:LabaRugi']);
+    Permission::firstOrCreate(['name' => 'View:PerubahanModal']);
+
+    $user = User::factory()->create();
+    $user->givePermissionTo(['View:LabaRugi', 'View:PerubahanModal']);
+    $this->actingAs($user);
 
     $pendapatan = Akun::factory()->pendapatan()->create();
     $beban = Akun::factory()->beban()->create();

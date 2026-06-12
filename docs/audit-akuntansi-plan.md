@@ -186,7 +186,7 @@ Field `akun_id` sebenarnya akun LAWAN (pendapatan/beban) tapi dilabeli "Akun Kas
 
 | Wave | Isi | Temuan tertutup |
 |---|---|---|
-| **0 — Darurat** (kecil, dampak besar) | K1 (form jurnal balanced), K2 (idempotensi BT), T7 (HasPageShield semua laporan + LaporanGaji + recompute SlipGaji server-side + scoping guru) | 2 kritis + 5 tinggi keamanan |
+| **0 — Darurat** ✅ **SELESAI 2026-06-13** (full suite 352 pass) | K1 (form jurnal create jadi multi-baris balanced + nomor bukti sekuensial atomik + drop unique nomor_bukti), K2 (idempotensi BT by referensi + pindah tagihan via update), T7 (HasPageShield 26 halaman + mapping RoleSeeder, SlipGaji recompute server-side + scoping kepemilikan, FinancialOverview canView) | 2 kritis + 5 tinggi keamanan |
 | **1 — Integritas ledger** | T4 (label+validasi akun kas, kas_akun_id), T6 (guard jurnal otomatis, reversal sarpras, klasifikasi item), T8 (transaksi atomik, unique index, lock), T3 (semantik saldo awal + boundary), T2 (laba berjalan Neraca/PerubahanModal), F1 (Neraca Saldo), F10 (nomor bukti) | ±20 temuan |
 | **2 — Integrasi posting** *(basis KAS, cut-off 2026-07-01)* | T1: PembayaranJournalPoster (D Kas via UnitPos.akun_id / K Pendapatan), SlipGaji workflow Approve→Bayar + posting, TabunganJournalPoster + akun 2-1004, atribusi UnitPos, blok KasMasuk manual SPP; susulan #1 (sarpras non-pengadaan) | ±12 temuan — *prasyarat laporan akurat* |
 | **3 — Pembenahan laporan** | T9 lengkap (LabaRugi total, ArusKas, LaporanPembayaran/Keuangan/Tabungan, soft-delete akun, batal, penyusutan, per-kelas historis), F6 (ekspor PDF), F7 (tunggakan) | ±15 temuan |

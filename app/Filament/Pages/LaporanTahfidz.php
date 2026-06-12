@@ -6,6 +6,7 @@ use App\Filament\Widgets\Laporan\LaporanTahfidzStats;
 use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\Tahfidz;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -21,6 +22,7 @@ use Illuminate\Support\Collection;
 
 class LaporanTahfidz extends Page implements HasSchemas, HasTable
 {
+    use HasPageShield;
     use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-book-open';

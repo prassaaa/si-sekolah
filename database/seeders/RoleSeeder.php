@@ -47,6 +47,22 @@ class RoleSeeder extends Seeder
     }
 
     /**
+     * All page permission names (View:<ClassName> format used by Shield HasPageShield trait).
+     *
+     * @var array<string>
+     */
+    private array $allPages = [
+        'Neraca', 'LabaRugi', 'BukuBesar', 'PerubahanModal', 'ArusKasBank',
+        'LaporanJurnal', 'LaporanDebitKredit', 'LaporanKeuangan',
+        'LaporanPembayaran', 'LaporanPembayaranPerKelas', 'LaporanPembayaranPerTanggal',
+        'LaporanTagihanSiswa', 'LaporanUnitPos', 'LaporanTabungan',
+        'LaporanGaji', 'KirimNotifGaji', 'KirimTagihan', 'LaporanPenyusutan',
+        'LaporanInventaris', 'LaporanKondisiSarpras', 'LaporanPemeliharaanSarpras',
+        'LaporanPeminjamanSarpras',
+        'LaporanSiswa', 'LaporanTahfidz', 'KirimNotifPresensi', 'MonitorGerbang',
+    ];
+
+    /**
      * Create all permissions for all resources.
      */
     private function createPermissions(): void
@@ -61,6 +77,10 @@ class RoleSeeder extends Seeder
             foreach ($actions as $action) {
                 Permission::firstOrCreate(['name' => "{$action}:{$resource}"]);
             }
+        }
+
+        foreach ($this->allPages as $page) {
+            Permission::firstOrCreate(['name' => "View:{$page}"]);
         }
     }
 
@@ -107,25 +127,13 @@ class RoleSeeder extends Seeder
     }
 
     /**
-     * Get Petugas Sarpras permissions.
-     * Focus: Sarana & Prasarana (kategori, ruangan, barang, peminjaman, pemeliharaan, pengadaan, penghapusan).
+     * Generate a page view permission (as single-element array for use with array_merge).
      *
      * @return array<string>
      */
-    private function getPetugasSarprasPermissions(): array
+    private function pagePermission(string $page): array
     {
-        return array_merge(
-            $this->fullCrud('SarprasKategori'),
-            $this->fullCrud('Ruangan'),
-            $this->fullCrud('SarprasBarang'),
-            $this->fullCrud('SarprasPeminjaman'),
-            $this->fullCrud('SarprasPemeliharaan'),
-            $this->fullCrud('SarprasPengadaan'),
-            $this->fullCrud('SarprasPenghapusan'),
-            // Konteks read-only untuk relasi peminjam
-            $this->viewOnly('Siswa'),
-            $this->viewOnly('Pegawai'),
-        );
+        return ["View:{$page}"];
     }
 
     /**
@@ -220,6 +228,26 @@ class RoleSeeder extends Seeder
             $this->viewOnly('Siswa'),
             $this->viewOnly('Pegawai'),
             $this->viewOnly('Kelas'),
+
+            // HALAMAN LAPORAN KEUANGAN & AKUNTANSI
+            $this->pagePermission('Neraca'),
+            $this->pagePermission('LabaRugi'),
+            $this->pagePermission('BukuBesar'),
+            $this->pagePermission('PerubahanModal'),
+            $this->pagePermission('ArusKasBank'),
+            $this->pagePermission('LaporanJurnal'),
+            $this->pagePermission('LaporanDebitKredit'),
+            $this->pagePermission('LaporanKeuangan'),
+            $this->pagePermission('LaporanPembayaran'),
+            $this->pagePermission('LaporanPembayaranPerKelas'),
+            $this->pagePermission('LaporanPembayaranPerTanggal'),
+            $this->pagePermission('LaporanTagihanSiswa'),
+            $this->pagePermission('LaporanUnitPos'),
+            $this->pagePermission('LaporanTabungan'),
+            $this->pagePermission('LaporanGaji'),
+            $this->pagePermission('KirimNotifGaji'),
+            $this->pagePermission('KirimTagihan'),
+            $this->pagePermission('LaporanPenyusutan'),
         );
     }
 
@@ -267,6 +295,14 @@ class RoleSeeder extends Seeder
             $this->fullCrud('KartuRfid'),
             $this->fullCrud('RfidDevice'),
             $this->viewOnly('RfidScanLog'),
+
+            // HALAMAN LAPORAN KESISWAAN & NOTIFIKASI
+            $this->pagePermission('LaporanSiswa'),
+            $this->pagePermission('LaporanTahfidz'),
+            $this->pagePermission('KirimNotifPresensi'),
+            $this->pagePermission('MonitorGerbang'),
+            $this->pagePermission('LaporanPembayaran'),
+            $this->pagePermission('LaporanTagihanSiswa'),
         );
     }
 
@@ -295,6 +331,10 @@ class RoleSeeder extends Seeder
 
             // PRESENSI HARIAN - View only (cek pola alpha)
             $this->viewOnly('PresensiHarian'),
+
+            // HALAMAN LAPORAN
+            $this->pagePermission('LaporanSiswa'),
+            $this->pagePermission('LaporanTahfidz'),
         );
     }
 
@@ -377,6 +417,38 @@ class RoleSeeder extends Seeder
             $this->noDelete('PresensiHarian'),
             $this->viewOnly('KartuRfid'),
             $this->viewOnly('RfidScanLog'),
+
+            // HALAMAN
+            $this->pagePermission('MonitorGerbang'),
+        );
+    }
+
+    /**
+     * Get Petugas Sarpras permissions.
+     * Focus: Sarana & Prasarana (kategori, ruangan, barang, peminjaman, pemeliharaan, pengadaan, penghapusan).
+     *
+     * @return array<string>
+     */
+    private function getPetugasSarprasPermissions(): array
+    {
+        return array_merge(
+            $this->fullCrud('SarprasKategori'),
+            $this->fullCrud('Ruangan'),
+            $this->fullCrud('SarprasBarang'),
+            $this->fullCrud('SarprasPeminjaman'),
+            $this->fullCrud('SarprasPemeliharaan'),
+            $this->fullCrud('SarprasPengadaan'),
+            $this->fullCrud('SarprasPenghapusan'),
+            // Konteks read-only untuk relasi peminjam
+            $this->viewOnly('Siswa'),
+            $this->viewOnly('Pegawai'),
+
+            // HALAMAN LAPORAN SARPRAS
+            $this->pagePermission('LaporanInventaris'),
+            $this->pagePermission('LaporanKondisiSarpras'),
+            $this->pagePermission('LaporanPemeliharaanSarpras'),
+            $this->pagePermission('LaporanPeminjamanSarpras'),
+            $this->pagePermission('LaporanPenyusutan'),
         );
     }
 }

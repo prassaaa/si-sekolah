@@ -17,6 +17,16 @@ class FinancialOverview extends StatsOverviewWidget
 
     protected ?string $heading = 'Ringkasan Keuangan';
 
+    /**
+     * Widget hanya ditampilkan kepada pengguna yang memiliki permission
+     * ViewAny:KasMasuk — proxy akses keuangan yang dimiliki bendahara dan
+     * super_admin, tetapi tidak oleh guru atau peran non-keuangan lainnya.
+     */
+    public static function canView(): bool
+    {
+        return auth()->user()?->can('ViewAny:KasMasuk') ?? false;
+    }
+
     protected function getStats(): array
     {
         $bulanIni = now()->startOfMonth();

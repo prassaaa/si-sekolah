@@ -166,15 +166,17 @@ it('rejects jurnal umum when both debit and kredit are zero', function () {
 
     Livewire::test(CreateJurnalUmum::class)
         ->fillForm([
-            'nomor_bukti' => 'JU-TEST-001',
             'tanggal' => now()->format('Y-m-d'),
-            'akun_id' => $akun->id,
             'keterangan' => 'Test jurnal',
-            'debit' => 0,
-            'kredit' => 0,
+            'details' => [
+                ['akun_id' => $akun->id, 'debit' => 0, 'kredit' => 0],
+                ['akun_id' => $akun->id, 'debit' => 0, 'kredit' => 0],
+            ],
         ])
         ->call('create')
-        ->assertHasFormErrors(['debit']);
+        ->assertHasFormErrors();
+
+    expect(JurnalUmum::count())->toBe(0);
 });
 
 it('accepts jurnal umum with nonzero debit', function () {
@@ -187,16 +189,19 @@ it('accepts jurnal umum with nonzero debit', function () {
     $this->actingAs($user);
 
     $akun = Akun::factory()->create();
+    $akunLawan = Akun::factory()->create();
 
     Livewire::test(CreateJurnalUmum::class)
         ->fillForm([
-            'nomor_bukti' => 'JU-TEST-002',
             'tanggal' => now()->format('Y-m-d'),
-            'akun_id' => $akun->id,
             'keterangan' => 'Test jurnal valid',
-            'debit' => 100000,
-            'kredit' => 0,
+            'details' => [
+                ['akun_id' => $akun->id, 'debit' => 100000, 'kredit' => 0],
+                ['akun_id' => $akunLawan->id, 'debit' => 0, 'kredit' => 100000],
+            ],
         ])
         ->call('create')
-        ->assertHasNoFormErrors(['debit', 'kredit']);
+        ->assertHasNoFormErrors();
+
+    expect(JurnalUmum::count())->toBe(2);
 });

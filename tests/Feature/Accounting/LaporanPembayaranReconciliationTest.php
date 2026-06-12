@@ -11,11 +11,16 @@ use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    Permission::firstOrCreate(['name' => 'View:LaporanPembayaran']);
+
+    $user = User::factory()->create();
+    $user->givePermissionTo('View:LaporanPembayaran');
+    $this->actingAs($user);
 });
 
 it('reconciles tagihan, terbayar and sisa in the summary', function () {

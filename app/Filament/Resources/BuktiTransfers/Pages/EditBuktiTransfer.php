@@ -38,17 +38,33 @@ class EditBuktiTransfer extends EditRecord
         DB::transaction(function () use ($record) {
             $record->refresh();
 
-            // Idempotency: already has a linked Pembayaran for this tagihan via transfer
-            $alreadyLinked = Pembayaran::query()
-                ->where('tagihan_siswa_id', $record->tagihan_siswa_id)
+            // Cari Pembayaran yang sudah ada berdasarkan referensi saja (tanpa
+            // filter tagihan_siswa_id) agar perubahan tagihan pada bukti yang
+            // sudah verified tidak membuat Pembayaran ganda.
+            // withTrashed() digunakan agar Pembayaran yang pernah di-soft-delete
+            // dapat dipulihkan/diperbarui alih-alih membuat entri baru yang
+            // berisiko dobel-akui ketika di-restore.
+            $pembayaran = Pembayaran::withTrashed()
                 ->where('referensi_pembayaran', 'BT-'.$record->id)
-                ->exists();
+                ->first();
 
-            if ($alreadyLinked) {
+            if ($pembayaran !== null) {
+                // Pembayaran sudah ada; pulihkan bila soft-deleted lalu pindahkan
+                // ke tagihan baru bila berbeda. Event updated akan memicu
+                // reconcilePayment yang merekonsiliasi tagihan lama dan baru.
+                if ($pembayaran->trashed()) {
+                    $pembayaran->restore();
+                    $pembayaran->refresh();
+                }
+
+                if ((int) $pembayaran->tagihan_siswa_id !== (int) $record->tagihan_siswa_id) {
+                    $pembayaran->update(['tagihan_siswa_id' => $record->tagihan_siswa_id]);
+                }
+
                 return;
             }
 
-            // Stamp verified_by / verified_at if not already set
+            // Stamp verified_by / verified_at jika belum diset
             if (! $record->verified_by || ! $record->verified_at) {
                 $record->verified_by = auth()->id();
                 $record->verified_at = now();

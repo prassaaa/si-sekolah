@@ -6,6 +6,7 @@ use App\Filament\Widgets\Laporan\LaporanPembayaranStats;
 use App\Models\JenisPembayaran;
 use App\Models\Semester;
 use App\Models\TagihanSiswa;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
@@ -24,6 +25,7 @@ use Illuminate\Support\Collection;
 
 class LaporanPembayaran extends Page implements HasSchemas, HasTable
 {
+    use HasPageShield;
     use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Akun;
 use App\Models\JurnalUmum;
 use App\Models\SaldoAwal;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
@@ -25,6 +26,7 @@ use Illuminate\Support\Collection;
 
 class BukuBesar extends Page implements HasSchemas, HasTable
 {
+    use HasPageShield;
     use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;

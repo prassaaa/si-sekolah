@@ -12,9 +12,22 @@ class SlipGajiPolicy
         return $user->can('ViewAny:SlipGaji');
     }
 
+    /**
+     * Izinkan lihat slip apabila user memiliki View:SlipGaji DAN:
+     *   - memiliki Create:SlipGaji (pengelola payroll: bendahara / super_admin), ATAU
+     *   - slip tersebut milik pegawai yang terhubung ke akun user ini (self-view guru).
+     */
     public function view(User $user, SlipGaji $slipGaji): bool
     {
-        return $user->can('View:SlipGaji');
+        if (! $user->can('View:SlipGaji')) {
+            return false;
+        }
+
+        if ($user->can('Create:SlipGaji')) {
+            return true;
+        }
+
+        return $slipGaji->pegawai?->user_id === $user->id;
     }
 
     public function create(User $user): bool

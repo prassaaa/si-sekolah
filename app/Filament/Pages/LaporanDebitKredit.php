@@ -5,6 +5,8 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\Laporan\LaporanDebitKreditStats;
 use App\Models\KasKeluar;
 use App\Models\KasMasuk;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -22,6 +24,7 @@ use Illuminate\Support\Collection;
 
 class LaporanDebitKredit extends Page implements HasSchemas, HasTable
 {
+    use HasPageShield;
     use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrows-right-left';
@@ -161,11 +164,11 @@ class LaporanDebitKredit extends Page implements HasSchemas, HasTable
                         $indicators = [];
 
                         if ($data['tanggal_mulai'] ?? null) {
-                            $indicators[] = 'Dari: '.\Carbon\Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
+                            $indicators[] = 'Dari: '.Carbon::parse($data['tanggal_mulai'])->translatedFormat('d M Y');
                         }
 
                         if ($data['tanggal_selesai'] ?? null) {
-                            $indicators[] = 'Sampai: '.\Carbon\Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
+                            $indicators[] = 'Sampai: '.Carbon::parse($data['tanggal_selesai'])->translatedFormat('d M Y');
                         }
 
                         return $indicators;

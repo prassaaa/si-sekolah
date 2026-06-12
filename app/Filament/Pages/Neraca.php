@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Akun;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 
 class Neraca extends Page implements HasSchemas, HasTable
 {
+    use HasPageShield;
     use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedScale;

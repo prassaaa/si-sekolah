@@ -12,7 +12,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class JurnalUmumForm
 {
@@ -23,15 +22,9 @@ class JurnalUmumForm
                 Grid::make(2)->schema([
                     TextInput::make('nomor_bukti')
                         ->label('Nomor Bukti')
-                        ->required()
-                        ->unique(ignoreRecord: true)
-                        ->maxLength(50)
-                        ->default(
-                            fn () => 'JU-'.
-                                now()->format('Ymd').
-                                '-'.
-                                strtoupper(Str::random(6)),
-                        ),
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->maxLength(50),
 
                     DatePicker::make('tanggal')
                         ->label('Tanggal')

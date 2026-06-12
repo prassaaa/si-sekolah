@@ -2,12 +2,15 @@
 
 namespace App\Filament\Pages;
 
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 
 class KirimNotifGaji extends Page
 {
+    use HasPageShield;
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedBell;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Notifikasi';

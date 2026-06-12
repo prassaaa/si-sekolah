@@ -6,6 +6,7 @@ use App\Filament\Widgets\Laporan\LaporanTagihanSiswaStats;
 use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\TagihanSiswa;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
 class LaporanTagihanSiswa extends Page implements HasSchemas, HasTable
 {
     use ExposesTableToWidgets, InteractsWithSchemas, InteractsWithTable;
+    use HasPageShield;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-currency-dollar';
 

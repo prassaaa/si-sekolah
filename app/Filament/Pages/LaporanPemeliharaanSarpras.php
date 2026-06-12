@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\SarprasPemeliharaan;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
@@ -21,6 +22,7 @@ use Illuminate\Support\Collection;
 
 class LaporanPemeliharaanSarpras extends Page implements HasSchemas, HasTable
 {
+    use HasPageShield;
     use InteractsWithSchemas, InteractsWithTable;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';

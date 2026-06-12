@@ -43,6 +43,29 @@ class SlipGajiResource extends Resource
         return SlipGajisTable::configure($table);
     }
 
+    /**
+     * Batasi query ke slip gaji milik pegawai user sendiri apabila user tidak
+     * memiliki permission Create:SlipGaji (proxy "pengelola payroll").
+     * Bendahara dan super_admin memiliki Create:SlipGaji sehingga dapat melihat
+     * semua slip. Guru hanya mendapat ViewAny+View sehingga hanya slip miliknya.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+
+        if (! auth()->user()?->can('Create:SlipGaji')) {
+            $query->whereHas(
+                'pegawai',
+                fn (Builder $q) => $q->where('user_id', auth()->id()),
+            );
+        }
+
+        return $query;
+    }
+
     public static function getRelations(): array
     {
         return [

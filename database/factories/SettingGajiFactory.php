@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\SettingGaji;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SettingGaji>
+ * @extends Factory<SettingGaji>
  */
 class SettingGajiFactory extends Factory
 {
@@ -17,7 +18,16 @@ class SettingGajiFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'gaji_pokok' => '5000000.00',
+            'tunjangan_jabatan' => '500000.00',
+            'tunjangan_kehadiran' => '300000.00',
+            'tunjangan_transport' => '200000.00',
+            'tunjangan_makan' => '150000.00',
+            'tunjangan_lainnya' => '0.00',
+            'potongan_bpjs' => '250000.00',
+            'potongan_pph21' => '100000.00',
+            'potongan_lainnya' => '0.00',
+            'is_active' => true,
         ];
     }
 }

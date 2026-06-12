@@ -4,6 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\Laporan\LaporanGajiStats;
 use App\Models\SlipGaji;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Pages\Page;
@@ -24,6 +26,7 @@ use Illuminate\Database\Eloquent\Model;
 class LaporanGaji extends Page implements HasSchemas, HasTable
 {
     use ExposesTableToWidgets, InteractsWithSchemas, InteractsWithTable;
+    use HasPageShield;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-currency-dollar';
 
@@ -120,7 +123,7 @@ class LaporanGaji extends Page implements HasSchemas, HasTable
                             return $query;
                         }
 
-                        $date = \Carbon\Carbon::parse($data['bulan']);
+                        $date = Carbon::parse($data['bulan']);
 
                         return $query
                             ->where('tahun', $date->year)
@@ -131,7 +134,7 @@ class LaporanGaji extends Page implements HasSchemas, HasTable
                             return null;
                         }
 
-                        return 'Bulan: '.\Carbon\Carbon::parse($data['bulan'])->translatedFormat('F Y');
+                        return 'Bulan: '.Carbon::parse($data['bulan'])->translatedFormat('F Y');
                     }),
                 SelectFilter::make('status')
                     ->label('Status')

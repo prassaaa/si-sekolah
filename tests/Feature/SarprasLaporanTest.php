@@ -15,11 +15,24 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    Permission::firstOrCreate(['name' => 'View:LaporanInventaris']);
+    Permission::firstOrCreate(['name' => 'View:LaporanKondisiSarpras']);
+    Permission::firstOrCreate(['name' => 'View:LaporanPemeliharaanSarpras']);
+    Permission::firstOrCreate(['name' => 'View:LaporanPeminjamanSarpras']);
+
+    $user = User::factory()->create();
+    $user->givePermissionTo([
+        'View:LaporanInventaris',
+        'View:LaporanKondisiSarpras',
+        'View:LaporanPemeliharaanSarpras',
+        'View:LaporanPeminjamanSarpras',
+    ]);
+    $this->actingAs($user);
 });
 
 // --- Page: LaporanInventaris ---

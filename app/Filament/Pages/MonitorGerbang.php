@@ -3,12 +3,15 @@
 namespace App\Filament\Pages;
 
 use App\Models\RfidScanLog;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
 
 class MonitorGerbang extends Page
 {
+    use HasPageShield;
+
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSignal;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Kesiswaan';
