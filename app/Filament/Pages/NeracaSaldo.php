@@ -4,8 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Models\Akun;
 use App\Services\Accounting\FinancialService;
+use App\Services\Accounting\LaporanPdfService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -20,6 +22,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class NeracaSaldo extends Page implements HasSchemas, HasTable
 {
@@ -110,6 +113,67 @@ class NeracaSaldo extends Page implements HasSchemas, HasTable
             ->emptyStateIcon('heroicon-o-inbox');
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('cetakPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(fn (): StreamedResponse => $this->cetakPdf()),
+        ];
+    }
+
+    public function cetakPdf(): StreamedResponse
+    {
+        $tanggalFilter = $this->getTableFilterState('tanggal') ?? [];
+        $tanggal = $tanggalFilter['tanggal'] ?? null;
+
+        $rows = $this->buildTrialBalance([
+            'tanggal' => $tanggalFilter,
+            'tampilkan_nol' => $this->getTableFilterState('tampilkan_nol') ?? [],
+        ]);
+
+        $isTotal = fn (array $row): bool => in_array($row['tipe'], ['Total', 'Seimbang', 'Selisih'], true);
+
+        $baris = $rows
+            ->reject($isTotal)
+            ->map(fn (array $row): array => [
+                $row['kode'],
+                $row['nama'],
+                $row['tipe'],
+                number_format((float) $row['debit'], 0, ',', '.'),
+                number_format((float) $row['kredit'], 0, ',', '.'),
+            ])
+            ->values()
+            ->all();
+
+        $ringkasan = $rows
+            ->filter($isTotal)
+            ->map(fn (array $row): array => [
+                '',
+                $row['nama'],
+                '',
+                number_format((float) $row['debit'], 0, ',', '.'),
+                number_format((float) $row['kredit'], 0, ',', '.'),
+            ])
+            ->values()
+            ->all();
+
+        $pdf = LaporanPdfService::make()
+            ->judul('NERACA SALDO')
+            ->periode($tanggal ? 'Per '.Carbon::parse($tanggal)->translatedFormat('d F Y') : 'Per Tanggal')
+            ->kolom(['Kode', 'Nama Akun', 'Tipe', ['Debit (Rp)', 'right'], ['Kredit (Rp)', 'right']])
+            ->baris($baris)
+            ->ringkasan($ringkasan)
+            ->render();
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            LaporanPdfService::make()->namaFile('neraca-saldo-'.($tanggal ?? now()->toDateString())),
+        );
+    }
+
     /**
      * Build the trial balance: every account's ending balance as of the filter
      * date, placed in the Debit or Kredit column per its posisi_normal, with a
@@ -129,7 +193,7 @@ class NeracaSaldo extends Page implements HasSchemas, HasTable
             return collect();
         }
 
-        $akuns = Akun::query()->orderBy('kode')->get();
+        $akuns = Akun::withTrashed()->orderBy('kode')->get();
 
         $saldoPerAkun = app(FinancialService::class)
             ->saldoPerAkun($akuns->pluck('id')->all(), $tanggal);

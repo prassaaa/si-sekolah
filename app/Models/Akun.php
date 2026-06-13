@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Database\Factories\AkunFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Akun extends Model
 {
-    /** @use HasFactory<\Database\Factories\AkunFactory> */
+    /** @use HasFactory<AkunFactory> */
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
@@ -73,8 +75,28 @@ class Akun extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Akun>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Akun>
+     * @return HasMany<SaldoAwal, $this>
+     */
+    public function saldoAwals(): HasMany
+    {
+        return $this->hasMany(SaldoAwal::class);
+    }
+
+    /**
+     * Whether this akun has any ledger footprint (jurnal umum atau saldo awal).
+     *
+     * Used to block deletion: an akun that has been used in the books must not
+     * be deleted (it would orphan journal rows and break historical reports);
+     * it should be deactivated via `is_active` instead.
+     */
+    public function hasLedgerActivity(): bool
+    {
+        return $this->jurnalUmums()->exists() || $this->saldoAwals()->exists();
+    }
+
+    /**
+     * @param  Builder<Akun>  $query
+     * @return Builder<Akun>
      */
     public function scopeActive($query)
     {
@@ -82,8 +104,8 @@ class Akun extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Akun>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Akun>
+     * @param  Builder<Akun>  $query
+     * @return Builder<Akun>
      */
     public function scopeByTipe($query, string $tipe)
     {
@@ -91,8 +113,8 @@ class Akun extends Model
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<Akun>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Akun>
+     * @param  Builder<Akun>  $query
+     * @return Builder<Akun>
      */
     public function scopeRoot($query)
     {

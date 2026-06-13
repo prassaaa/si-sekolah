@@ -4,8 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Models\Akun;
 use App\Services\Accounting\FinancialService;
+use App\Services\Accounting\LaporanPdfService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -21,6 +23,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class Neraca extends Page implements HasSchemas, HasTable
 {
@@ -57,86 +60,7 @@ class Neraca extends Page implements HasSchemas, HasTable
                 $tanggal = $filters['tanggal']['tanggal'] ?? null;
                 $tipe = $filters['tipe']['value'] ?? null;
 
-                if (! $tanggal) {
-                    return collect();
-                }
-
-                $akuns = Akun::whereIn('tipe', ['aset', 'liabilitas', 'ekuitas'])
-                    ->orderBy('kode')
-                    ->get();
-
-                $saldoPerAkun = app(FinancialService::class)
-                    ->saldoPerAkun($akuns->pluck('id')->all(), $tanggal);
-
-                $visibleAkuns = $tipe
-                    ? $akuns->where('tipe', $tipe)
-                    : $akuns;
-
-                $rows = $visibleAkuns->map(function ($akun) use ($saldoPerAkun) {
-                    $saldo = $saldoPerAkun[$akun->id] ?? '0';
-
-                    if (bccomp($saldo, '0', 2) === 0) {
-                        return null;
-                    }
-
-                    return [
-                        'akun' => $akun->nama,
-                        'tipe' => match ($akun->tipe) {
-                            'aset' => 'Aset',
-                            'liabilitas' => 'Kewajiban',
-                            'ekuitas' => 'Modal',
-                            default => ucfirst($akun->tipe),
-                        },
-                        'saldo' => $saldo,
-                    ];
-                })->filter()->values();
-
-                $totalAset = '0';
-                $totalLiabilitasEkuitas = '0';
-
-                foreach ($akuns as $akun) {
-                    $saldo = $saldoPerAkun[$akun->id] ?? '0';
-
-                    if ($akun->tipe === 'aset') {
-                        $totalAset = bcadd($totalAset, $saldo, 2);
-                    } else {
-                        $totalLiabilitasEkuitas = bcadd($totalLiabilitasEkuitas, $saldo, 2);
-                    }
-                }
-
-                $labaBerjalan = $this->labaBerjalan($tanggal);
-                $totalLiabilitasEkuitas = bcadd($totalLiabilitasEkuitas, $labaBerjalan, 2);
-
-                if ((! $tipe || $tipe === 'ekuitas') && bccomp($labaBerjalan, '0', 2) !== 0) {
-                    $rows->push([
-                        'akun' => 'Laba (Rugi) Berjalan',
-                        'tipe' => 'Modal',
-                        'saldo' => $labaBerjalan,
-                    ]);
-                }
-
-                $selisih = bcsub($totalAset, $totalLiabilitasEkuitas, 2);
-                $balanced = bccomp($selisih, '0', 2) === 0;
-
-                if (! $tipe) {
-                    $rows->push([
-                        'akun' => 'TOTAL ASET',
-                        'tipe' => 'Total',
-                        'saldo' => $totalAset,
-                    ]);
-                    $rows->push([
-                        'akun' => 'TOTAL KEWAJIBAN + MODAL',
-                        'tipe' => 'Total',
-                        'saldo' => $totalLiabilitasEkuitas,
-                    ]);
-                    $rows->push([
-                        'akun' => $balanced ? 'SEIMBANG (Balanced)' : 'TIDAK SEIMBANG (Selisih)',
-                        'tipe' => $balanced ? 'Seimbang' : 'Selisih',
-                        'saldo' => $selisih,
-                    ]);
-                }
-
-                return $rows;
+                return $this->buildRows($tanggal, $tipe);
             })
             ->columns([
                 TextColumn::make('akun')
@@ -186,6 +110,160 @@ class Neraca extends Page implements HasSchemas, HasTable
             ->emptyStateHeading('Tidak ada data')
             ->emptyStateDescription('Silakan pilih tanggal untuk melihat neraca.')
             ->emptyStateIcon('heroicon-o-inbox');
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('cetakPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(fn (): StreamedResponse => $this->cetakPdf()),
+        ];
+    }
+
+    /**
+     * Build the neraca rows shown on screen AND exported to PDF.
+     *
+     * Account balances come from FinancialService::saldoPerAkun (snapshot
+     * semantics, trashed-inclusive). The account list itself is fetched
+     * withTrashed() so a soft-deleted account that still carries a balance is
+     * both summed and rendered, keeping TOTAL ASET == TOTAL KEWAJIBAN+MODAL
+     * (temuan #37/#71/#76). A synthetic "Laba (Rugi) Berjalan" equity line is
+     * appended so the neraca stays SEIMBANG (T2).
+     *
+     * @return Collection<int, array{akun: string, tipe: string, saldo: string}>
+     */
+    public function buildRows(?string $tanggal, ?string $tipe = null): Collection
+    {
+        if (! $tanggal) {
+            return collect();
+        }
+
+        $akuns = Akun::withTrashed()
+            ->whereIn('tipe', ['aset', 'liabilitas', 'ekuitas'])
+            ->orderBy('kode')
+            ->get();
+
+        $saldoPerAkun = app(FinancialService::class)
+            ->saldoPerAkun($akuns->pluck('id')->all(), $tanggal);
+
+        $visibleAkuns = $tipe
+            ? $akuns->where('tipe', $tipe)
+            : $akuns;
+
+        $rows = $visibleAkuns->map(function ($akun) use ($saldoPerAkun) {
+            $saldo = $saldoPerAkun[$akun->id] ?? '0';
+
+            if (bccomp($saldo, '0', 2) === 0) {
+                return null;
+            }
+
+            return [
+                'akun' => $akun->nama,
+                'tipe' => match ($akun->tipe) {
+                    'aset' => 'Aset',
+                    'liabilitas' => 'Kewajiban',
+                    'ekuitas' => 'Modal',
+                    default => ucfirst($akun->tipe),
+                },
+                'saldo' => $saldo,
+            ];
+        })->filter()->values();
+
+        $totalAset = '0';
+        $totalLiabilitasEkuitas = '0';
+
+        foreach ($akuns as $akun) {
+            $saldo = $saldoPerAkun[$akun->id] ?? '0';
+
+            if ($akun->tipe === 'aset') {
+                $totalAset = bcadd($totalAset, $saldo, 2);
+            } else {
+                $totalLiabilitasEkuitas = bcadd($totalLiabilitasEkuitas, $saldo, 2);
+            }
+        }
+
+        $labaBerjalan = $this->labaBerjalan($tanggal);
+        $totalLiabilitasEkuitas = bcadd($totalLiabilitasEkuitas, $labaBerjalan, 2);
+
+        if ((! $tipe || $tipe === 'ekuitas') && bccomp($labaBerjalan, '0', 2) !== 0) {
+            $rows->push([
+                'akun' => 'Laba (Rugi) Berjalan',
+                'tipe' => 'Modal',
+                'saldo' => $labaBerjalan,
+            ]);
+        }
+
+        $selisih = bcsub($totalAset, $totalLiabilitasEkuitas, 2);
+        $balanced = bccomp($selisih, '0', 2) === 0;
+
+        if (! $tipe) {
+            $rows->push([
+                'akun' => 'TOTAL ASET',
+                'tipe' => 'Total',
+                'saldo' => $totalAset,
+            ]);
+            $rows->push([
+                'akun' => 'TOTAL KEWAJIBAN + MODAL',
+                'tipe' => 'Total',
+                'saldo' => $totalLiabilitasEkuitas,
+            ]);
+            $rows->push([
+                'akun' => $balanced ? 'SEIMBANG (Balanced)' : 'TIDAK SEIMBANG (Selisih)',
+                'tipe' => $balanced ? 'Seimbang' : 'Selisih',
+                'saldo' => $selisih,
+            ]);
+        }
+
+        return $rows;
+    }
+
+    public function cetakPdf(): StreamedResponse
+    {
+        $filters = $this->getTableFilterState('tanggal') ?? [];
+        $tipeFilter = $this->getTableFilterState('tipe') ?? [];
+
+        $tanggal = $filters['tanggal'] ?? null;
+        $tipe = $tipeFilter['value'] ?? null;
+
+        $rows = $this->buildRows($tanggal, $tipe);
+
+        $isTotal = fn (array $row): bool => in_array($row['tipe'], ['Total', 'Seimbang', 'Selisih'], true);
+
+        $baris = $rows
+            ->reject($isTotal)
+            ->map(fn (array $row): array => [
+                $row['akun'],
+                $row['tipe'],
+                number_format((float) $row['saldo'], 0, ',', '.'),
+            ])
+            ->values()
+            ->all();
+
+        $ringkasan = $rows
+            ->filter($isTotal)
+            ->map(fn (array $row): array => [
+                $row['akun'],
+                '',
+                number_format((float) $row['saldo'], 0, ',', '.'),
+            ])
+            ->values()
+            ->all();
+
+        $pdf = LaporanPdfService::make()
+            ->judul('NERACA')
+            ->periode($tanggal ? 'Per '.Carbon::parse($tanggal)->translatedFormat('d F Y') : 'Per Tanggal')
+            ->kolom(['Akun', 'Tipe', ['Saldo (Rp)', 'right']])
+            ->baris($baris)
+            ->ringkasan($ringkasan)
+            ->render();
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            LaporanPdfService::make()->namaFile('neraca-'.($tanggal ?? now()->toDateString())),
+        );
     }
 
     /**

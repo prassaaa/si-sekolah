@@ -4,8 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\Laporan\LaporanGajiStats;
 use App\Models\SlipGaji;
+use App\Services\Accounting\LaporanPdfService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Pages\Page;
@@ -22,6 +24,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanGaji extends Page implements HasSchemas, HasTable
 {
@@ -151,10 +154,82 @@ class LaporanGaji extends Page implements HasSchemas, HasTable
             ->emptyStateIcon('heroicon-o-inbox');
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('cetakPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(fn (): StreamedResponse => $this->cetakPdf()),
+        ];
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [
             LaporanGajiStats::class,
         ];
+    }
+
+    private function cetakPdf(): StreamedResponse
+    {
+        $query = $this->getFilteredSortedTableQuery();
+
+        $slips = $query !== null
+            ? $query->with('pegawai')->get()
+            : collect();
+
+        $statusLabel = fn (string $state): string => match ($state) {
+            'draft' => 'Draft',
+            'approved' => 'Approved',
+            'paid' => 'Paid',
+            default => ucfirst($state),
+        };
+
+        $baris = $slips->map(fn (SlipGaji $slip): array => [
+            $slip->pegawai?->nip ?? '-',
+            $slip->pegawai?->nama_lengkap ?? '-',
+            $this->rupiah($slip->gaji_pokok),
+            $this->rupiah($slip->total_tunjangan),
+            $this->rupiah($slip->total_potongan),
+            $this->rupiah($slip->gaji_bersih),
+            $statusLabel((string) $slip->status),
+        ])->all();
+
+        $pdf = LaporanPdfService::make()
+            ->judul('Laporan Slip Gaji')
+            ->periode('Dicetak '.now()->translatedFormat('d F Y'))
+            ->landscape()
+            ->kolom([
+                'NIP',
+                'Nama',
+                ['Gaji Pokok', 'right'],
+                ['Tunjangan', 'right'],
+                ['Potongan', 'right'],
+                ['Gaji Bersih', 'right'],
+                ['Status', 'center'],
+            ])
+            ->baris($baris)
+            ->ringkasan([[
+                'TOTAL',
+                '',
+                $this->rupiah($slips->sum('gaji_pokok')),
+                $this->rupiah($slips->sum('total_tunjangan')),
+                $this->rupiah($slips->sum('total_potongan')),
+                $this->rupiah($slips->sum('gaji_bersih')),
+                '',
+            ]])
+            ->render();
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            LaporanPdfService::make()->namaFile('laporan-gaji-'.now()->format('Y-m-d')),
+        );
+    }
+
+    private function rupiah(mixed $value): string
+    {
+        return 'Rp '.number_format((float) $value, 0, ',', '.');
     }
 }

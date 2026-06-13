@@ -60,6 +60,7 @@ class RoleSeeder extends Seeder
         'LaporanInventaris', 'LaporanKondisiSarpras', 'LaporanPemeliharaanSarpras',
         'LaporanPeminjamanSarpras',
         'LaporanSiswa', 'LaporanTahfidz', 'KirimNotifPresensi', 'MonitorGerbang',
+        'LaporanTunggakan',
     ];
 
     /**
@@ -243,6 +244,7 @@ class RoleSeeder extends Seeder
             $this->pagePermission('LaporanPembayaranPerKelas'),
             $this->pagePermission('LaporanPembayaranPerTanggal'),
             $this->pagePermission('LaporanTagihanSiswa'),
+            $this->pagePermission('LaporanTunggakan'),
             $this->pagePermission('LaporanUnitPos'),
             $this->pagePermission('LaporanTabungan'),
             $this->pagePermission('LaporanGaji'),
@@ -304,6 +306,7 @@ class RoleSeeder extends Seeder
             $this->pagePermission('MonitorGerbang'),
             $this->pagePermission('LaporanPembayaran'),
             $this->pagePermission('LaporanTagihanSiswa'),
+            $this->pagePermission('LaporanTunggakan'),
         );
     }
 

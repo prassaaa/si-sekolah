@@ -4,8 +4,11 @@ namespace App\Filament\Pages;
 
 use App\Models\SarprasBarang;
 use App\Models\SarprasKategori;
+use App\Services\Accounting\LaporanPdfService;
 use App\Services\Sarpras\PenyusutanService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -14,11 +17,13 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanPenyusutan extends Page implements HasSchemas, HasTable
 {
@@ -40,6 +45,18 @@ class LaporanPenyusutan extends Page implements HasSchemas, HasTable
      */
     public array $summary = [];
 
+    /**
+     * Baris tabel terakhir yang dirender, dipakai untuk ekspor PDF.
+     *
+     * @var array<int, array<string, string>>
+     */
+    public array $rows = [];
+
+    /**
+     * Tanggal acuan akumulasi/nilai buku terakhir yang dirender (Y-m-d).
+     */
+    public ?string $perTanggal = null;
+
     public function getTitle(): string|Htmlable
     {
         return 'Laporan Penyusutan Aset';
@@ -60,7 +77,12 @@ class LaporanPenyusutan extends Page implements HasSchemas, HasTable
                 $kategoriId = $filters['kategori_id']['value'] ?? null;
 
                 $service = app(PenyusutanService::class);
-                $sampai = Carbon::now();
+
+                $sampai = filled($filters['per_tanggal']['per_tanggal'] ?? null)
+                    ? Carbon::parse($filters['per_tanggal']['per_tanggal'])->endOfDay()
+                    : Carbon::now();
+
+                $this->perTanggal = $sampai->toDateString();
 
                 $totalPerolehan = '0.00';
                 $totalAkumulasi = '0.00';
@@ -104,6 +126,8 @@ class LaporanPenyusutan extends Page implements HasSchemas, HasTable
                     'total_nilai_buku' => $this->rupiah($totalNilaiBuku),
                 ];
 
+                $this->rows = $records->values()->all();
+
                 return $records;
             })
             ->columns([
@@ -139,12 +163,82 @@ class LaporanPenyusutan extends Page implements HasSchemas, HasTable
                             ->orderBy('nama')
                             ->pluck('nama', 'id'),
                     ),
+                Filter::make('per_tanggal')
+                    ->form([
+                        DatePicker::make('per_tanggal')
+                            ->label('Per Tanggal')
+                            ->helperText('Akumulasi & nilai buku dihitung sampai tanggal ini.')
+                            ->default(now()),
+                    ])
+                    ->indicateUsing(function (array $data): ?string {
+                        if (! ($data['per_tanggal'] ?? null)) {
+                            return null;
+                        }
+
+                        return 'Per: '.Carbon::parse($data['per_tanggal'])->translatedFormat('d M Y');
+                    }),
             ])
             ->deferFilters(false)
             ->defaultPaginationPageOption('all')
             ->emptyStateHeading('Tidak ada data')
             ->emptyStateDescription('Tidak ada aset untuk dihitung penyusutannya.')
             ->emptyStateIcon('heroicon-o-inbox');
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('cetakPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(fn (): StreamedResponse => $this->cetakPdf()),
+        ];
+    }
+
+    private function cetakPdf(): StreamedResponse
+    {
+        $tanggal = $this->perTanggal ? Carbon::parse($this->perTanggal) : now();
+
+        $baris = array_map(fn (array $row): array => [
+            $row['nama'],
+            $row['kategori'],
+            $row['metode_susut'],
+            $row['harga_perolehan'],
+            $row['per_bulan'],
+            $row['akumulasi'],
+            $row['nilai_buku'],
+        ], $this->rows);
+
+        $pdf = LaporanPdfService::make()
+            ->judul('Laporan Penyusutan Aset')
+            ->periode('Per '.$tanggal->translatedFormat('d F Y'))
+            ->landscape()
+            ->kolom([
+                'Nama Barang',
+                'Kategori',
+                'Metode',
+                ['Harga Perolehan', 'right'],
+                ['Penyusutan/Bulan', 'right'],
+                ['Akumulasi', 'right'],
+                ['Nilai Buku', 'right'],
+            ])
+            ->baris($baris)
+            ->ringkasan([[
+                'TOTAL',
+                '',
+                '',
+                $this->summary['total_perolehan'] ?? 'Rp 0',
+                '',
+                $this->summary['total_akumulasi'] ?? 'Rp 0',
+                $this->summary['total_nilai_buku'] ?? 'Rp 0',
+            ]])
+            ->render();
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            LaporanPdfService::make()->namaFile('laporan-penyusutan-'.$tanggal->format('Y-m-d')),
+        );
     }
 
     private function rupiah(string $value): string

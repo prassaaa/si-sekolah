@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Akuns\Tables;
 
+use App\Models\Akun;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -82,10 +84,13 @@ class AkunsTable
             ->actions([
                 ViewAction::make(),
                 EditAction::make(),
+                DeleteAction::make()
+                    ->hidden(fn (Akun $record): bool => $record->hasLedgerActivity()),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->authorizeIndividualRecords('delete'),
                 ]),
             ])
             ->defaultSort('kode');

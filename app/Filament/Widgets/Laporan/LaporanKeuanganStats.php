@@ -16,13 +16,13 @@ class LaporanKeuanganStats extends StatsOverviewWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Total Tagihan', 'Rp '.number_format($this->summary['total_tagihan'] ?? 0, 0, ',', '.'))
-                ->description('Tagihan dalam periode')
+            Stat::make('Tagihan Terbit', 'Rp '.number_format($this->summary['total_tagihan'] ?? 0, 0, ',', '.'))
+                ->description('Tagihan terbit periode ini (tgl tagihan)')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('primary'),
 
-            Stat::make('Total Pembayaran', 'Rp '.number_format($this->summary['total_pembayaran'] ?? 0, 0, ',', '.'))
-                ->description('Pembayaran diterima')
+            Stat::make('Pembayaran Diterima', 'Rp '.number_format($this->summary['total_pembayaran'] ?? 0, 0, ',', '.'))
+                ->description('Pembayaran diterima periode ini (tgl bayar)')
                 ->descriptionIcon('heroicon-m-check-circle')
                 ->color('success'),
 

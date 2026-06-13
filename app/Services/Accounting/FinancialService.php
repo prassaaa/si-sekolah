@@ -7,6 +7,21 @@ use App\Models\JurnalUmum;
 use App\Models\SaldoAwal;
 use Illuminate\Support\Carbon;
 
+/**
+ * Single source of truth for ledger-derived figures (pendapatan, beban, net
+ * income, per-account balances) shared by every laporan page so they always
+ * agree.
+ *
+ * Soft-deleted akun treatment (temuan #37/#71/#76): every aggregation here
+ * includes trashed accounts (`withTrashed`). An akun that still carries journal
+ * history must keep contributing to historical reports — otherwise its journal
+ * side (e.g. a trashed beban's debit) would vanish from Laba Rugi while its
+ * counterpart (kas credit) stays, silently unbalancing Neraca and making the
+ * Laba Rugi total disagree with the per-account rincian. Deleting an akun that
+ * has journals/saldo awal is blocked at the resource + policy level, so this is
+ * a safety net that keeps already-trashed accounts consistent across LabaRugi,
+ * Neraca, NeracaSaldo and BukuBesar.
+ */
 class FinancialService
 {
     /**
@@ -161,6 +176,10 @@ class FinancialService
     /**
      * Shared core for saldoPerAkun / saldoAwalPeriodePerAkun.
      *
+     * Soft-deleted akun that still carry journal history are included
+     * (`withTrashed`) so historical reports stay balanced and reconcile with
+     * LabaRugi/BukuBesar — see the class docblock note on trashed accounts.
+     *
      * @param  array<int>|null  $akunIds
      * @return array<int, string>
      */
@@ -169,6 +188,7 @@ class FinancialService
         $tanggal = Carbon::parse($perTanggal)->toDateString();
 
         $akuns = Akun::query()
+            ->withTrashed()
             ->when($akunIds !== null, fn ($q) => $q->whereIn('id', $akunIds))
             ->get(['id', 'posisi_normal']);
 
@@ -204,13 +224,16 @@ class FinancialService
      * Sum the ledger movement for every account of a given tipe over a period.
      *
      * A null $start removes the lower bound (since the beginning of the books).
+     * Soft-deleted akun are included (`withTrashed`) so a trashed account that
+     * still carries journal history keeps contributing to historical totals and
+     * the total reconciles with the per-account rincian (LabaRugi).
      */
     private function sumByTipe(string $tipe, Carbon|string|null $start, Carbon|string $end, bool $credit): string
     {
         $start = $start !== null ? Carbon::parse($start)->startOfDay() : null;
         $end = Carbon::parse($end)->endOfDay();
 
-        $akunIds = Akun::query()->where('tipe', $tipe)->pluck('id');
+        $akunIds = Akun::query()->withTrashed()->where('tipe', $tipe)->pluck('id');
 
         if ($akunIds->isEmpty()) {
             return '0.00';

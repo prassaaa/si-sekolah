@@ -17,22 +17,22 @@ class LaporanPembayaranStats extends StatsOverviewWidget
     {
         return [
             Stat::make('Total Tagihan', 'Rp '.number_format($this->summary['total_tagihan'] ?? 0, 0, ',', '.'))
-                ->description('Total tagihan')
+                ->description('Total tagihan (tidak termasuk batal)')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('gray'),
 
-            Stat::make('Total Terbayar', 'Rp '.number_format($this->summary['total_terbayar'] ?? 0, 0, ',', '.'))
-                ->description('Sudah dibayar')
+            Stat::make('Terbayar (periode ini)', 'Rp '.number_format($this->summary['terbayar_periode'] ?? 0, 0, ',', '.'))
+                ->description('Pembayaran berhasil pada rentang tanggal')
                 ->descriptionIcon('heroicon-m-check-circle')
                 ->color('success'),
 
             Stat::make('Sisa Tagihan', 'Rp '.number_format($this->summary['total_sisa'] ?? 0, 0, ',', '.'))
-                ->description('Belum terbayar')
+                ->description('Sisa tagihan riil (posisi terkini)')
                 ->descriptionIcon('heroicon-m-exclamation-circle')
                 ->color('danger'),
 
-            Stat::make('Persentase', ($this->summary['persentase'] ?? 0).'%')
-                ->description('Tingkat pembayaran')
+            Stat::make('Persentase Lunas', ($this->summary['persentase'] ?? 0).'%')
+                ->description('Tagihan terbayar dari total')
                 ->descriptionIcon('heroicon-m-chart-pie')
                 ->color('primary'),
         ];

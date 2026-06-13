@@ -61,11 +61,11 @@ it('reconciles tagihan, terbayar and sisa in the summary', function () {
     $summary = $component->get('summary');
 
     expect((float) $summary['total_tagihan'])->toBe(1000000.0)
-        ->and((float) $summary['total_terbayar'])->toBe(400000.0)
-        ->and((float) $summary['total_tagihan'])->toBe((float) $summary['total_terbayar'] + (float) $summary['total_sisa']);
+        ->and((float) $summary['terbayar_periode'])->toBe(400000.0)
+        ->and((float) $summary['total_sisa'])->toBe(600000.0);
 });
 
-it('excludes payments outside the date window from terbayar', function () {
+it('excludes payments outside the date window from terbayar but keeps real sisa', function () {
     $tahunAjaran = TahunAjaran::factory()->create();
     $semester = Semester::factory()->create(['is_active' => true, 'tahun_ajaran_id' => $tahunAjaran->id]);
     $kelas = Kelas::factory()->create(['tahun_ajaran_id' => $tahunAjaran->id]);
@@ -102,6 +102,9 @@ it('excludes payments outside the date window from terbayar', function () {
 
     $summary = $component->get('summary');
 
-    expect((float) $summary['total_terbayar'])->toBe(0.0)
-        ->and((float) $summary['total_sisa'])->toBe(1000000.0);
+    // Pembayaran di luar rentang tanggal tidak masuk "terbayar (periode ini)",
+    // tetapi "Sisa Tagihan" tetap memakai sisa_tagihan riil (600.000), bukan
+    // total semester dikurangi pembayaran periode (#73/#78).
+    expect((float) $summary['terbayar_periode'])->toBe(0.0)
+        ->and((float) $summary['total_sisa'])->toBe(600000.0);
 });

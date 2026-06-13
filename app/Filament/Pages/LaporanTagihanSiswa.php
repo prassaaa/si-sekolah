@@ -6,7 +6,9 @@ use App\Filament\Widgets\Laporan\LaporanTagihanSiswaStats;
 use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\TagihanSiswa;
+use App\Services\Accounting\LaporanPdfService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Filament\Actions\Action;
 use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -20,6 +22,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanTagihanSiswa extends Page implements HasSchemas, HasTable
 {
@@ -147,5 +150,87 @@ class LaporanTagihanSiswa extends Page implements HasSchemas, HasTable
         return [
             LaporanTagihanSiswaStats::class,
         ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('cetakPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(fn (): StreamedResponse => $this->cetakPdf()),
+        ];
+    }
+
+    private function cetakPdf(): StreamedResponse
+    {
+        $query = $this->getFilteredSortedTableQuery();
+
+        $tagihans = $query !== null
+            ? $query->with(['siswa.kelas', 'jenisPembayaran'])->get()
+            : collect();
+
+        $statusLabel = fn (string $state): string => match ($state) {
+            'belum_bayar' => 'Belum Bayar',
+            'sebagian' => 'Sebagian',
+            'lunas' => 'Lunas',
+            'batal' => 'Batal',
+            default => ucfirst($state),
+        };
+
+        $baris = $tagihans->map(function (TagihanSiswa $tagihan) use ($statusLabel): array {
+            return [
+                $tagihan->nomor_tagihan,
+                $tagihan->siswa?->nama_lengkap ?? '-',
+                $tagihan->siswa?->kelas?->nama ?? '-',
+                $tagihan->jenisPembayaran?->nama ?? '-',
+                'Rp '.number_format((float) $tagihan->total_tagihan, 0, ',', '.'),
+                'Rp '.number_format((float) $tagihan->total_terbayar, 0, ',', '.'),
+                'Rp '.number_format((float) $tagihan->sisa_tagihan, 0, ',', '.'),
+                $statusLabel((string) $tagihan->status),
+            ];
+        })->toArray();
+
+        // Agregat ringkasan mengecualikan tagihan batal (#79).
+        $aktif = $tagihans->where('status', '!=', 'batal');
+
+        $pdf = LaporanPdfService::make()
+            ->judul('LAPORAN TAGIHAN SISWA')
+            ->periode('Per '.now()->translatedFormat('d F Y'))
+            ->kolom([
+                'No. Tagihan',
+                'Nama Siswa',
+                'Kelas',
+                'Jenis Tagihan',
+                ['Tagihan', 'right'],
+                ['Terbayar', 'right'],
+                ['Sisa', 'right'],
+                ['Status', 'center'],
+            ])
+            ->baris($baris)
+            ->ringkasan([
+                [
+                    'TOTAL',
+                    '',
+                    '',
+                    '',
+                    'Rp '.number_format((float) $aktif->sum('total_tagihan'), 0, ',', '.'),
+                    'Rp '.number_format((float) $aktif->sum('total_terbayar'), 0, ',', '.'),
+                    'Rp '.number_format((float) $aktif->sum('sisa_tagihan'), 0, ',', '.'),
+                    '',
+                ],
+            ])
+            ->catatan('Baris total tidak memperhitungkan tagihan berstatus batal.')
+            ->landscape()
+            ->render();
+
+        $namaFile = LaporanPdfService::make()
+            ->namaFile('laporan-tagihan-siswa-'.now()->format('Ymd'));
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            $namaFile,
+        );
     }
 }

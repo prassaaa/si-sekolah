@@ -5,8 +5,10 @@ namespace App\Filament\Pages;
 use App\Models\Akun;
 use App\Models\JurnalUmum;
 use App\Services\Accounting\FinancialService;
+use App\Services\Accounting\LaporanPdfService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -23,6 +25,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BukuBesar extends Page implements HasSchemas, HasTable
 {
@@ -120,6 +123,82 @@ class BukuBesar extends Page implements HasSchemas, HasTable
             ->emptyStateIcon('heroicon-o-inbox');
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('cetakPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(fn (): StreamedResponse => $this->cetakPdf()),
+        ];
+    }
+
+    public function cetakPdf(): StreamedResponse
+    {
+        $akunFilter = $this->getTableFilterState('akun_id') ?? [];
+        $tanggalFilter = $this->getTableFilterState('tanggal') ?? [];
+
+        $akunId = $akunFilter['value'] ?? null;
+        $tanggalMulai = $tanggalFilter['tanggal_mulai'] ?? null;
+        $tanggalAkhir = $tanggalFilter['tanggal_akhir'] ?? null;
+
+        $rows = $this->buildLedger([
+            'akun_id' => $akunFilter,
+            'tanggal' => $tanggalFilter,
+        ]);
+
+        $akun = $akunId ? Akun::withTrashed()->find($akunId) : null;
+
+        $baris = $rows
+            ->map(fn (array $row): array => [
+                $row['tanggal'] ? Carbon::parse($row['tanggal'])->format('d/m/Y') : '-',
+                $row['nomor_bukti'],
+                $row['keterangan'],
+                number_format((float) $row['debit'], 0, ',', '.'),
+                number_format((float) $row['kredit'], 0, ',', '.'),
+                number_format((float) $row['saldo'], 0, ',', '.'),
+            ])
+            ->values()
+            ->all();
+
+        $judul = $akun
+            ? 'BUKU BESAR — '.$akun->kode.' '.$akun->nama
+            : 'BUKU BESAR';
+
+        $pdf = LaporanPdfService::make()
+            ->judul($judul)
+            ->periode($this->labelPeriode($tanggalMulai, $tanggalAkhir))
+            ->kolom([
+                'Tanggal',
+                'No. Bukti',
+                'Keterangan',
+                ['Debit (Rp)', 'right'],
+                ['Kredit (Rp)', 'right'],
+                ['Saldo (Rp)', 'right'],
+            ])
+            ->baris($baris)
+            ->landscape()
+            ->render();
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            LaporanPdfService::make()->namaFile(
+                'buku-besar-'.($akun?->kode ?? 'akun').'-'.($tanggalAkhir ?? now()->toDateString())
+            ),
+        );
+    }
+
+    private function labelPeriode(?string $tanggalMulai, ?string $tanggalAkhir): string
+    {
+        if (! $tanggalMulai || ! $tanggalAkhir) {
+            return 'Semua Periode';
+        }
+
+        return 'Periode '.Carbon::parse($tanggalMulai)->translatedFormat('d M Y')
+            .' s.d. '.Carbon::parse($tanggalAkhir)->translatedFormat('d M Y');
+    }
+
     /**
      * Build a real ledger for a single account using snapshot semantics.
      *
@@ -145,7 +224,7 @@ class BukuBesar extends Page implements HasSchemas, HasTable
             return collect();
         }
 
-        $akun = Akun::query()->find($akunId);
+        $akun = Akun::withTrashed()->find($akunId);
 
         if (! $akun) {
             return collect();

@@ -41,9 +41,18 @@ class AkunPolicy
 
     /**
      * Determine whether the user can delete the model.
+     *
+     * An akun yang sudah dipakai di pembukuan (punya jurnal umum atau saldo
+     * awal) tidak boleh dihapus — menghapusnya akan mengorbankan baris jurnal
+     * dan merusak laporan historis. Nonaktifkan lewat `is_active` sebagai
+     * gantinya.
      */
     public function delete(User $user, Akun $akun): bool
     {
+        if ($akun->hasLedgerActivity()) {
+            return false;
+        }
+
         return $user->can('Delete:Akun');
     }
 
@@ -73,9 +82,16 @@ class AkunPolicy
 
     /**
      * Determine whether the user can permanently delete the model.
+     *
+     * Sama seperti delete(): akun ber-jurnal/saldo awal tidak boleh dihapus
+     * permanen agar baris jurnal historis tidak menjadi yatim.
      */
     public function forceDelete(User $user, Akun $akun): bool
     {
+        if ($akun->hasLedgerActivity()) {
+            return false;
+        }
+
         return $user->can('ForceDelete:Akun');
     }
 

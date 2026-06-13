@@ -4,8 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\Laporan\LaporanJurnalStats;
 use App\Models\JurnalUmum;
+use App\Services\Accounting\LaporanPdfService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Concerns\ExposesTableToWidgets;
 use Filament\Pages\Page;
@@ -22,6 +24,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanJurnal extends Page implements HasSchemas, HasTable
 {
@@ -126,6 +129,84 @@ class LaporanJurnal extends Page implements HasSchemas, HasTable
             ->emptyStateHeading('Tidak ada data')
             ->emptyStateDescription('Silakan pilih rentang tanggal untuk melihat jurnal umum.')
             ->emptyStateIcon('heroicon-o-inbox');
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('cetakPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(fn (): StreamedResponse => $this->cetakPdf()),
+        ];
+    }
+
+    public function cetakPdf(): StreamedResponse
+    {
+        $tanggalFilter = $this->getTableFilterState('tanggal') ?? [];
+        $tanggalMulai = $tanggalFilter['tanggal_mulai'] ?? null;
+        $tanggalSelesai = $tanggalFilter['tanggal_selesai'] ?? null;
+
+        $entries = JurnalUmum::query()
+            ->with('akun')
+            ->when($tanggalMulai, fn (Builder $q, $date) => $q->where('tanggal', '>=', $date))
+            ->when($tanggalSelesai, fn (Builder $q, $date) => $q->where('tanggal', '<=', $date))
+            ->orderBy('tanggal')
+            ->orderBy('nomor_bukti')
+            ->get();
+
+        $totalDebit = '0';
+        $totalKredit = '0';
+
+        $baris = $entries->map(function (JurnalUmum $entry) use (&$totalDebit, &$totalKredit): array {
+            $totalDebit = bcadd($totalDebit, (string) $entry->debit, 2);
+            $totalKredit = bcadd($totalKredit, (string) $entry->kredit, 2);
+
+            return [
+                Carbon::parse($entry->tanggal)->format('d/m/Y'),
+                $entry->nomor_bukti,
+                $entry->akun?->nama ?? '-',
+                $entry->keterangan,
+                number_format((float) $entry->debit, 0, ',', '.'),
+                number_format((float) $entry->kredit, 0, ',', '.'),
+            ];
+        })->all();
+
+        $ringkasan = [[
+            'TOTAL',
+            '',
+            '',
+            '',
+            number_format((float) $totalDebit, 0, ',', '.'),
+            number_format((float) $totalKredit, 0, ',', '.'),
+        ]];
+
+        $periode = ($tanggalMulai && $tanggalSelesai)
+            ? 'Periode '.Carbon::parse($tanggalMulai)->translatedFormat('d M Y')
+                .' s.d. '.Carbon::parse($tanggalSelesai)->translatedFormat('d M Y')
+            : 'Semua Periode';
+
+        $pdf = LaporanPdfService::make()
+            ->judul('LAPORAN JURNAL UMUM')
+            ->periode($periode)
+            ->kolom([
+                'Tanggal',
+                'No. Bukti',
+                'Akun',
+                'Keterangan',
+                ['Debit (Rp)', 'right'],
+                ['Kredit (Rp)', 'right'],
+            ])
+            ->baris($baris)
+            ->ringkasan($ringkasan)
+            ->landscape()
+            ->render();
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            LaporanPdfService::make()->namaFile('jurnal-umum-'.($tanggalSelesai ?? now()->toDateString())),
+        );
     }
 
     protected function getHeaderWidgets(): array
