@@ -22,11 +22,13 @@ class SlipGaji extends Model
         'nomor',
         'pegawai_id',
         'setting_gaji_id',
+        'pajak_id',
         'tahun',
         'bulan',
         'gaji_pokok',
         'total_tunjangan',
         'total_potongan',
+        'potongan_pajak',
         'gaji_bersih',
         'detail_tunjangan',
         'detail_potongan',
@@ -45,7 +47,9 @@ class SlipGaji extends Model
             'gaji_pokok' => 'decimal:2',
             'total_tunjangan' => 'decimal:2',
             'total_potongan' => 'decimal:2',
+            'potongan_pajak' => 'decimal:2',
             'gaji_bersih' => 'decimal:2',
+            'pajak_id' => 'integer',
             'detail_tunjangan' => 'array',
             'detail_potongan' => 'array',
             'tanggal_bayar' => 'date',
@@ -71,6 +75,16 @@ class SlipGaji extends Model
     public function settingGaji(): BelongsTo
     {
         return $this->belongsTo(SettingGaji::class);
+    }
+
+    /**
+     * Master pajak (persentase flat) yang menjadi dasar potongan PPh slip.
+     *
+     * @return BelongsTo<Pajak, $this>
+     */
+    public function pajak(): BelongsTo
+    {
+        return $this->belongsTo(Pajak::class);
     }
 
     public function creator(): BelongsTo

@@ -2,19 +2,46 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
+     *
+     * Strategi event (temuan audit #3):
+     *
+     * - Seeder LEGACY/PRA-PEMBUKUAN dijalankan dengan model event DIMATIKAN
+     *   ($legacySeeders, dibungkus Model::withoutEvents). Mereka menyetel kolom
+     *   turunan secara manual (saldo tabungan, total_terbayar tagihan, nomor
+     *   sarpras, stok) dan bertanggal SEBELUM cut-off, jadi memang TIDAK boleh
+     *   memicu poster/observer (akan menimpa kolom, melempar guard, atau
+     *   memposting jurnal pra-pembukuan). Ini mempertahankan perilaku sebelum
+     *   trait WithoutModelEvents kelas dihapus.
+     *
+     * - Jurnal keuangan demo yang JUJUR dibuat di $liveSeeders dengan event
+     *   AKTIF: JurnalUmumSeeder (jurnal manual operasional, tanpa memalsukan
+     *   SPP/gaji) dan DemoKeuanganPascaCutoffSeeder (Pembayaran/SlipGaji/
+     *   Tabungan/Kas bertanggal >= cut-off yang benar-benar diposting oleh
+     *   poster produksi). Tidak ada lagi jurnal SPP/gaji palsu.
      */
     public function run(): void
     {
-        $this->call([
+        Model::withoutEvents(fn () => $this->call($this->legacySeeders()));
+
+        $this->call($this->liveSeeders());
+    }
+
+    /**
+     * Seeder yang harus berjalan dengan event dimatikan (data pra-pembukuan /
+     * kolom turunan disetel manual).
+     *
+     * @return list<class-string<Seeder>>
+     */
+    private function legacySeeders(): array
+    {
+        return [
             // Core
             RoleSeeder::class,
             UserSeeder::class,
@@ -66,7 +93,7 @@ class DatabaseSeeder extends Seeder
             UnitPosSeeder::class,
             SettingGajiSeeder::class,
 
-            // Keuangan - Transaksi
+            // Keuangan - Transaksi (pra cut-off; kolom turunan disetel manual)
             TagihanSiswaSeeder::class,
             PembayaranSeeder::class,
             TabunganSiswaSeeder::class,
@@ -75,10 +102,22 @@ class DatabaseSeeder extends Seeder
             KasKeluarSeeder::class,
             SlipGajiSeeder::class,
             BuktiTransferSeeder::class,
+        ];
+    }
 
-            // Akuntansi
-            JurnalUmumSeeder::class,
-
+    /**
+     * Seeder yang berjalan dengan event AKTIF agar nomor/observer/poster nyata
+     * berjalan.
+     *
+     * Catatan Sarpras: seeder transaksi sarpras MENGANDALKAN hook model untuk
+     * generate `nomor` (PJM/dst.), jadi WAJIB event aktif. Posternya ber-gate
+     * cut-off sehingga transaksi sarpras pra cut-off tidak ikut menjurnal.
+     *
+     * @return list<class-string<Seeder>>
+     */
+    private function liveSeeders(): array
+    {
+        return [
             // Sarpras - Master Data (dependensi awal)
             SarprasKategoriSeeder::class,
             RuanganSeeder::class,
@@ -86,11 +125,18 @@ class DatabaseSeeder extends Seeder
             // Sarpras - Inventaris (bergantung pada kategori + ruangan)
             SarprasBarangSeeder::class,
 
-            // Sarpras - Transaksi (bergantung pada barang + user/siswa/pegawai)
+            // Sarpras - Transaksi (butuh event untuk nomor; poster ber-gate cut-off)
             SarprasPeminjamanSeeder::class,
             SarprasPemeliharaanSeeder::class,
             SarprasPengadaanSeeder::class,
             SarprasPenghapusanSeeder::class,
-        ]);
+
+            // Jurnal manual operasional (tanpa memalsukan SPP/gaji).
+            JurnalUmumSeeder::class,
+
+            // Demo keuangan pasca cut-off: jurnal SPP/gaji/tabungan/kas JUJUR
+            // yang benar-benar terbentuk lewat poster nyata.
+            DemoKeuanganPascaCutoffSeeder::class,
+        ];
     }
 }

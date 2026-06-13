@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -33,5 +34,16 @@ class Pajak extends Model
             ->logOnly(['nama', 'persentase', 'keterangan', 'is_active'])
             ->logOnlyDirty()
             ->useLogName('pajak');
+    }
+
+    /**
+     * Batasi query hanya pada master pajak yang aktif.
+     *
+     * @param  Builder<Pajak>  $query
+     * @return Builder<Pajak>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
     }
 }

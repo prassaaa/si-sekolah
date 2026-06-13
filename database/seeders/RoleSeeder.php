@@ -27,7 +27,7 @@ class RoleSeeder extends Seeder
         'PresensiHarianPegawai',
         'SarprasKategori', 'Ruangan', 'SarprasBarang', 'SarprasPeminjaman',
         'SarprasPemeliharaan', 'SarprasPengadaan', 'SarprasPenghapusan',
-        'Anggaran', 'PeriodeAkuntansi',
+        'Anggaran', 'PeriodeAkuntansi', 'MutasiBank',
     ];
 
     /**
@@ -62,6 +62,7 @@ class RoleSeeder extends Seeder
         'LaporanPeminjamanSarpras',
         'LaporanSiswa', 'LaporanTahfidz', 'KirimNotifPresensi', 'MonitorGerbang',
         'LaporanTunggakan', 'BukuKasUmum', 'LaporanRapbs',
+        'DashboardKeuangan', 'RekonsiliasiBank', 'KasKecil',
     ];
 
     /**
@@ -123,9 +124,45 @@ class RoleSeeder extends Seeder
         $petugasSarpras = Role::firstOrCreate(['name' => 'petugas_sarpras']);
         $petugasSarpras->syncPermissions($this->getPetugasSarprasPermissions());
 
+        // 9. Kepala Sekolah - Dashboard Keuangan & laporan read-only (pengawasan)
+        $kepalaSekolah = Role::firstOrCreate(['name' => 'kepala_sekolah']);
+        $kepalaSekolah->syncPermissions($this->getKepalaSekolahPermissions());
+
         // Keep admin role for backward compatibility (same as tata_usaha)
         $admin = Role::firstOrCreate(['name' => 'admin']);
         $admin->syncPermissions($this->getTataUsahaPermissions());
+    }
+
+    /**
+     * Get Kepala Sekolah permissions.
+     * Focus: Dashboard Keuangan + seluruh laporan keuangan/akuntansi (read-only).
+     *
+     * @return array<string>
+     */
+    private function getKepalaSekolahPermissions(): array
+    {
+        return array_merge(
+            $this->pagePermission('DashboardKeuangan'),
+            $this->pagePermission('Neraca'),
+            $this->pagePermission('NeracaSaldo'),
+            $this->pagePermission('LabaRugi'),
+            $this->pagePermission('BukuBesar'),
+            $this->pagePermission('PerubahanModal'),
+            $this->pagePermission('ArusKasBank'),
+            $this->pagePermission('LaporanKeuangan'),
+            $this->pagePermission('LaporanPembayaran'),
+            $this->pagePermission('LaporanPembayaranPerKelas'),
+            $this->pagePermission('LaporanTagihanSiswa'),
+            $this->pagePermission('LaporanTunggakan'),
+            $this->pagePermission('LaporanGaji'),
+            $this->pagePermission('LaporanRapbs'),
+            $this->pagePermission('BukuKasUmum'),
+            $this->pagePermission('LaporanTabungan'),
+            $this->pagePermission('LaporanPenyusutan'),
+            $this->viewOnly('Siswa'),
+            $this->viewOnly('Kelas'),
+            $this->viewOnly('Pegawai'),
+        );
     }
 
     /**
@@ -213,6 +250,7 @@ class RoleSeeder extends Seeder
             $this->fullCrud('SaldoAwal'),
             $this->fullCrud('Anggaran'),
             $this->fullCrud('PeriodeAkuntansi'),
+            $this->fullCrud('MutasiBank'),
 
             // KAS & BANK - Full CRUD
             $this->fullCrud('KasMasuk'),
@@ -256,6 +294,9 @@ class RoleSeeder extends Seeder
             $this->pagePermission('LaporanPenyusutan'),
             $this->pagePermission('BukuKasUmum'),
             $this->pagePermission('LaporanRapbs'),
+            $this->pagePermission('DashboardKeuangan'),
+            $this->pagePermission('RekonsiliasiBank'),
+            $this->pagePermission('KasKecil'),
         );
     }
 

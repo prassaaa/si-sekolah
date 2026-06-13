@@ -22,7 +22,10 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanDebitKredit extends Page implements HasSchemas, HasTable
@@ -58,12 +61,16 @@ class LaporanDebitKredit extends Page implements HasSchemas, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->records(function (array $filters): Collection {
+            ->records(function (array $filters, int $page, int $recordsPerPage): LengthAwarePaginator {
                 $tanggalMulai = $filters['tanggal']['tanggal_mulai'] ?? null;
                 $tanggalSelesai = $filters['tanggal']['tanggal_selesai'] ?? null;
                 $jenis = $filters['jenis']['value'] ?? null;
 
-                return $this->buildRows($tanggalMulai, $tanggalSelesai, $jenis);
+                // Total dihitung via SQL SUM (independen dari paginasi) agar
+                // widget ringkasan tetap benar walau hanya satu halaman dimuat.
+                $this->hitungRingkasan($tanggalMulai, $tanggalSelesai, $jenis);
+
+                return $this->paginatedRecords($tanggalMulai, $tanggalSelesai, $jenis, $page, $recordsPerPage);
             })
             ->columns([
                 TextColumn::make('tanggal')
@@ -123,7 +130,7 @@ class LaporanDebitKredit extends Page implements HasSchemas, HasTable
                     }),
             ])
             ->deferFilters(false)
-            ->defaultPaginationPageOption('all')
+            ->paginated([10, 25, 50, 100])
             ->emptyStateHeading('Tidak ada data')
             ->emptyStateDescription('Silakan pilih rentang tanggal untuk melihat data kas.')
             ->emptyStateIcon('heroicon-o-inbox');
@@ -141,9 +148,9 @@ class LaporanDebitKredit extends Page implements HasSchemas, HasTable
     }
 
     /**
-     * Build the kas masuk/keluar rows shown on screen AND exported to PDF, and
-     * refresh the $summary used by the header widget. Kept as one method so the
-     * screen, the widget totals and the PDF never diverge.
+     * Build SEMUA baris kas masuk/keluar (tanpa paginasi) untuk diekspor ke PDF.
+     * Juga menyegarkan $summary lewat SQL SUM. Hanya dipakai oleh cetak PDF yang
+     * memang membutuhkan seluruh baris; tampilan layar memakai paginatedRecords().
      *
      * @return Collection<int, array<string, mixed>>
      */
@@ -155,56 +162,134 @@ class LaporanDebitKredit extends Page implements HasSchemas, HasTable
             return collect();
         }
 
-        $data = collect();
+        $this->hitungRingkasan($tanggalMulai, $tanggalSelesai, $jenis);
+
+        return $this->unionQuery($tanggalMulai, $tanggalSelesai, $jenis)
+            ->orderBy('tanggal')
+            ->orderBy('nomor_bukti')
+            ->get()
+            ->map(fn ($row): array => $this->mapRow($row))
+            ->values();
+    }
+
+    /**
+     * Halaman baris kas (gabungan masuk+keluar) yang ditampilkan, dipaginasi di
+     * level DB via UNION + LIMIT/OFFSET sehingga hanya satu halaman yang dimuat
+     * ke memori — bukan seluruh tabel (temuan performa #98).
+     *
+     * @return LengthAwarePaginator<int, array<string, mixed>>
+     */
+    protected function paginatedRecords(?string $tanggalMulai, ?string $tanggalSelesai, ?string $jenis, int $page, int $recordsPerPage): LengthAwarePaginator
+    {
+        if (! $tanggalMulai || ! $tanggalSelesai) {
+            return new LengthAwarePaginator([], total: 0, perPage: $recordsPerPage, currentPage: $page);
+        }
+
+        $base = $this->unionQuery($tanggalMulai, $tanggalSelesai, $jenis);
+
+        $total = (clone $base)->count();
+
+        $rows = $base
+            ->orderBy('tanggal')
+            ->orderBy('nomor_bukti')
+            ->forPage($page, $recordsPerPage)
+            ->get()
+            ->map(fn ($row): array => $this->mapRow($row))
+            ->all();
+
+        return new LengthAwarePaginator(
+            $rows,
+            total: $total,
+            perPage: $recordsPerPage,
+            currentPage: $page,
+        );
+    }
+
+    /**
+     * Hitung total masuk/keluar + jumlah baris langsung di SQL (SUM/COUNT),
+     * tanpa memuat baris ke Collection (temuan performa #98).
+     */
+    protected function hitungRingkasan(?string $tanggalMulai, ?string $tanggalSelesai, ?string $jenis = null): void
+    {
+        if (! $tanggalMulai || ! $tanggalSelesai) {
+            $this->summary = [];
+
+            return;
+        }
+
+        $masuk = ['nominal' => 0.0, 'jumlah' => 0];
+        $keluar = ['nominal' => 0.0, 'jumlah' => 0];
 
         if (! $jenis || $jenis === 'masuk') {
-            $kasMasuk = KasMasuk::query()
-                ->with('akun')
+            $agg = KasMasuk::query()
                 ->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
-                ->orderBy('tanggal')
-                ->get()
-                ->map(fn ($k) => [
-                    'tanggal' => $k->tanggal->format('Y-m-d'),
-                    'nomor_bukti' => $k->nomor_bukti,
-                    'akun' => $k->akun?->nama ?? '-',
-                    'keterangan' => $k->sumber ?? $k->keterangan ?? '-',
-                    'jenis' => 'Kas Masuk',
-                    'nominal' => $k->nominal,
-                ]);
-            $data = $data->merge($kasMasuk);
+                ->selectRaw('COALESCE(SUM(nominal), 0) as total, COUNT(*) as jumlah')
+                ->first();
+            $masuk = ['nominal' => (float) $agg->total, 'jumlah' => (int) $agg->jumlah];
         }
 
         if (! $jenis || $jenis === 'keluar') {
-            $kasKeluar = KasKeluar::query()
-                ->with('akun')
+            $agg = KasKeluar::query()
                 ->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
-                ->orderBy('tanggal')
-                ->get()
-                ->map(fn ($k) => [
-                    'tanggal' => $k->tanggal->format('Y-m-d'),
-                    'nomor_bukti' => $k->nomor_bukti,
-                    'akun' => $k->akun?->nama ?? '-',
-                    'keterangan' => $k->penerima ?? $k->keterangan ?? '-',
-                    'jenis' => 'Kas Keluar',
-                    'nominal' => $k->nominal,
-                ]);
-            $data = $data->merge($kasKeluar);
+                ->selectRaw('COALESCE(SUM(nominal), 0) as total, COUNT(*) as jumlah')
+                ->first();
+            $keluar = ['nominal' => (float) $agg->total, 'jumlah' => (int) $agg->jumlah];
         }
 
-        $data = $data->sortBy('tanggal')->values();
-
-        $totalMasuk = $data->where('jenis', 'Kas Masuk')->sum('nominal');
-        $totalKeluar = $data->where('jenis', 'Kas Keluar')->sum('nominal');
-
         $this->summary = [
-            'total_masuk' => $totalMasuk,
-            'total_keluar' => $totalKeluar,
-            'selisih' => $totalMasuk - $totalKeluar,
-            'jml_masuk' => $data->where('jenis', 'Kas Masuk')->count(),
-            'jml_keluar' => $data->where('jenis', 'Kas Keluar')->count(),
+            'total_masuk' => $masuk['nominal'],
+            'total_keluar' => $keluar['nominal'],
+            'selisih' => $masuk['nominal'] - $keluar['nominal'],
+            'jml_masuk' => $masuk['jumlah'],
+            'jml_keluar' => $keluar['jumlah'],
         ];
+    }
 
-        return $data;
+    /**
+     * Query UNION ALL ternormalisasi atas kas_masuks + kas_keluars dengan nama
+     * akun di-join (hindari N+1) dan keterangan yang sudah dipilih per jenis.
+     * Mengembalikan query builder mentah agar bisa di-COUNT & dipaginasi di DB.
+     */
+    protected function unionQuery(?string $tanggalMulai, ?string $tanggalSelesai, ?string $jenis = null): QueryBuilder
+    {
+        $masuk = DB::table('kas_masuks')
+            ->leftJoin('akuns', 'akuns.id', '=', 'kas_masuks.akun_id')
+            ->whereBetween('kas_masuks.tanggal', [$tanggalMulai, $tanggalSelesai])
+            ->whereNull('kas_masuks.deleted_at')
+            ->selectRaw("kas_masuks.tanggal as tanggal, kas_masuks.nomor_bukti as nomor_bukti, COALESCE(akuns.nama, '-') as akun, COALESCE(kas_masuks.sumber, kas_masuks.keterangan, '-') as keterangan, 'Kas Masuk' as jenis, kas_masuks.nominal as nominal");
+
+        $keluar = DB::table('kas_keluars')
+            ->leftJoin('akuns', 'akuns.id', '=', 'kas_keluars.akun_id')
+            ->whereBetween('kas_keluars.tanggal', [$tanggalMulai, $tanggalSelesai])
+            ->whereNull('kas_keluars.deleted_at')
+            ->selectRaw("kas_keluars.tanggal as tanggal, kas_keluars.nomor_bukti as nomor_bukti, COALESCE(akuns.nama, '-') as akun, COALESCE(kas_keluars.penerima, kas_keluars.keterangan, '-') as keterangan, 'Kas Keluar' as jenis, kas_keluars.nominal as nominal");
+
+        if ($jenis === 'masuk') {
+            return $masuk;
+        }
+
+        if ($jenis === 'keluar') {
+            return $keluar;
+        }
+
+        return $masuk->unionAll($keluar);
+    }
+
+    /**
+     * Normalisasi satu baris hasil union (stdClass) menjadi array kolom tabel.
+     *
+     * @return array<string, mixed>
+     */
+    protected function mapRow(object $row): array
+    {
+        return [
+            'tanggal' => Carbon::parse($row->tanggal)->format('Y-m-d'),
+            'nomor_bukti' => $row->nomor_bukti,
+            'akun' => $row->akun ?? '-',
+            'keterangan' => $row->keterangan ?? '-',
+            'jenis' => $row->jenis,
+            'nominal' => $row->nominal,
+        ];
     }
 
     public function cetakPdf(): StreamedResponse

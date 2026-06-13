@@ -23,7 +23,7 @@ class KasMasukSeeder extends Seeder
 
         $kasMasuks = [
             [
-                'nomor_bukti' => 'KM-'.now()->format('Ymd').'-001',
+                'nomor_bukti' => 'KM-'.now()->format('Ymd').'-0001',
                 'akun_id' => $akunKas->id,
                 'tanggal' => now()->subDays(10),
                 'nominal' => 5000000,
@@ -32,7 +32,7 @@ class KasMasukSeeder extends Seeder
                 'user_id' => $admin?->id,
             ],
             [
-                'nomor_bukti' => 'KM-'.now()->format('Ymd').'-002',
+                'nomor_bukti' => 'KM-'.now()->format('Ymd').'-0002',
                 'akun_id' => $akunBank?->id ?? $akunKas->id,
                 'tanggal' => now()->subDays(5),
                 'nominal' => 10000000,
@@ -41,7 +41,7 @@ class KasMasukSeeder extends Seeder
                 'user_id' => $admin?->id,
             ],
             [
-                'nomor_bukti' => 'KM-'.now()->format('Ymd').'-003',
+                'nomor_bukti' => 'KM-'.now()->format('Ymd').'-0003',
                 'akun_id' => $akunKas->id,
                 'tanggal' => now()->subDays(2),
                 'nominal' => 2500000,

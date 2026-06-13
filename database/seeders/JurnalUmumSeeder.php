@@ -7,18 +7,30 @@ use App\Models\JurnalUmum;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 
+/**
+ * Hanya men-seed jurnal MANUAL yang memang dibuat manual di produksi:
+ * beban operasional rutin (listrik, air, internet, ATK, kebersihan) dan
+ * pendapatan lain-lain. Pasangan D/K dibuat dengan nomor bukti & token unik.
+ *
+ * SENGAJA TIDAK men-seed jurnal SPP maupun gaji (temuan audit #3): di produksi
+ * jurnal SPP terbentuk via PembayaranJournalPoster (saat Pembayaran berhasil)
+ * dan jurnal gaji via SlipGaji::approve()/bayar() — keduanya idempoten & tunduk
+ * cut-off. Memalsukannya di seeder membuat demo terlihat benar padahal produksi
+ * tak akan pernah menyamai. Untuk demo jurnal SPP/gaji/tabungan yang JUJUR,
+ * lihat DemoKeuanganPascaCutoffSeeder yang menjalankan poster nyata.
+ *
+ * Tanggal jurnal manual ini berada pada jendela pasca cut-off (mulai bulan
+ * cut-off s/d bulan berjalan) agar konsisten dengan era pembukuan otomatis dan
+ * tampil di Buku Besar/Laba Rugi bersama jurnal poster.
+ */
 class JurnalUmumSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $admin = User::first();
-        $today = Carbon::now();
 
-        // Ambil akun berdasarkan kode
         $akuns = Akun::all()->keyBy('kode');
 
         if ($akuns->isEmpty()) {
@@ -27,314 +39,149 @@ class JurnalUmumSeeder extends Seeder
             return;
         }
 
+        $cutoff = Carbon::parse(config('akuntansi.cutoff_posting'))->startOfMonth();
+        $bulanBerjalan = Carbon::now()->startOfMonth();
+
+        // Bila bulan berjalan masih sebelum cut-off (mis. demo dijalankan sebelum
+        // TA baru), tetap buat satu bulan jurnal manual tepat di bulan cut-off.
+        $mulai = $bulanBerjalan->lessThan($cutoff) ? $cutoff->copy() : $cutoff->copy();
+        $akhir = $bulanBerjalan->greaterThan($cutoff) ? $bulanBerjalan->copy() : $cutoff->copy();
+
         $globalCounter = 0;
+        $cursor = $mulai->copy();
 
-        // Generate jurnal untuk 6 bulan terakhir
-        for ($monthOffset = 5; $monthOffset >= 0; $monthOffset--) {
-            $bulan = $today->copy()->subMonths($monthOffset);
-            $tanggalAwal = $bulan->copy()->startOfMonth();
-            $monthCounter = 0;
+        while ($cursor->lessThanOrEqualTo($akhir)) {
+            $globalCounter += $this->seedBulan($cursor->copy(), $akuns, $admin);
+            $cursor->addMonthNoOverflow();
+        }
 
-            // === PENDAPATAN SPP ===
-            // Generate beberapa transaksi penerimaan SPP per bulan
-            $jumlahTransaksiSpp = rand(15, 25);
-            for ($i = 0; $i < $jumlahTransaksiSpp; $i++) {
-                $tanggal = $tanggalAwal->copy()->addDays(rand(0, 27));
-                if ($tanggal->isWeekend()) {
-                    $tanggal = $tanggal->addDays(2);
-                }
+        $this->command->info("JurnalUmum (manual operasional) seeded: {$globalCounter} transaksi.");
+    }
 
-                $nominal = rand(3, 8) * 100000; // 300.000 - 800.000
-                $monthCounter++;
-                $baseNomorBukti = 'JU-SPP-'.$bulan->format('Ym').'-'.str_pad($monthCounter, 4, '0', STR_PAD_LEFT);
-                $metode = collect(['Kas', 'Bank BCA', 'Bank Mandiri', 'Bank BSI'])->random();
+    /**
+     * Seed beban operasional + pendapatan lain untuk satu bulan. Mengembalikan
+     * jumlah transaksi (pasangan jurnal) yang dibuat.
+     *
+     * @param  Collection<string, Akun>  $akuns
+     */
+    private function seedBulan(Carbon $bulan, $akuns, ?User $admin): int
+    {
+        $awalBulan = $bulan->copy()->startOfMonth();
+        $count = 0;
 
-                // Debit: Kas/Bank
-                $akunDebit = $metode === 'Kas' ? '1-1001' : ($metode === 'Bank BCA' ? '1-1002' : ($metode === 'Bank Mandiri' ? '1-1003' : '1-1004'));
-
-                JurnalUmum::create([
-                    'nomor_bukti' => $baseNomorBukti.'-D',
-                    'tanggal' => $tanggal->format('Y-m-d'),
-                    'keterangan' => 'Penerimaan pembayaran SPP siswa via '.$metode,
-                    'akun_id' => $akuns[$akunDebit]->id,
-                    'debit' => $nominal,
-                    'kredit' => 0,
-                    'referensi' => 'SPP-'.$bulan->format('Ym'),
-                    'jenis_referensi' => 'pembayaran',
-                    'created_by' => $admin?->id,
-                ]);
-
-                // Kredit: Pendapatan SPP
-                JurnalUmum::create([
-                    'nomor_bukti' => $baseNomorBukti.'-K',
-                    'tanggal' => $tanggal->format('Y-m-d'),
-                    'keterangan' => 'Penerimaan pembayaran SPP siswa via '.$metode,
-                    'akun_id' => $akuns['4-1001']->id,
-                    'debit' => 0,
-                    'kredit' => $nominal,
-                    'referensi' => 'SPP-'.$bulan->format('Ym'),
-                    'jenis_referensi' => 'pembayaran',
-                    'created_by' => $admin?->id,
-                ]);
-
-                $globalCounter++;
-            }
-
-            // === BEBAN GAJI ===
-            $tanggalGaji = $tanggalAwal->copy()->endOfMonth();
-            if ($tanggalGaji->isWeekend()) {
-                $tanggalGaji = $tanggalGaji->subDays(2);
-            }
-
-            $gajiGuru = rand(15, 25) * 1000000; // 15-25 juta
-            $gajiKaryawan = rand(8, 15) * 1000000; // 8-15 juta
-
-            $baseNomorBuktiGaji = 'JU-GAJI-'.$bulan->format('Ym').'-001';
-
-            // Debit: Beban Gaji Guru
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiGaji.'-D',
-                'tanggal' => $tanggalGaji->format('Y-m-d'),
-                'keterangan' => 'Pembayaran gaji guru bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['5-1001']->id,
-                'debit' => $gajiGuru,
-                'kredit' => 0,
-                'referensi' => 'GAJI-'.$bulan->format('Ym'),
-                'jenis_referensi' => 'slip_gaji',
-                'created_by' => $admin?->id,
-            ]);
-
-            // Kredit: Kas (pembayaran gaji guru)
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiGaji.'-K',
-                'tanggal' => $tanggalGaji->format('Y-m-d'),
-                'keterangan' => 'Pembayaran gaji guru bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['1-1001']->id,
-                'debit' => 0,
-                'kredit' => $gajiGuru,
-                'referensi' => 'GAJI-'.$bulan->format('Ym'),
-                'jenis_referensi' => 'slip_gaji',
-                'created_by' => $admin?->id,
-            ]);
-
-            $baseNomorBuktiGaji2 = 'JU-GAJI-'.$bulan->format('Ym').'-002';
-
-            // Debit: Beban Gaji Karyawan
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiGaji2.'-D',
-                'tanggal' => $tanggalGaji->format('Y-m-d'),
-                'keterangan' => 'Pembayaran gaji karyawan bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['5-1002']->id,
-                'debit' => $gajiKaryawan,
-                'kredit' => 0,
-                'referensi' => 'GAJI-'.$bulan->format('Ym'),
-                'jenis_referensi' => 'slip_gaji',
-                'created_by' => $admin?->id,
-            ]);
-
-            // Kredit: Kas (pembayaran gaji karyawan)
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiGaji2.'-K',
-                'tanggal' => $tanggalGaji->format('Y-m-d'),
-                'keterangan' => 'Pembayaran gaji karyawan bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['1-1001']->id,
-                'debit' => 0,
-                'kredit' => $gajiKaryawan,
-                'referensi' => 'GAJI-'.$bulan->format('Ym'),
-                'jenis_referensi' => 'slip_gaji',
-                'created_by' => $admin?->id,
-            ]);
-
-            $globalCounter += 2;
-
-            // === BEBAN OPERASIONAL BULANAN ===
-
-            // Beban Listrik
-            $bebanListrik = rand(2, 5) * 1000000;
-            $tanggalListrik = $tanggalAwal->copy()->addDays(rand(5, 15));
-            $baseNomorBuktiListrik = 'JU-OPS-'.$bulan->format('Ym').'-001';
-
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiListrik.'-D',
-                'tanggal' => $tanggalListrik->format('Y-m-d'),
+        /** @var list<array{kode_beban: string, keterangan: string, nominal: int, offsetHari: int, prefix: string}> $bebanList */
+        $bebanList = [
+            [
+                'kode_beban' => '5-2001',
                 'keterangan' => 'Pembayaran tagihan listrik bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['5-2001']->id,
-                'debit' => $bebanListrik,
-                'kredit' => 0,
-                'jenis_referensi' => 'operasional',
-                'created_by' => $admin?->id,
-            ]);
-
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiListrik.'-K',
-                'tanggal' => $tanggalListrik->format('Y-m-d'),
-                'keterangan' => 'Pembayaran tagihan listrik bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['1-1001']->id,
-                'debit' => 0,
-                'kredit' => $bebanListrik,
-                'jenis_referensi' => 'operasional',
-                'created_by' => $admin?->id,
-            ]);
-
-            $globalCounter++;
-
-            // Beban Air
-            $bebanAir = rand(500, 1500) * 1000;
-            $tanggalAir = $tanggalAwal->copy()->addDays(rand(5, 15));
-            $baseNomorBuktiAir = 'JU-OPS-'.$bulan->format('Ym').'-002';
-
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiAir.'-D',
-                'tanggal' => $tanggalAir->format('Y-m-d'),
+                'nominal' => rand(2, 5) * 1000000,
+                'offsetHari' => rand(5, 15),
+                'prefix' => 'JU-OPS-'.$bulan->format('Ym').'-001',
+            ],
+            [
+                'kode_beban' => '5-2002',
                 'keterangan' => 'Pembayaran tagihan air bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['5-2002']->id,
-                'debit' => $bebanAir,
-                'kredit' => 0,
-                'jenis_referensi' => 'operasional',
-                'created_by' => $admin?->id,
-            ]);
-
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiAir.'-K',
-                'tanggal' => $tanggalAir->format('Y-m-d'),
-                'keterangan' => 'Pembayaran tagihan air bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['1-1001']->id,
-                'debit' => 0,
-                'kredit' => $bebanAir,
-                'jenis_referensi' => 'operasional',
-                'created_by' => $admin?->id,
-            ]);
-
-            $globalCounter++;
-
-            // Beban Internet
-            $bebanInternet = rand(500, 2000) * 1000;
-            $tanggalInternet = $tanggalAwal->copy()->addDays(rand(1, 10));
-            $baseNomorBuktiInternet = 'JU-OPS-'.$bulan->format('Ym').'-003';
-
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiInternet.'-D',
-                'tanggal' => $tanggalInternet->format('Y-m-d'),
+                'nominal' => rand(500, 1500) * 1000,
+                'offsetHari' => rand(5, 15),
+                'prefix' => 'JU-OPS-'.$bulan->format('Ym').'-002',
+            ],
+            [
+                'kode_beban' => '5-2003',
                 'keterangan' => 'Pembayaran tagihan internet bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['5-2003']->id,
-                'debit' => $bebanInternet,
-                'kredit' => 0,
-                'jenis_referensi' => 'operasional',
-                'created_by' => $admin?->id,
-            ]);
+                'nominal' => rand(500, 2000) * 1000,
+                'offsetHari' => rand(1, 10),
+                'prefix' => 'JU-OPS-'.$bulan->format('Ym').'-003',
+            ],
+            [
+                'kode_beban' => '5-3002',
+                'keterangan' => 'Pembelian perlengkapan kebersihan',
+                'nominal' => rand(200, 500) * 1000,
+                'offsetHari' => rand(1, 20),
+                'prefix' => 'JU-OPS-'.$bulan->format('Ym').'-005',
+            ],
+        ];
 
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiInternet.'-K',
-                'tanggal' => $tanggalInternet->format('Y-m-d'),
-                'keterangan' => 'Pembayaran tagihan internet bulan '.$bulan->translatedFormat('F Y'),
-                'akun_id' => $akuns['1-1001']->id,
-                'debit' => 0,
-                'kredit' => $bebanInternet,
-                'jenis_referensi' => 'operasional',
-                'created_by' => $admin?->id,
-            ]);
+        if (rand(1, 10) <= 6) {
+            $bebanList[] = [
+                'kode_beban' => '5-3001',
+                'keterangan' => 'Pembelian alat tulis kantor',
+                'nominal' => rand(300, 800) * 1000,
+                'offsetHari' => rand(1, 25),
+                'prefix' => 'JU-OPS-'.$bulan->format('Ym').'-004',
+            ];
+        }
 
-            $globalCounter++;
+        foreach ($bebanList as $beban) {
+            $akunBeban = $akuns[$beban['kode_beban']] ?? null;
+            $akunKas = $akuns['1-1001'] ?? null;
 
-            // Beban ATK (tidak setiap bulan)
-            if (rand(1, 10) <= 6) {
-                $bebanAtk = rand(300, 800) * 1000;
-                $tanggalAtk = $tanggalAwal->copy()->addDays(rand(1, 25));
-                $baseNomorBuktiAtk = 'JU-OPS-'.$bulan->format('Ym').'-004';
-
-                JurnalUmum::create([
-                    'nomor_bukti' => $baseNomorBuktiAtk.'-D',
-                    'tanggal' => $tanggalAtk->format('Y-m-d'),
-                    'keterangan' => 'Pembelian alat tulis kantor',
-                    'akun_id' => $akuns['5-3001']->id,
-                    'debit' => $bebanAtk,
-                    'kredit' => 0,
-                    'jenis_referensi' => 'operasional',
-                    'created_by' => $admin?->id,
-                ]);
-
-                JurnalUmum::create([
-                    'nomor_bukti' => $baseNomorBuktiAtk.'-K',
-                    'tanggal' => $tanggalAtk->format('Y-m-d'),
-                    'keterangan' => 'Pembelian alat tulis kantor',
-                    'akun_id' => $akuns['1-1001']->id,
-                    'debit' => 0,
-                    'kredit' => $bebanAtk,
-                    'jenis_referensi' => 'operasional',
-                    'created_by' => $admin?->id,
-                ]);
-
-                $globalCounter++;
+            if ($akunBeban === null || $akunKas === null) {
+                continue;
             }
 
-            // Beban Kebersihan
-            $bebanKebersihan = rand(200, 500) * 1000;
-            $tanggalKebersihan = $tanggalAwal->copy()->addDays(rand(1, 20));
-            $baseNomorBuktiKebersihan = 'JU-OPS-'.$bulan->format('Ym').'-005';
+            $tanggal = $awalBulan->copy()->addDays($beban['offsetHari']);
+            $this->postManual($beban['prefix'], $tanggal, $beban['keterangan'], $akunBeban, $akunKas, (string) $beban['nominal'], $admin);
+            $count++;
+        }
 
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiKebersihan.'-D',
-                'tanggal' => $tanggalKebersihan->format('Y-m-d'),
-                'keterangan' => 'Pembelian perlengkapan kebersihan',
-                'akun_id' => $akuns['5-3002']->id,
-                'debit' => $bebanKebersihan,
-                'kredit' => 0,
-                'jenis_referensi' => 'operasional',
-                'created_by' => $admin?->id,
-            ]);
+        // Pendapatan lain-lain (sekali-sekali).
+        if (rand(1, 10) <= 4) {
+            $akunPendapatanLain = $akuns['4-1005'] ?? null;
+            $akunKas = $akuns['1-1001'] ?? null;
 
-            JurnalUmum::create([
-                'nomor_bukti' => $baseNomorBuktiKebersihan.'-K',
-                'tanggal' => $tanggalKebersihan->format('Y-m-d'),
-                'keterangan' => 'Pembelian perlengkapan kebersihan',
-                'akun_id' => $akuns['1-1001']->id,
-                'debit' => 0,
-                'kredit' => $bebanKebersihan,
-                'jenis_referensi' => 'operasional',
-                'created_by' => $admin?->id,
-            ]);
-
-            $globalCounter++;
-
-            // === PENDAPATAN LAINNYA (sekali-sekali) ===
-            if (rand(1, 10) <= 4) {
-                $pendapatanLain = rand(500, 2000) * 1000;
-                $tanggalLain = $tanggalAwal->copy()->addDays(rand(1, 25));
-                $baseNomorBuktiLain = 'JU-LAIN-'.$bulan->format('Ym').'-001';
-
-                $keteranganLain = collect([
+            if ($akunPendapatanLain !== null && $akunKas !== null) {
+                $keterangan = collect([
                     'Pendapatan dari kegiatan ekstrakurikuler',
                     'Pendapatan dari penyewaan aula',
                     'Pendapatan dari donasi',
                     'Pendapatan dari kantin sekolah',
                 ])->random();
 
-                JurnalUmum::create([
-                    'nomor_bukti' => $baseNomorBuktiLain.'-D',
-                    'tanggal' => $tanggalLain->format('Y-m-d'),
-                    'keterangan' => $keteranganLain,
-                    'akun_id' => $akuns['1-1001']->id,
-                    'debit' => $pendapatanLain,
-                    'kredit' => 0,
-                    'jenis_referensi' => 'lainnya',
-                    'created_by' => $admin?->id,
-                ]);
-
-                JurnalUmum::create([
-                    'nomor_bukti' => $baseNomorBuktiLain.'-K',
-                    'tanggal' => $tanggalLain->format('Y-m-d'),
-                    'keterangan' => $keteranganLain,
-                    'akun_id' => $akuns['4-1005']->id,
-                    'debit' => 0,
-                    'kredit' => $pendapatanLain,
-                    'jenis_referensi' => 'lainnya',
-                    'created_by' => $admin?->id,
-                ]);
-
-                $globalCounter++;
+                $tanggal = $awalBulan->copy()->addDays(rand(1, 25));
+                $this->postManual(
+                    'JU-LAIN-'.$bulan->format('Ym').'-001',
+                    $tanggal,
+                    $keterangan,
+                    $akunKas,
+                    $akunPendapatanLain,
+                    (string) (rand(500, 2000) * 1000),
+                    $admin,
+                );
+                $count++;
             }
         }
 
-        $this->command->info("JurnalUmum seeded successfully: {$globalCounter} transaksi (jurnal entries)");
+        return $count;
+    }
+
+    /**
+     * Buat satu pasangan jurnal manual seimbang (debit $akunDebit / kredit
+     * $akunKredit) dengan nomor bukti & token unik agar tidak bentrok.
+     */
+    private function postManual(string $prefix, Carbon $tanggal, string $keterangan, Akun $akunDebit, Akun $akunKredit, string $nominal, ?User $admin): void
+    {
+        $token = ((int) JurnalUmum::query()->withTrashed()->max('id')) + 1;
+
+        JurnalUmum::create([
+            'nomor_bukti' => $prefix.'-D-'.$token,
+            'tanggal' => $tanggal->format('Y-m-d'),
+            'keterangan' => $keterangan,
+            'akun_id' => $akunDebit->id,
+            'debit' => $nominal,
+            'kredit' => 0,
+            'jenis_referensi' => null,
+            'created_by' => $admin?->id,
+        ]);
+
+        JurnalUmum::create([
+            'nomor_bukti' => $prefix.'-K-'.$token,
+            'tanggal' => $tanggal->format('Y-m-d'),
+            'keterangan' => $keterangan,
+            'akun_id' => $akunKredit->id,
+            'debit' => 0,
+            'kredit' => $nominal,
+            'jenis_referensi' => null,
+            'created_by' => $admin?->id,
+        ]);
     }
 }

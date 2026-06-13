@@ -32,6 +32,7 @@ return [
         'pendapatan_spp_default' => '4-1001',
         'titipan_tabungan' => '2-1004',
         'hutang_gaji' => '2-1002',
+        'hutang_pajak' => '2-1003',
         'beban_gaji_guru' => '5-1001',
         'beban_gaji_karyawan' => '5-1002',
         'beban_pemeliharaan' => '5-3003',

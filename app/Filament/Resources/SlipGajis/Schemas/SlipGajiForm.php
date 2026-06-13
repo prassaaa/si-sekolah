@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SlipGajis\Schemas;
 
+use App\Models\Pajak;
 use App\Models\SettingGaji;
 use App\Models\SlipGaji;
 use Filament\Forms\Components\DatePicker;
@@ -92,6 +93,22 @@ class SlipGajiForm
                                     ->dehydrated(false)
                                     ->helperText('Diubah lewat tombol Setujui / Bayar, bukan diisi manual.'),
                             ]),
+                        Select::make('pajak_id')
+                            ->label('Potongan Pajak (PPh)')
+                            ->options(fn (): array => Pajak::query()
+                                ->active()
+                                ->orderBy('nama')
+                                ->get()
+                                ->mapWithKeys(fn (Pajak $pajak): array => [
+                                    $pajak->id => $pajak->nama.' ('.rtrim(rtrim((string) $pajak->persentase, '0'), '.').'%)',
+                                ])
+                                ->all())
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->dehydrated()
+                            ->disabled(fn (?SlipGaji $record): bool => $record !== null && ! $record->isDraft())
+                            ->helperText('Opsional. Potongan PPh dihitung dari persentase x (gaji pokok + tunjangan).'),
                     ])->columns(2),
 
                 Section::make('Rincian Gaji')
@@ -116,6 +133,13 @@ class SlipGajiForm
                             ->prefix('Rp')
                             ->disabled()
                             ->dehydrated(),
+                        TextInput::make('potongan_pajak')
+                            ->label('Potongan Pajak (PPh)')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->disabled()
+                            ->dehydrated()
+                            ->helperText('Dihitung server dari master pajak terpilih.'),
                         TextInput::make('gaji_bersih')
                             ->label('Gaji Bersih')
                             ->numeric()

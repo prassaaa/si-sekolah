@@ -30,21 +30,26 @@ class PembayaranForm
                         ->relationship(
                             'tagihanSiswa',
                             'nomor_tagihan',
-                            fn ($query, ?Pembayaran $record) => $query->where(
-                                fn ($q) => $q
-                                    ->where(function ($inner) {
-                                        $inner
-                                            ->where('status', '!=', 'lunas')
-                                            ->where('status', '!=', 'batal');
-                                    })
-                                    ->when(
-                                        $record?->tagihan_siswa_id,
-                                        fn ($q, $id) => $q->orWhere(
-                                            'id',
-                                            $id,
+                            // Eager-load siswa agar label opsi (yang mengakses
+                            // $record->siswa->nama per opsi) tidak memicu N+1
+                            // (temuan performa #99).
+                            fn ($query, ?Pembayaran $record) => $query
+                                ->with('siswa')
+                                ->where(
+                                    fn ($q) => $q
+                                        ->where(function ($inner) {
+                                            $inner
+                                                ->where('status', '!=', 'lunas')
+                                                ->where('status', '!=', 'batal');
+                                        })
+                                        ->when(
+                                            $record?->tagihan_siswa_id,
+                                            fn ($q, $id) => $q->orWhere(
+                                                'id',
+                                                $id,
+                                            ),
                                         ),
-                                    ),
-                            ),
+                                ),
                         )
                         ->searchable()
                         ->preload()

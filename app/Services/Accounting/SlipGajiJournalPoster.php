@@ -18,9 +18,18 @@ use Illuminate\Support\Facades\Log;
  *   - Pegawai non-guru (karyawan)      :
  *       D Beban Gaji Karyawan (5-1002) / K Hutang Gaji (2-1002)
  *
+ * Bila slip memiliki potongan pajak (potongan_pajak > 0), beban gaji diakui
+ * bruto dan kewajiban dipecah menjadi hutang pajak + hutang gaji (net):
+ *       D Beban Gaji (gaji_bersih + potongan_pajak)
+ *           / K Hutang Pajak (2-1003) (potongan_pajak)
+ *           / K Hutang Gaji  (2-1002) (gaji_bersih)
+ * Saat potongan_pajak = 0, jurnal tetap pasangan dua-baris seperti di atas
+ * (tanpa baris hutang pajak) — perilaku slip tanpa pajak tidak berubah.
+ *
  * Sisi PEMBAYARAN (D Hutang Gaji / K Kas) TIDAK ditangani di sini: pembayaran
  * dilakukan dengan membuat record KasKeluar (lihat SlipGaji::bayar) yang
- * otomatis dijurnal oleh KasKeluarObserver.
+ * otomatis dijurnal oleh KasKeluarObserver. Pembayaran tetap memakai gaji_bersih
+ * (net), sehingga hutang pajak menjadi saldo tersisa yang disetor terpisah.
  *
  * Akun di-resolve dari kode pada config('akuntansi.akun.*'); bila salah satu
  * tidak ditemukan, posting dilewati dengan Log::warning (tidak pernah menebak).
@@ -62,18 +71,25 @@ class SlipGajiJournalPoster
         $bebanAkunId = $this->resolveAkunId($bebanKode);
         $hutangAkunId = $this->resolveAkunId(config('akuntansi.akun.hutang_gaji'));
 
-        if ($bebanAkunId === null || $hutangAkunId === null) {
-            Log::warning('Posting jurnal akrual gaji dilewati: akun beban/hutang gaji tidak dapat di-resolve.', [
+        // Hutang pajak hanya diperlukan bila ada potongan pajak pada slip.
+        $adaPajak = bccomp((string) $slip->potongan_pajak, '0', 2) === 1;
+        $hutangPajakAkunId = $adaPajak
+            ? $this->resolveAkunId(config('akuntansi.akun.hutang_pajak'))
+            : null;
+
+        if ($bebanAkunId === null || $hutangAkunId === null || ($adaPajak && $hutangPajakAkunId === null)) {
+            Log::warning('Posting jurnal akrual gaji dilewati: akun beban/hutang gaji/hutang pajak tidak dapat di-resolve.', [
                 'jenis_referensi' => self::JENIS,
                 'referensi_id' => $slip->getKey(),
                 'beban_akun_id' => $bebanAkunId,
                 'hutang_akun_id' => $hutangAkunId,
+                'hutang_pajak_akun_id' => $hutangPajakAkunId,
             ]);
 
             return;
         }
 
-        DB::transaction(function () use ($slip, $bebanAkunId, $hutangAkunId): void {
+        DB::transaction(function () use ($slip, $bebanAkunId, $hutangAkunId, $hutangPajakAkunId, $adaPajak): void {
             // Lock baris slip agar tidak ada proses lain yang memposting
             // secara bersamaan untuk record yang sama.
             $slip->getConnection()
@@ -86,7 +102,10 @@ class SlipGajiJournalPoster
                 return;
             }
 
-            $nominal = (string) $slip->gaji_bersih;
+            $net = (string) $slip->gaji_bersih;
+            $pajak = (string) $slip->potongan_pajak;
+            // Beban gaji diakui bruto: net (dibayar) + pajak (kewajiban tersisa).
+            $bruto = bcadd($net, $pajak, 2);
             $tanggal = $this->tanggalAkrual($slip)->toDateString();
             $referensi = $slip->nomor;
             $keterangan = 'Akrual beban gaji '.$slip->nomor;
@@ -101,7 +120,7 @@ class SlipGajiJournalPoster
                 'tanggal' => $tanggal,
                 'keterangan' => $keterangan,
                 'akun_id' => $bebanAkunId,
-                'debit' => $nominal,
+                'debit' => $bruto,
                 'kredit' => '0',
                 'referensi' => $referensi,
                 'jenis_referensi' => self::JENIS,
@@ -109,13 +128,28 @@ class SlipGajiJournalPoster
                 'created_by' => $createdBy,
             ]);
 
+            if ($adaPajak) {
+                JurnalUmum::create([
+                    'nomor_bukti' => $referensi.'-AKR-KP-'.$token,
+                    'tanggal' => $tanggal,
+                    'keterangan' => $keterangan,
+                    'akun_id' => $hutangPajakAkunId,
+                    'debit' => '0',
+                    'kredit' => $pajak,
+                    'referensi' => $referensi,
+                    'jenis_referensi' => self::JENIS,
+                    'referensi_id' => $referensiId,
+                    'created_by' => $createdBy,
+                ]);
+            }
+
             JurnalUmum::create([
                 'nomor_bukti' => $referensi.'-AKR-K-'.$token,
                 'tanggal' => $tanggal,
                 'keterangan' => $keterangan,
                 'akun_id' => $hutangAkunId,
                 'debit' => '0',
-                'kredit' => $nominal,
+                'kredit' => $net,
                 'referensi' => $referensi,
                 'jenis_referensi' => self::JENIS,
                 'referensi_id' => $referensiId,
