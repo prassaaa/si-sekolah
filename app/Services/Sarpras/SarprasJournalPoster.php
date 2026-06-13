@@ -5,6 +5,7 @@ namespace App\Services\Sarpras;
 use App\Models\JurnalUmum;
 use App\Models\SarprasBarang;
 use App\Models\SarprasPengadaan;
+use App\Models\SarprasPengadaanItem;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -34,7 +35,12 @@ class SarprasJournalPoster
     ) {}
 
     /**
-     * Post procurement intake: debit Aset Tetap total, credit Kas/Bank total.
+     * Post procurement intake: debit Perlengkapan (bahan) atau Aset Tetap (aset)
+     * per tipe barang yang dihasilkan, credit Kas/Bank total.
+     *
+     * Setiap item dijurnal berdasarkan tipe SarprasBarang yang terbentuk saat
+     * terima(): tipe='bahan' → debit Perlengkapan (1-3001); tipe='aset' → debit
+     * Aset Tetap (1-4001). Total kredit Kas = total seluruh item agar tetap balance.
      * Idempotent per pengadaan. Returns true when a journal was posted.
      */
     public function postPengadaan(SarprasPengadaan $pengadaan): bool
@@ -45,15 +51,12 @@ class SarprasJournalPoster
             return false;
         }
 
-        $debitAkunId = $this->akun->asetTetapAkunId();
         $kreditAkunId = $this->akun->kasAkunId();
 
-        if ($debitAkunId === null || $kreditAkunId === null) {
-            Log::warning('Sarpras pengadaan journal skipped: required akun not resolved.', [
+        if ($kreditAkunId === null) {
+            Log::warning('Sarpras pengadaan journal skipped: akun kas tidak ditemukan.', [
                 'jenis_referensi' => self::JENIS_PENGADAAN,
                 'referensi_id' => $pengadaan->getKey(),
-                'aset_tetap' => $debitAkunId,
-                'kas' => $kreditAkunId,
             ]);
 
             return false;
@@ -63,27 +66,43 @@ class SarprasJournalPoster
             return false;
         }
 
+        /** @var list<array{akun_id: int, subtotal: string, label: string}> $debitLines */
+        $debitLines = $this->buildDebitLines($pengadaan);
+
+        if (empty($debitLines)) {
+            Log::warning('Sarpras pengadaan journal skipped: tidak ada baris debit yang dapat diposting.', [
+                'jenis_referensi' => self::JENIS_PENGADAAN,
+                'referensi_id' => $pengadaan->getKey(),
+            ]);
+
+            return false;
+        }
+
         $nomor = $pengadaan->nomor;
         $keterangan = 'Pengadaan sarpras '.$nomor;
 
-        DB::transaction(function () use ($pengadaan, $debitAkunId, $kreditAkunId, $total, $nomor, $keterangan): void {
+        DB::transaction(function () use ($pengadaan, $debitLines, $kreditAkunId, $total, $nomor, $keterangan): void {
             $token = $this->freshToken();
+            $seq = 1;
+
+            foreach ($debitLines as $line) {
+                JurnalUmum::create([
+                    'nomor_bukti' => $nomor.'-D'.$seq.'-'.$token,
+                    'tanggal' => $pengadaan->tanggal,
+                    'keterangan' => $keterangan.' ('.$line['label'].')',
+                    'akun_id' => $line['akun_id'],
+                    'debit' => $line['subtotal'],
+                    'kredit' => '0',
+                    'referensi' => $nomor,
+                    'jenis_referensi' => self::JENIS_PENGADAAN,
+                    'referensi_id' => $pengadaan->getKey(),
+                    'created_by' => $pengadaan->dibuat_oleh,
+                ]);
+                $seq++;
+            }
 
             JurnalUmum::create([
-                'nomor_bukti' => $nomor.'-AST-D-'.$token,
-                'tanggal' => $pengadaan->tanggal,
-                'keterangan' => $keterangan,
-                'akun_id' => $debitAkunId,
-                'debit' => $total,
-                'kredit' => '0',
-                'referensi' => $nomor,
-                'jenis_referensi' => self::JENIS_PENGADAAN,
-                'referensi_id' => $pengadaan->getKey(),
-                'created_by' => $pengadaan->dibuat_oleh,
-            ]);
-
-            JurnalUmum::create([
-                'nomor_bukti' => $nomor.'-AST-K-'.$token,
+                'nomor_bukti' => $nomor.'-K-'.$token,
                 'tanggal' => $pengadaan->tanggal,
                 'keterangan' => $keterangan,
                 'akun_id' => $kreditAkunId,
@@ -97,6 +116,72 @@ class SarprasJournalPoster
         });
 
         return true;
+    }
+
+    /**
+     * Bangun daftar baris debit untuk postPengadaan(), dikelompokkan per akun
+     * berdasarkan tipe SarprasBarang yang terbentuk dari tiap item.
+     * Tipe 'bahan' → Perlengkapan; tipe 'aset' → Aset Tetap.
+     *
+     * @return list<array{akun_id: int, subtotal: string, label: string}>
+     */
+    private function buildDebitLines(SarprasPengadaan $pengadaan): array
+    {
+        $asetTetapAkunId = $this->akun->asetTetapAkunId();
+        $perlengkapanAkunId = $this->akun->perlengkapanAkunId();
+
+        /** @var array<int, string> $totalsPerAkun akun_id → bc-math accumulated subtotal */
+        $totalsPerAkun = [];
+        /** @var array<int, string> $labelPerAkun akun_id → label string */
+        $labelPerAkun = [];
+
+        foreach ($pengadaan->items()->get() as $item) {
+            /** @var SarprasPengadaanItem $item */
+            $kodeInventaris = 'INV-'.$pengadaan->nomor.'-'.$item->getKey();
+
+            $barang = SarprasBarang::query()
+                ->where('kode_inventaris', $kodeInventaris)
+                ->first();
+
+            $tipe = $barang?->tipe ?? 'bahan';
+
+            if ($tipe === 'aset') {
+                $akunId = $asetTetapAkunId;
+                $label = 'Aset Tetap';
+            } else {
+                $akunId = $perlengkapanAkunId;
+                $label = 'Perlengkapan';
+            }
+
+            if ($akunId === null) {
+                Log::warning('Sarpras pengadaan: akun tidak ditemukan untuk item, item dilewati.', [
+                    'item_id' => $item->getKey(),
+                    'tipe' => $tipe,
+                    'kode_inventaris' => $kodeInventaris,
+                ]);
+
+                continue;
+            }
+
+            $subtotal = (string) $item->subtotal;
+            $totalsPerAkun[$akunId] = isset($totalsPerAkun[$akunId])
+                ? bcadd($totalsPerAkun[$akunId], $subtotal, 2)
+                : $subtotal;
+            $labelPerAkun[$akunId] = $label;
+        }
+
+        $lines = [];
+        foreach ($totalsPerAkun as $akunId => $subtotal) {
+            if (bccomp($subtotal, '0', 2) > 0) {
+                $lines[] = [
+                    'akun_id' => $akunId,
+                    'subtotal' => $subtotal,
+                    'label' => $labelPerAkun[$akunId],
+                ];
+            }
+        }
+
+        return $lines;
     }
 
     /**

@@ -5,6 +5,8 @@ namespace App\Filament\Resources\SlipGajis\Pages;
 use App\Filament\Resources\SlipGajis\SlipGajiResource;
 use App\Models\SettingGaji;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CreateSlipGaji extends CreateRecord
@@ -58,5 +60,19 @@ class CreateSlipGaji extends CreateRecord
         ];
 
         return $data;
+    }
+
+    /**
+     * Wrap the record creation in a database transaction so the lockForUpdate
+     * acquired while generating the slip nomor (SlipGaji::booted creating hook)
+     * is held until the row is inserted. Without an enclosing transaction the
+     * lock would be released immediately, reopening the race that lets two
+     * concurrent creates read the same max nomor and collide on the unique key.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function handleRecordCreation(array $data): Model
+    {
+        return DB::transaction(fn (): Model => parent::handleRecordCreation($data));
     }
 }

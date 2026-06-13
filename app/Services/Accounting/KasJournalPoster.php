@@ -5,26 +5,25 @@ namespace App\Services\Accounting;
 use App\Models\Akun;
 use App\Models\JurnalUmum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 /**
- * Posts balanced double-entry journal rows to jurnal_umums for kas (cash)
- * transactions.
+ * Memosting pasangan jurnal double-entry seimbang ke jurnal_umums untuk
+ * transaksi kas (kas masuk / kas keluar).
  *
- * Each kas record carries ONE akun_id (the counterpart, e.g. a revenue or
- * expense account). Double-entry also needs the cash/bank account. The schema
- * does not designate a cash akun, so we resolve it by convention:
+ * Setiap record kas membawa:
+ *   - kas_akun_id : akun kas/bank yang bergerak (sisi kas)
+ *   - akun_id     : akun lawan (pendapatan / beban)
  *
- *   1. Akun with kode '1-1001' (the seeded "Kas" account), else
- *   2. Akun with tipe='aset', kategori='lancar' whose nama contains
- *      'Kas' or 'Bank'.
+ * Jika kas_akun_id null, poster mencari akun kas secara konvensi:
+ *   1. Akun dengan kode '1-1001' (Kas tunai)
+ *   2. Akun tipe=aset, kategori=lancar, nama mengandung 'Kas' atau 'Bank'
  *
- * If the cash akun cannot be resolved, we SKIP posting and log a warning
- * rather than guessing wrong — kas saving is never broken by this service.
- *
- * Posting is idempotent: entries are tagged with jenis_referensi +
- * referensi_id pointing back to the kas row, so they are never double-posted
- * and can be excluded from reports that count manual entries.
+ * Idempotensi: entri ditandai jenis_referensi + referensi_id, sehingga
+ * tidak pernah diposting ganda. Check-then-insert dilindungi lockForUpdate
+ * dalam DB::transaction.
  */
 class KasJournalPoster
 {
@@ -33,33 +32,42 @@ class KasJournalPoster
     public const JENIS_KAS_KELUAR = 'kas_keluar';
 
     /**
-     * Post a balanced pair for a KasMasuk row: debit Cash, credit counterpart.
+     * Post pasangan seimbang untuk KasMasuk: debit Kas, kredit akun lawan.
+     *
+     * @throws ValidationException
      */
     public function postKasMasuk(Model $kasMasuk): void
     {
+        $kasAkunId = $kasMasuk->kas_akun_id ?? $this->resolveCashAkunId();
+
         $this->post(
             jenisReferensi: self::JENIS_KAS_MASUK,
             kas: $kasMasuk,
-            debitAkunId: $this->resolveCashAkunId(),
+            debitAkunId: $kasAkunId,
             kreditAkunId: $kasMasuk->akun_id,
         );
     }
 
     /**
-     * Post a balanced pair for a KasKeluar row: debit counterpart, credit Cash.
+     * Post pasangan seimbang untuk KasKeluar: debit akun lawan, kredit Kas.
+     *
+     * @throws ValidationException
      */
     public function postKasKeluar(Model $kasKeluar): void
     {
+        $kasAkunId = $kasKeluar->kas_akun_id ?? $this->resolveCashAkunId();
+
         $this->post(
             jenisReferensi: self::JENIS_KAS_KELUAR,
             kas: $kasKeluar,
             debitAkunId: $kasKeluar->akun_id,
-            kreditAkunId: $this->resolveCashAkunId(),
+            kreditAkunId: $kasAkunId,
         );
     }
 
     /**
-     * Reverse (soft-delete) any journal rows previously posted for a kas row.
+     * Reverse (soft-delete) semua entri jurnal yang sebelumnya diposting
+     * untuk suatu record kas. Dipanggil sebelum repost atau saat dihapus.
      */
     public function reverse(string $jenisReferensi, Model $kas): void
     {
@@ -70,7 +78,7 @@ class KasJournalPoster
     }
 
     /**
-     * Resolve the cash/bank account id by documented convention, or null.
+     * Resolve akun kas/bank secara konvensi jika kas_akun_id tidak diset.
      */
     public function resolveCashAkunId(): ?int
     {
@@ -91,10 +99,18 @@ class KasJournalPoster
         return $akun?->id;
     }
 
-    private function post(string $jenisReferensi, Model $kas, ?int $debitAkunId, int $kreditAkunId): void
+    /**
+     * Post satu pasangan debit/kredit di dalam transaction tunggal.
+     * lockForUpdate pada record kas memastikan idempoten aman dari race.
+     *
+     * @throws ValidationException bila akun kas tidak ditemukan atau akun lawan sama
+     */
+    private function post(string $jenisReferensi, Model $kas, ?int $debitAkunId, ?int $kreditAkunId): void
     {
+        // Jika akun kas tidak ditemukan, lewati posting tanpa error (data lama
+        // mungkin belum punya kas_akun_id; form sudah mensyaratkan field ini).
         if ($debitAkunId === null || $kreditAkunId === null) {
-            Log::warning('Kas journal posting skipped: cash akun could not be resolved.', [
+            Log::warning('Posting jurnal kas dilewati: akun kas/bank tidak dapat di-resolve.', [
                 'jenis_referensi' => $jenisReferensi,
                 'referensi_id' => $kas->getKey(),
             ]);
@@ -102,55 +118,61 @@ class KasJournalPoster
             return;
         }
 
-        if ($debitAkunId === $kreditAkunId) {
-            Log::warning('Kas journal posting skipped: counterpart equals cash akun.', [
+        DB::transaction(function () use ($jenisReferensi, $kas, $debitAkunId, $kreditAkunId): void {
+            // Lock record sumber agar tidak ada proses lain yang memposting
+            // secara bersamaan untuk kas yang sama.
+            $kas->getConnection()
+                ->table($kas->getTable())
+                ->where($kas->getKeyName(), $kas->getKey())
+                ->lockForUpdate()
+                ->first();
+
+            if ($debitAkunId === $kreditAkunId) {
+                throw ValidationException::withMessages([
+                    'akun_id' => 'Akun lawan tidak boleh sama dengan Akun Kas/Bank yang dipilih.',
+                ]);
+            }
+
+            if ($this->alreadyPosted($jenisReferensi, $kas)) {
+                return;
+            }
+
+            $nominal = (string) $kas->nominal;
+            $tanggal = $kas->tanggal;
+            $nomorBukti = $kas->nomor_bukti;
+            $keterangan = $kas->keterangan ?: $nomorBukti;
+            $referensiId = $kas->getKey();
+            $createdBy = $kas->user_id;
+
+            // Token unik untuk menghindari duplikasi nomor_bukti jurnal saat repost.
+            $token = ((int) JurnalUmum::query()->withTrashed()->max('id')) + 1;
+
+            JurnalUmum::create([
+                'nomor_bukti' => $nomorBukti.'-D-'.$token,
+                'tanggal' => $tanggal,
+                'keterangan' => $keterangan,
+                'akun_id' => $debitAkunId,
+                'debit' => $nominal,
+                'kredit' => '0',
+                'referensi' => $nomorBukti,
                 'jenis_referensi' => $jenisReferensi,
-                'referensi_id' => $kas->getKey(),
+                'referensi_id' => $referensiId,
+                'created_by' => $createdBy,
             ]);
 
-            return;
-        }
-
-        if ($this->alreadyPosted($jenisReferensi, $kas)) {
-            return;
-        }
-
-        $nominal = (string) $kas->nominal;
-        $tanggal = $kas->tanggal;
-        $nomorBukti = $kas->nomor_bukti;
-        $keterangan = $kas->keterangan ?: $nomorBukti;
-        $referensiId = $kas->getKey();
-        $createdBy = $kas->user_id;
-
-        // jurnal_umums.nomor_bukti is globally unique and the index ignores
-        // soft-deletes, so reposts (after a reversal) must use a fresh token.
-        $token = ((int) JurnalUmum::query()->withTrashed()->max('id')) + 1;
-
-        JurnalUmum::create([
-            'nomor_bukti' => $nomorBukti.'-D-'.$token,
-            'tanggal' => $tanggal,
-            'keterangan' => $keterangan,
-            'akun_id' => $debitAkunId,
-            'debit' => $nominal,
-            'kredit' => '0',
-            'referensi' => $nomorBukti,
-            'jenis_referensi' => $jenisReferensi,
-            'referensi_id' => $referensiId,
-            'created_by' => $createdBy,
-        ]);
-
-        JurnalUmum::create([
-            'nomor_bukti' => $nomorBukti.'-K-'.$token,
-            'tanggal' => $tanggal,
-            'keterangan' => $keterangan,
-            'akun_id' => $kreditAkunId,
-            'debit' => '0',
-            'kredit' => $nominal,
-            'referensi' => $nomorBukti,
-            'jenis_referensi' => $jenisReferensi,
-            'referensi_id' => $referensiId,
-            'created_by' => $createdBy,
-        ]);
+            JurnalUmum::create([
+                'nomor_bukti' => $nomorBukti.'-K-'.$token,
+                'tanggal' => $tanggal,
+                'keterangan' => $keterangan,
+                'akun_id' => $kreditAkunId,
+                'debit' => '0',
+                'kredit' => $nominal,
+                'referensi' => $nomorBukti,
+                'jenis_referensi' => $jenisReferensi,
+                'referensi_id' => $referensiId,
+                'created_by' => $createdBy,
+            ]);
+        });
     }
 
     private function alreadyPosted(string $jenisReferensi, Model $kas): bool

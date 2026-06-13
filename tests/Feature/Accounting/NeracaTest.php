@@ -1,21 +1,19 @@
 <?php
 
-use App\Filament\Pages\Neraca;
 use App\Models\Akun;
 use App\Models\JurnalUmum;
 use App\Models\SaldoAwal;
 use App\Models\TahunAjaran;
+use App\Services\Accounting\FinancialService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 function neracaSaldo(string $tanggal): array
 {
-    $page = new Neraca;
-    $method = new ReflectionMethod(Neraca::class, 'calculateSaldoPerAkun');
-    $method->setAccessible(true);
+    $akunIds = Akun::query()->pluck('id')->all();
 
-    return $method->invoke($page, $tanggal);
+    return app(FinancialService::class)->saldoPerAkun($akunIds, $tanggal);
 }
 
 it('drives account balances from posisi_normal', function () {

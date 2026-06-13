@@ -6,6 +6,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -69,9 +70,9 @@ class JurnalUmumsTable
                     ]),
                 Filter::make('tanggal')
                     ->form([
-                        \Filament\Forms\Components\DatePicker::make('dari')
+                        DatePicker::make('dari')
                             ->label('Dari Tanggal'),
-                        \Filament\Forms\Components\DatePicker::make('sampai')
+                        DatePicker::make('sampai')
                             ->label('Sampai Tanggal'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
@@ -88,8 +89,12 @@ class JurnalUmumsTable
             ])
             ->actions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->hidden(fn ($record) => $record->isAutoPosted()),
             ])
+            ->checkIfRecordIsSelectableUsing(
+                fn ($record) => ! $record->isAutoPosted(),
+            )
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

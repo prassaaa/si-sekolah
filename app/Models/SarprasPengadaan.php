@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -185,6 +186,14 @@ class SarprasPengadaan extends Model
             }
             if (! $pengadaan->dibuat_oleh) {
                 $pengadaan->dibuat_oleh = auth()->id();
+            }
+        });
+
+        static::deleting(function (SarprasPengadaan $pengadaan): void {
+            if ($pengadaan->status === 'diterima') {
+                throw ValidationException::withMessages([
+                    'status' => 'Pengadaan yang sudah diterima tidak bisa dihapus; jurnal & stok sudah terbentuk.',
+                ]);
             }
         });
     }

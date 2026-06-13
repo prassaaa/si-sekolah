@@ -4,7 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Akun;
 use App\Models\JurnalUmum;
-use App\Models\SaldoAwal;
+use App\Services\Accounting\FinancialService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
@@ -121,10 +121,16 @@ class BukuBesar extends Page implements HasSchemas, HasTable
     }
 
     /**
-     * Build a real ledger for a single account: opening balance seeded from
-     * saldo_awals plus prior journal movement, a running saldo for each entry
-     * in the period (ordered by tanggal then id, honoring posisi_normal), and
-     * explicit opening/closing rows.
+     * Build a real ledger for a single account using snapshot semantics.
+     *
+     * The opening balance is the saldo awal snapshot (latest saldo_awals row
+     * with tanggal <= tanggal mulai, NOT a sum across tahun ajaran) plus the
+     * journal movement from the snapshot date up to — but excluding — tanggal
+     * mulai (jurnal >= snapshot.tanggal AND < tanggal mulai). Period movement
+     * is jurnal in [tanggal mulai, tanggal akhir]. With this, a saldo awal dated
+     * exactly on tanggal mulai lands in the opening balance (not lost, not
+     * double-counted) and reconciles with Neraca. Honors posisi_normal and runs
+     * a saldo per entry; soft-deleted rows are excluded.
      *
      * @param  array<string, mixed>  $filters
      * @return Collection<int, array<string, mixed>>
@@ -147,24 +153,10 @@ class BukuBesar extends Page implements HasSchemas, HasTable
 
         $isDebitNormal = $akun->posisi_normal === 'debit';
 
-        $saldoAwalRecorded = SaldoAwal::query()
-            ->where('akun_id', $akunId)
-            ->when($tanggalMulai, fn ($q) => $q->where('tanggal', '<', $tanggalMulai))
-            ->sum('saldo');
-
-        $priorMovement = JurnalUmum::query()
-            ->where('akun_id', $akunId)
-            ->when($tanggalMulai, fn ($q) => $q->where('tanggal', '<', $tanggalMulai))
-            ->selectRaw('COALESCE(SUM(debit), 0) as total_debit, COALESCE(SUM(kredit), 0) as total_kredit')
-            ->first();
-
-        $priorDebit = (string) ($priorMovement->total_debit ?? '0');
-        $priorKredit = (string) ($priorMovement->total_kredit ?? '0');
-        $priorNet = $isDebitNormal
-            ? bcsub($priorDebit, $priorKredit, 2)
-            : bcsub($priorKredit, $priorDebit, 2);
-
-        $saldo = bcadd((string) $saldoAwalRecorded, $priorNet, 2);
+        $saldo = $tanggalMulai
+            ? (app(FinancialService::class)
+                ->saldoAwalPeriodePerAkun([$akun->id], $tanggalMulai)[$akun->id] ?? '0.00')
+            : '0.00';
 
         $rows = collect();
         $rows->push([

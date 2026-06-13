@@ -52,7 +52,7 @@ class RoleSeeder extends Seeder
      * @var array<string>
      */
     private array $allPages = [
-        'Neraca', 'LabaRugi', 'BukuBesar', 'PerubahanModal', 'ArusKasBank',
+        'Neraca', 'NeracaSaldo', 'LabaRugi', 'BukuBesar', 'PerubahanModal', 'ArusKasBank',
         'LaporanJurnal', 'LaporanDebitKredit', 'LaporanKeuangan',
         'LaporanPembayaran', 'LaporanPembayaranPerKelas', 'LaporanPembayaranPerTanggal',
         'LaporanTagihanSiswa', 'LaporanUnitPos', 'LaporanTabungan',
@@ -231,6 +231,7 @@ class RoleSeeder extends Seeder
 
             // HALAMAN LAPORAN KEUANGAN & AKUNTANSI
             $this->pagePermission('Neraca'),
+            $this->pagePermission('NeracaSaldo'),
             $this->pagePermission('LabaRugi'),
             $this->pagePermission('BukuBesar'),
             $this->pagePermission('PerubahanModal'),

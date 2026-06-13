@@ -4,7 +4,6 @@ namespace App\Filament\Pages;
 
 use App\Models\Akun;
 use App\Models\JurnalUmum;
-use App\Models\SaldoAwal;
 use App\Services\Accounting\FinancialService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
@@ -62,22 +61,25 @@ class PerubahanModal extends Page implements HasSchemas, HasTable
                     return collect();
                 }
 
-                $akunModalIds = Akun::where('tipe', 'ekuitas')->pluck('id');
+                $financial = app(FinancialService::class);
 
-                $saldoAwalEkuitas = SaldoAwal::query()
-                    ->whereIn('akun_id', $akunModalIds)
-                    ->where('tanggal', '<', $tanggalMulai)
-                    ->sum('saldo');
+                $akunModalIds = Akun::where('tipe', 'ekuitas')->pluck('id')->all();
 
-                $jurnalModalAwal = JurnalUmum::query()
-                    ->whereIn('akun_id', $akunModalIds)
-                    ->where('tanggal', '<', $tanggalMulai)
-                    ->selectRaw('COALESCE(SUM(kredit), 0) - COALESCE(SUM(debit), 0) as saldo')
-                    ->value('saldo') ?? 0;
+                $sebelumMulai = Carbon::parse($tanggalMulai)->subDay()->toDateString();
 
-                $modalAwal = bcadd((string) $saldoAwalEkuitas, (string) $jurnalModalAwal, 2);
+                $saldoEkuitas = $financial->saldoAwalPeriodePerAkun($akunModalIds, $tanggalMulai);
+                $modalAkun = array_reduce(
+                    $saldoEkuitas,
+                    fn (string $carry, string $saldo): string => bcadd($carry, $saldo, 2),
+                    '0',
+                );
 
-                $labaRugi = app(FinancialService::class)->netIncome($tanggalMulai, $tanggalAkhir);
+                $awalLaba = $financial->latestSnapshotDate($tanggalMulai);
+                $labaKumulatif = $financial->netIncome($awalLaba, $sebelumMulai);
+
+                $modalAwal = bcadd($modalAkun, $labaKumulatif, 2);
+
+                $labaRugi = $financial->netIncome($tanggalMulai, $tanggalAkhir);
 
                 $prive = $this->calculatePrive($tanggalMulai, $tanggalAkhir);
 

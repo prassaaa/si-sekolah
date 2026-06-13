@@ -9,6 +9,7 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class EditBuktiTransfer extends EditRecord
 {
@@ -71,17 +72,29 @@ class EditBuktiTransfer extends EditRecord
                 $record->saveQuietly();
             }
 
-            Pembayaran::create([
-                'tagihan_siswa_id' => $record->tagihan_siswa_id,
-                'nomor_transaksi' => 'TRF-'.strtoupper(uniqid()),
-                'tanggal_bayar' => $record->tanggal_transfer ?? now()->toDateString(),
-                'jumlah_bayar' => $record->nominal,
-                'metode_pembayaran' => 'transfer',
-                'referensi_pembayaran' => 'BT-'.$record->id,
-                'diterima_oleh' => null,
-                'keterangan' => 'Verifikasi bukti transfer #'.$record->id,
-                'status' => 'berhasil',
-            ]);
+            // BuktiTransfer memverifikasi transfer nyata yang sudah terjadi —
+            // validasi overpayment dilewati (temuan #45, belum diselesaikan).
+            // Flag direset di blok finally agar tidak bocor ke request lain.
+            Pembayaran::$skipOverpayValidation = true;
+
+            try {
+                Pembayaran::create([
+                    'tagihan_siswa_id' => $record->tagihan_siswa_id,
+                    'nomor_transaksi' => 'TRF-'.strtoupper(uniqid()),
+                    'tanggal_bayar' => $record->tanggal_transfer ?? now()->toDateString(),
+                    'jumlah_bayar' => $record->nominal,
+                    'metode_pembayaran' => 'transfer',
+                    'referensi_pembayaran' => 'BT-'.$record->id,
+                    'diterima_oleh' => null,
+                    'keterangan' => 'Verifikasi bukti transfer #'.$record->id,
+                    'status' => 'berhasil',
+                ]);
+            } catch (Throwable $e) {
+                Pembayaran::$skipOverpayValidation = false;
+                throw $e;
+            }
+
+            Pembayaran::$skipOverpayValidation = false;
         });
     }
 }

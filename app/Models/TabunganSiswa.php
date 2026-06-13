@@ -113,11 +113,15 @@ class TabunganSiswa extends Model
 
     /**
      * Reject a `tarik` row before it is persisted when it would drive the
-     * running balance negative at its chronological position.
+     * running balance negative at any point in the student's timeline.
      *
-     * The balance is computed under a row lock against the affected student's
-     * other rows ordered by tanggal then id, so the check reflects the real
-     * (recomputed) balance rather than the stale stored saldo.
+     * This method MUST be called inside an active DB::transaction so that the
+     * lockForUpdate acquired here is held until the INSERT/UPDATE commits —
+     * preventing concurrent withdrawals from racing past the balance check.
+     *
+     * Beyond the insertion point, the method also simulates how every subsequent
+     * row in the ledger would be affected by this new entry so that a backdated
+     * withdrawal cannot silently corrupt future balances.
      *
      * @throws ValidationException
      */
@@ -127,35 +131,59 @@ class TabunganSiswa extends Model
             return;
         }
 
-        DB::transaction(function (): void {
-            $rows = static::query()
-                ->where('siswa_id', $this->siswa_id)
-                ->when($this->exists, fn ($query) => $query->whereKeyNot($this->getKey()))
-                ->orderBy('tanggal')
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get();
+        $rows = static::query()
+            ->where('siswa_id', $this->siswa_id)
+            ->when($this->exists, fn ($query) => $query->whereKeyNot($this->getKey()))
+            ->orderBy('tanggal')
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
 
-            $runningSaldo = '0.00';
-            $tanggal = $this->tanggal instanceof \DateTimeInterface
-                ? $this->tanggal->format('Y-m-d')
-                : (string) $this->tanggal;
+        $runningSaldo = '0.00';
+        $tanggal = $this->tanggal instanceof \DateTimeInterface
+            ? $this->tanggal->format('Y-m-d')
+            : (string) $this->tanggal;
 
-            foreach ($rows as $row) {
-                $rowTanggal = $row->tanggal instanceof \DateTimeInterface
-                    ? $row->tanggal->format('Y-m-d')
-                    : (string) $row->tanggal;
+        /** @var bool $injected — have we applied the new withdrawal yet? */
+        $injected = false;
 
-                if ($rowTanggal > $tanggal) {
-                    continue;
+        foreach ($rows as $row) {
+            $rowTanggal = $row->tanggal instanceof \DateTimeInterface
+                ? $row->tanggal->format('Y-m-d')
+                : (string) $row->tanggal;
+
+            // Inject the new withdrawal into the timeline at the correct
+            // chronological position before processing rows that come after it.
+            if (! $injected && $rowTanggal > $tanggal) {
+                $thisNominal = bcadd((string) $this->nominal, '0', self::MONEY_SCALE);
+                $runningSaldo = bcsub($runningSaldo, $thisNominal, self::MONEY_SCALE);
+
+                if (bccomp($runningSaldo, '0', self::MONEY_SCALE) < 0) {
+                    throw ValidationException::withMessages([
+                        'nominal' => 'Saldo tidak mencukupi untuk penarikan ini.',
+                    ]);
                 }
 
-                $nominal = bcadd((string) $row->nominal, '0', self::MONEY_SCALE);
-                $runningSaldo = $row->jenis === 'setor'
-                    ? bcadd($runningSaldo, $nominal, self::MONEY_SCALE)
-                    : bcsub($runningSaldo, $nominal, self::MONEY_SCALE);
+                $injected = true;
             }
 
+            $nominal = bcadd((string) $row->nominal, '0', self::MONEY_SCALE);
+            $runningSaldo = $row->jenis === 'setor'
+                ? bcadd($runningSaldo, $nominal, self::MONEY_SCALE)
+                : bcsub($runningSaldo, $nominal, self::MONEY_SCALE);
+
+            // A tarik row after the injection point must not drive the balance
+            // negative — that would mean this backdated withdrawal corrupts a
+            // future row that was previously valid.
+            if ($injected && $row->jenis === 'tarik' && bccomp($runningSaldo, '0', self::MONEY_SCALE) < 0) {
+                throw ValidationException::withMessages([
+                    'nominal' => 'Penarikan ini menyebabkan saldo negatif pada transaksi berikutnya (backdated).',
+                ]);
+            }
+        }
+
+        // The new withdrawal is the last (or only) entry — inject at the end.
+        if (! $injected) {
             $thisNominal = bcadd((string) $this->nominal, '0', self::MONEY_SCALE);
             $runningSaldo = bcsub($runningSaldo, $thisNominal, self::MONEY_SCALE);
 
@@ -164,7 +192,7 @@ class TabunganSiswa extends Model
                     'nominal' => 'Saldo tidak mencukupi untuk penarikan ini.',
                 ]);
             }
-        });
+        }
     }
 
     /**

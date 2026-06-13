@@ -26,10 +26,12 @@ class CreatePembayaran extends CreateRecord
             ]);
         }
 
-        $jumlahBayar = (float) ($data['jumlah_bayar'] ?? 0);
-        $sisaTagihan = (float) $tagihan->sisa_tagihan;
+        // Validasi cepat di sisi form (UX) menggunakan bcmath.
+        // Validasi otoritatif dengan lock ada di reconcilePayment pada Pembayaran model.
+        $jumlahBayar = bcadd((string) ($data['jumlah_bayar'] ?? '0'), '0', 2);
+        $sisaTagihan = bcadd((string) $tagihan->sisa_tagihan, '0', 2);
 
-        if ($jumlahBayar > $sisaTagihan) {
+        if (bccomp($jumlahBayar, $sisaTagihan, 2) > 0) {
             throw ValidationException::withMessages([
                 'jumlah_bayar' => 'Jumlah bayar melebihi sisa tagihan.',
             ]);

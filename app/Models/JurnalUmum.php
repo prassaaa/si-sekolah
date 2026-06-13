@@ -78,6 +78,15 @@ class JurnalUmum extends Model
     }
 
     /**
+     * Mengembalikan true bila baris ini dihasilkan oleh sistem (posting otomatis).
+     * Jurnal manual mempunyai jenis_referensi null; jurnal sistem punya nilai.
+     */
+    public function isAutoPosted(): bool
+    {
+        return ! empty($this->jenis_referensi);
+    }
+
+    /**
      * @param  Builder<JurnalUmum>  $query
      * @return Builder<JurnalUmum>
      */

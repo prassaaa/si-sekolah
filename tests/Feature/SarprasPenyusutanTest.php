@@ -19,6 +19,7 @@ function seedAkun(): void
 {
     $akuns = [
         ['kode' => '1-1001', 'nama' => 'Kas', 'tipe' => 'aset', 'kategori' => 'lancar', 'posisi_normal' => 'debit'],
+        ['kode' => '1-3001', 'nama' => 'Perlengkapan', 'tipe' => 'aset', 'kategori' => 'lancar', 'posisi_normal' => 'debit'],
         ['kode' => '1-4001', 'nama' => 'Peralatan', 'tipe' => 'aset', 'kategori' => 'tetap', 'posisi_normal' => 'debit'],
         ['kode' => '1-4002', 'nama' => 'Akumulasi Penyusutan Peralatan', 'tipe' => 'aset', 'kategori' => 'tetap', 'posisi_normal' => 'kredit'],
         ['kode' => '5-4001', 'nama' => 'Beban Penyusutan', 'tipe' => 'beban', 'kategori' => 'non_operasional', 'posisi_normal' => 'debit'],
@@ -115,8 +116,9 @@ describe('Pengadaan terima posts balanced jurnal', function () {
         expect($totalDebit)->toBe(1000000.0);
         expect($totalKredit)->toBe(1000000.0);
 
+        // Item bertipe 'bahan' (default terima()) → debit ke Perlengkapan (1-3001), bukan Aset Tetap.
         $debitRow = $rows->firstWhere('debit', '>', 0);
-        expect($debitRow->akun_id)->toBe(Akun::where('kode', '1-4001')->value('id'));
+        expect($debitRow->akun_id)->toBe(Akun::where('kode', '1-3001')->value('id'));
     });
 
     it('SAFE-skips posting when accounts are missing (no exception, no partial post)', function () {

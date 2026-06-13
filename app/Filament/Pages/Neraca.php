@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Akun;
+use App\Services\Accounting\FinancialService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
@@ -20,7 +21,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class Neraca extends Page implements HasSchemas, HasTable
 {
@@ -61,14 +61,18 @@ class Neraca extends Page implements HasSchemas, HasTable
                     return collect();
                 }
 
-                $saldoPerAkun = $this->calculateSaldoPerAkun($tanggal);
-
                 $akuns = Akun::whereIn('tipe', ['aset', 'liabilitas', 'ekuitas'])
-                    ->when($tipe, fn ($q) => $q->where('tipe', $tipe))
                     ->orderBy('kode')
                     ->get();
 
-                $rows = $akuns->map(function ($akun) use ($saldoPerAkun) {
+                $saldoPerAkun = app(FinancialService::class)
+                    ->saldoPerAkun($akuns->pluck('id')->all(), $tanggal);
+
+                $visibleAkuns = $tipe
+                    ? $akuns->where('tipe', $tipe)
+                    : $akuns;
+
+                $rows = $visibleAkuns->map(function ($akun) use ($saldoPerAkun) {
                     $saldo = $saldoPerAkun[$akun->id] ?? '0';
 
                     if (bccomp($saldo, '0', 2) === 0) {
@@ -98,6 +102,17 @@ class Neraca extends Page implements HasSchemas, HasTable
                     } else {
                         $totalLiabilitasEkuitas = bcadd($totalLiabilitasEkuitas, $saldo, 2);
                     }
+                }
+
+                $labaBerjalan = $this->labaBerjalan($tanggal);
+                $totalLiabilitasEkuitas = bcadd($totalLiabilitasEkuitas, $labaBerjalan, 2);
+
+                if ((! $tipe || $tipe === 'ekuitas') && bccomp($labaBerjalan, '0', 2) !== 0) {
+                    $rows->push([
+                        'akun' => 'Laba (Rugi) Berjalan',
+                        'tipe' => 'Modal',
+                        'saldo' => $labaBerjalan,
+                    ]);
                 }
 
                 $selisih = bcsub($totalAset, $totalLiabilitasEkuitas, 2);
@@ -174,58 +189,20 @@ class Neraca extends Page implements HasSchemas, HasTable
     }
 
     /**
-     * Balance per account as of a date, driven by each account's posisi_normal.
+     * Laba (rugi) berjalan as of $tanggal: a synthetic equity line.
      *
-     * A debit-normal account's balance is opening + (debit - kredit); a
-     * credit-normal account's balance is opening + (kredit - debit). Soft
-     * deleted saldo_awals and jurnal_umums rows are excluded.
-     *
-     * @return array<int, string>
+     * Net income is accumulated from the latest saldo awal snapshot date (the
+     * MAX tanggal across the selected snapshots <= $tanggal) through $tanggal.
+     * ASSUMPTION: saldo awal of a tahun ajaran is entered on a single shared
+     * date that already absorbed prior-period results, so accumulating net
+     * income from that date forward avoids double counting. With no snapshot,
+     * net income is accumulated since the beginning of the books (null start).
      */
-    private function calculateSaldoPerAkun(string $tanggal): array
+    private function labaBerjalan(string $tanggal): string
     {
-        $saldoAwal = DB::table('saldo_awals')
-            ->select('akun_id', DB::raw('SUM(saldo) as total'))
-            ->where('tanggal', '<=', $tanggal)
-            ->whereNull('deleted_at')
-            ->groupBy('akun_id')
-            ->pluck('total', 'akun_id')
-            ->toArray();
+        $financial = app(FinancialService::class);
+        $awalLaba = $financial->latestSnapshotDate($tanggal);
 
-        $jurnal = DB::table('jurnal_umums')
-            ->select(
-                'akun_id',
-                DB::raw(
-                    'SUM(debit) as total_debit, SUM(kredit) as total_kredit',
-                ),
-            )
-            ->where('tanggal', '<=', $tanggal)
-            ->whereNull('deleted_at')
-            ->groupBy('akun_id')
-            ->get()
-            ->keyBy('akun_id');
-
-        $akuns = Akun::whereIn('tipe', [
-            'aset',
-            'liabilitas',
-            'ekuitas',
-        ])->get();
-
-        $result = [];
-        foreach ($akuns as $akun) {
-            $awal = (string) ($saldoAwal[$akun->id] ?? '0');
-            $row = $jurnal[$akun->id] ?? null;
-
-            $debit = (string) ($row->total_debit ?? '0');
-            $kredit = (string) ($row->total_kredit ?? '0');
-
-            $jurnalSaldo = $akun->posisi_normal === 'debit'
-                ? bcsub($debit, $kredit, 2)
-                : bcsub($kredit, $debit, 2);
-
-            $result[$akun->id] = bcadd($awal, $jurnalSaldo, 2);
-        }
-
-        return $result;
+        return $financial->netIncome($awalLaba, $tanggal);
     }
 }

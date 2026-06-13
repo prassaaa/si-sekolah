@@ -77,6 +77,34 @@ class AkunResolver
     }
 
     /**
+     * Perlengkapan account (debited for bahan/habis-pakai procurement).
+     * Convention: kode '1-3001', else first aset/lancar named like Perlengkapan,
+     * else first beban account as fallback. Returns null when not resolvable.
+     */
+    public function perlengkapanAkunId(): ?int
+    {
+        $akun = Akun::query()->where('kode', '1-3001')->first();
+
+        if (! $akun) {
+            $akun = Akun::query()
+                ->where('tipe', 'aset')
+                ->where('kategori', 'lancar')
+                ->where('nama', 'like', '%Perlengkapan%')
+                ->orderBy('kode')
+                ->first();
+        }
+
+        if (! $akun) {
+            $akun = Akun::query()
+                ->where('tipe', 'beban')
+                ->orderBy('kode')
+                ->first();
+        }
+
+        return $akun?->id;
+    }
+
+    /**
      * Akumulasi Penyusutan contra-asset (credited monthly). Convention: kode
      * '1-4002', else first aset account named like "Akumulasi Penyusutan"
      * with a credit normal balance.

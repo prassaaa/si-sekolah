@@ -3,6 +3,7 @@
 use App\Models\Pembayaran;
 use App\Models\TagihanSiswa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
@@ -249,21 +250,22 @@ it('updates the amount on the same tagihan', function () {
         ->and((float) $pembayaran->applied_amount)->toBe(450000.0);
 });
 
-it('clamps sisa_tagihan at zero on overpayment and flags overpaid', function () {
+it('menolak pembayaran yang melebihi total tagihan via ValidationException', function () {
     $tagihan = makeTagihan(500000);
 
-    Pembayaran::factory()->create([
+    // Sebelumnya: pembayaran ini lolos dan sisa_tagihan diklem di nol.
+    // Setelah perbaikan #91: validasi otoritatif di reconcilePayment menolaknya.
+    expect(fn () => Pembayaran::factory()->create([
         'tagihan_siswa_id' => $tagihan->id,
         'jumlah_bayar' => 700000,
         'status' => 'berhasil',
-    ]);
+    ]))->toThrow(ValidationException::class);
 
+    // Tagihan tidak boleh termodifikasi
     $tagihan->refresh();
-
-    expect((float) $tagihan->total_terbayar)->toBe(700000.0)
-        ->and((float) $tagihan->sisa_tagihan)->toBe(0.0)
-        ->and($tagihan->status)->toBe('lunas')
-        ->and($tagihan->isOverpaid())->toBeTrue();
+    expect((float) $tagihan->total_terbayar)->toBe(0.0)
+        ->and((float) $tagihan->sisa_tagihan)->toBe(500000.0)
+        ->and($tagihan->status)->toBe('belum_bayar');
 });
 
 it('does not flip a batal tagihan when reconciling', function () {

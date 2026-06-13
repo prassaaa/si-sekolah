@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\KasKeluar;
 use App\Services\Accounting\KasJournalPoster;
+use Illuminate\Support\Facades\DB;
 
 class KasKeluarObserver
 {
@@ -14,10 +15,16 @@ class KasKeluarObserver
         $this->poster->postKasKeluar($kasKeluar);
     }
 
+    /**
+     * Reverse lalu repost dalam satu transaction agar tidak ada jeda
+     * di mana jurnal tidak ada atau jurnal ganda muncul.
+     */
     public function updated(KasKeluar $kasKeluar): void
     {
-        $this->poster->reverse(KasJournalPoster::JENIS_KAS_KELUAR, $kasKeluar);
-        $this->poster->postKasKeluar($kasKeluar);
+        DB::transaction(function () use ($kasKeluar): void {
+            $this->poster->reverse(KasJournalPoster::JENIS_KAS_KELUAR, $kasKeluar);
+            $this->poster->postKasKeluar($kasKeluar);
+        });
     }
 
     public function deleted(KasKeluar $kasKeluar): void
