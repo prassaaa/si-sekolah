@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\JenisPembayaranFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class JenisPembayaran extends Model
 {
-    /** @use HasFactory<\Database\Factories\JenisPembayaranFactory> */
+    /** @use HasFactory<JenisPembayaranFactory> */
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
@@ -22,6 +23,7 @@ class JenisPembayaran extends Model
         'kode',
         'nama',
         'nominal',
+        'akun_pendapatan_id',
         'jenis',
         'deskripsi',
         'is_active',
@@ -47,6 +49,14 @@ class JenisPembayaran extends Model
     public function kategoriPembayaran(): BelongsTo
     {
         return $this->belongsTo(KategoriPembayaran::class);
+    }
+
+    /**
+     * @return BelongsTo<Akun, $this>
+     */
+    public function akunPendapatan(): BelongsTo
+    {
+        return $this->belongsTo(Akun::class, 'akun_pendapatan_id');
     }
 
     public function tahunAjaran(): BelongsTo

@@ -26,6 +26,7 @@ class AkunSeeder extends Seeder
             ['kode' => '2-1001', 'nama' => 'Hutang Usaha', 'tipe' => 'liabilitas', 'kategori' => 'jangka_panjang', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Hutang kepada supplier', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
             ['kode' => '2-1002', 'nama' => 'Hutang Gaji', 'tipe' => 'liabilitas', 'kategori' => 'jangka_panjang', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Hutang gaji pegawai', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
             ['kode' => '2-1003', 'nama' => 'Hutang Pajak', 'tipe' => 'liabilitas', 'kategori' => 'jangka_panjang', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Hutang pajak (PPh, PPN)', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
+            ['kode' => '2-1004', 'nama' => 'Titipan Tabungan Siswa', 'tipe' => 'liabilitas', 'kategori' => 'jangka_panjang', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Saldo tabungan siswa yang dititipkan ke sekolah (kewajiban)', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
 
             // Ekuitas
             ['kode' => '3-1001', 'nama' => 'Modal Yayasan', 'tipe' => 'ekuitas', 'kategori' => null, 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Modal dari yayasan', 'saldo_awal' => 250000000, 'saldo_akhir' => 250000000, 'is_active' => true],
@@ -38,6 +39,7 @@ class AkunSeeder extends Seeder
             ['kode' => '4-1003', 'nama' => 'Pendapatan Seragam', 'tipe' => 'pendapatan', 'kategori' => 'operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Pendapatan dari penjualan seragam', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
             ['kode' => '4-1004', 'nama' => 'Pendapatan Kegiatan', 'tipe' => 'pendapatan', 'kategori' => 'operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Pendapatan dari kegiatan sekolah', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
             ['kode' => '4-1005', 'nama' => 'Pendapatan Lain-lain', 'tipe' => 'pendapatan', 'kategori' => 'non_operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Pendapatan lain-lain', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
+            ['kode' => '4-1006', 'nama' => 'Pendapatan Denda', 'tipe' => 'pendapatan', 'kategori' => 'non_operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'kredit', 'deskripsi' => 'Pendapatan denda keterlambatan (mis. peminjaman sarpras)', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
 
             // Beban - Operasional
             ['kode' => '5-1001', 'nama' => 'Beban Gaji Guru', 'tipe' => 'beban', 'kategori' => 'operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'debit', 'deskripsi' => 'Beban gaji guru', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
@@ -47,8 +49,10 @@ class AkunSeeder extends Seeder
             ['kode' => '5-2003', 'nama' => 'Beban Telepon/Internet', 'tipe' => 'beban', 'kategori' => 'operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'debit', 'deskripsi' => 'Beban tagihan telepon dan internet', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
             ['kode' => '5-3001', 'nama' => 'Beban ATK', 'tipe' => 'beban', 'kategori' => 'operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'debit', 'deskripsi' => 'Beban alat tulis kantor', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
             ['kode' => '5-3002', 'nama' => 'Beban Kebersihan', 'tipe' => 'beban', 'kategori' => 'operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'debit', 'deskripsi' => 'Beban perlengkapan kebersihan', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
+            ['kode' => '5-3003', 'nama' => 'Beban Pemeliharaan', 'tipe' => 'beban', 'kategori' => 'operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'debit', 'deskripsi' => 'Beban pemeliharaan sarana & prasarana', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
             ['kode' => '5-4001', 'nama' => 'Beban Penyusutan', 'tipe' => 'beban', 'kategori' => 'non_operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'debit', 'deskripsi' => 'Beban penyusutan aset tetap', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
             ['kode' => '5-5001', 'nama' => 'Beban Lain-lain', 'tipe' => 'beban', 'kategori' => 'non_operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'debit', 'deskripsi' => 'Beban lain-lain', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
+            ['kode' => '5-5002', 'nama' => 'Kerugian Penghapusan Aset', 'tipe' => 'beban', 'kategori' => 'non_operasional', 'parent_id' => null, 'level' => 1, 'posisi_normal' => 'debit', 'deskripsi' => 'Kerugian nilai buku aset yang dihapus/dimusnahkan', 'saldo_awal' => 0, 'saldo_akhir' => 0, 'is_active' => true],
         ];
 
         foreach ($akuns as $akun) {

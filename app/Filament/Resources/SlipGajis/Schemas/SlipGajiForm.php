@@ -35,6 +35,8 @@ class SlipGajiForm
                             ->preload()
                             ->required()
                             ->live()
+                            ->disabled(fn (?SlipGaji $record): bool => $record !== null && ! $record->isDraft())
+                            ->dehydrated()
                             ->afterStateUpdated(function (Set $set, $state) {
                                 $setting = SettingGaji::where('pegawai_id', $state)
                                     ->where('is_active', true)
@@ -78,15 +80,17 @@ class SlipGajiForm
                                     ])
                                     ->default((int) date('m'))
                                     ->required(),
-                                Select::make('status')
+                                TextInput::make('status')
                                     ->label('Status')
-                                    ->options([
-                                        'draft' => 'Draft',
-                                        'approved' => 'Approved',
-                                        'paid' => 'Paid',
-                                    ])
+                                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                        'approved' => 'Disetujui',
+                                        'paid' => 'Dibayar',
+                                        default => 'Draft',
+                                    })
                                     ->default('draft')
-                                    ->required(),
+                                    ->disabled()
+                                    ->dehydrated(false)
+                                    ->helperText('Diubah lewat tombol Setujui / Bayar, bukan diisi manual.'),
                             ]),
                     ])->columns(2),
 

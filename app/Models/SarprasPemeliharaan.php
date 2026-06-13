@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Sarpras\SarprasJournalPoster;
 use Database\Factories\SarprasPemeliharaanFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -109,11 +110,25 @@ class SarprasPemeliharaan extends Model
         });
 
         static::saved(function (SarprasPemeliharaan $pemeliharaan): void {
-            if (! $pemeliharaan->wasChanged('status') && ! $pemeliharaan->wasRecentlyCreated) {
+            $relevan = $pemeliharaan->wasChanged('status')
+                || $pemeliharaan->wasChanged('biaya')
+                || $pemeliharaan->wasRecentlyCreated;
+
+            if (! $relevan) {
                 return;
             }
 
             static::syncBarangStatus($pemeliharaan);
+
+            if ($pemeliharaan->status === 'selesai') {
+                app(SarprasJournalPoster::class)->postPemeliharaan($pemeliharaan);
+            } else {
+                app(SarprasJournalPoster::class)->reversePemeliharaan($pemeliharaan);
+            }
+        });
+
+        static::deleted(function (SarprasPemeliharaan $pemeliharaan): void {
+            app(SarprasJournalPoster::class)->reversePemeliharaan($pemeliharaan);
         });
     }
 

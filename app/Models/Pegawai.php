@@ -127,6 +127,15 @@ class Pegawai extends Model
         return $diff->y.' tahun '.$diff->m.' bulan';
     }
 
+    /**
+     * Pegawai dianggap guru bila jabatannya berjenis 'Fungsional'.
+     * Selain itu (Struktural / Non-Fungsional / tanpa jabatan) = karyawan.
+     */
+    public function isGuru(): bool
+    {
+        return $this->jabatan?->jenis === 'Fungsional';
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

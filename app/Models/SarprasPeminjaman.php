@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Sarpras\SarprasJournalPoster;
 use Database\Factories\SarprasPeminjamanFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -222,6 +223,28 @@ class SarprasPeminjaman extends Model
                     $barang->save();
                 }
             });
+        });
+
+        static::saved(function (SarprasPeminjaman $peminjaman): void {
+            $relevan = $peminjaman->wasChanged('denda')
+                || $peminjaman->wasChanged('status')
+                || $peminjaman->wasChanged('tanggal_kembali');
+
+            if (! $relevan) {
+                return;
+            }
+
+            $poster = app(SarprasJournalPoster::class);
+
+            if (bccomp((string) ($peminjaman->denda ?? '0'), '0', 2) > 0) {
+                $poster->postDenda($peminjaman);
+            } else {
+                $poster->reverseDenda($peminjaman);
+            }
+        });
+
+        static::deleted(function (SarprasPeminjaman $peminjaman): void {
+            app(SarprasJournalPoster::class)->reverseDenda($peminjaman);
         });
     }
 

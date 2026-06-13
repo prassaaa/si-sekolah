@@ -124,4 +124,93 @@ class AkunResolver
 
         return $akun?->id;
     }
+
+    /**
+     * Beban Pemeliharaan account (debited when maintenance completes with a
+     * cost). Convention: kode from config('akuntansi.akun.beban_pemeliharaan')
+     * (default '5-3003'), else first beban account named like "Pemeliharaan".
+     */
+    public function bebanPemeliharaanId(): ?int
+    {
+        $kode = (string) config('akuntansi.akun.beban_pemeliharaan', '5-3003');
+
+        $akun = Akun::query()->where('kode', $kode)->first();
+
+        if (! $akun) {
+            $akun = Akun::query()
+                ->where('tipe', 'beban')
+                ->where('nama', 'like', '%Pemeliharaan%')
+                ->orderBy('kode')
+                ->first();
+        }
+
+        return $akun?->id;
+    }
+
+    /**
+     * Kerugian Penghapusan Aset account (debited for the remaining book value
+     * of a written-off asset). Convention: kode from
+     * config('akuntansi.akun.kerugian_penghapusan_aset') (default '5-5002'),
+     * else first beban account named like "Penghapusan"/"Kerugian".
+     */
+    public function kerugianPenghapusanId(): ?int
+    {
+        $kode = (string) config('akuntansi.akun.kerugian_penghapusan_aset', '5-5002');
+
+        $akun = Akun::query()->where('kode', $kode)->first();
+
+        if (! $akun) {
+            $akun = Akun::query()
+                ->where('tipe', 'beban')
+                ->where(function ($q): void {
+                    $q->where('nama', 'like', '%Penghapusan%')
+                        ->orWhere('nama', 'like', '%Kerugian%');
+                })
+                ->orderBy('kode')
+                ->first();
+        }
+
+        return $akun?->id;
+    }
+
+    /**
+     * Pendapatan Denda account (credited when a late-return fine is recorded).
+     * Convention: kode from config('akuntansi.akun.pendapatan_denda')
+     * (default '4-1006'), else first pendapatan account named like "Denda".
+     */
+    public function pendapatanDendaId(): ?int
+    {
+        $kode = (string) config('akuntansi.akun.pendapatan_denda', '4-1006');
+
+        $akun = Akun::query()->where('kode', $kode)->first();
+
+        if (! $akun) {
+            $akun = Akun::query()
+                ->where('tipe', 'pendapatan')
+                ->where('nama', 'like', '%Denda%')
+                ->orderBy('kode')
+                ->first();
+        }
+
+        return $akun?->id;
+    }
+
+    /**
+     * Cash/bank account resolved from config('akuntansi.akun.kas_default')
+     * (default '1-1001'). Alias of kasAkunId() that honours the configured kode
+     * first; falls back to the same Kas/Bank heuristic. Used by cash-basis
+     * sarpras journals (maintenance cost, fine income).
+     */
+    public function kasDefaultId(): ?int
+    {
+        $kode = (string) config('akuntansi.akun.kas_default', '1-1001');
+
+        $akun = Akun::query()->where('kode', $kode)->first();
+
+        if ($akun) {
+            return $akun->id;
+        }
+
+        return $this->kasAkunId();
+    }
 }

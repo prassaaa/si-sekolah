@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Observers\PembayaranObserver;
 use Database\Factories\PembayaranFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+#[ObservedBy(PembayaranObserver::class)]
 class Pembayaran extends Model
 {
     /** @use HasFactory<PembayaranFactory> */

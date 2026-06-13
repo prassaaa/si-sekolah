@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Sarpras\SarprasJournalPoster;
 use Database\Factories\SarprasPenghapusanFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -130,6 +131,22 @@ class SarprasPenghapusan extends Model
             if (! $penghapusan->disetujui_oleh) {
                 $penghapusan->disetujui_oleh = auth()->id();
             }
+        });
+
+        static::saved(function (SarprasPenghapusan $penghapusan): void {
+            if (! $penghapusan->wasChanged('status') && ! $penghapusan->wasRecentlyCreated) {
+                return;
+            }
+
+            if ($penghapusan->status === 'disetujui') {
+                app(SarprasJournalPoster::class)->postPenghapusan($penghapusan);
+            } else {
+                app(SarprasJournalPoster::class)->reversePenghapusan($penghapusan);
+            }
+        });
+
+        static::deleted(function (SarprasPenghapusan $penghapusan): void {
+            app(SarprasJournalPoster::class)->reversePenghapusan($penghapusan);
         });
     }
 

@@ -7,7 +7,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Get;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class KasMasukForm
@@ -46,10 +46,19 @@ class KasMasukForm
                     ->searchable()
                     ->preload()
                     ->required()
+                    ->helperText('Penerimaan SPP TIDAK boleh dicatat di sini — gunakan modul Pembayaran agar terjurnal otomatis dan tidak dobel. Akun pendapatan lain bebas dipilih.')
                     ->rules([
                         fn (Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get) {
                             if ((int) $value === (int) $get('kas_akun_id')) {
                                 $fail('Akun lawan tidak boleh sama dengan Akun Kas/Bank yang dipilih.');
+                            }
+
+                            $sppAkunId = Akun::query()
+                                ->where('kode', config('akuntansi.akun.pendapatan_spp_default'))
+                                ->value('id');
+
+                            if ($sppAkunId !== null && (int) $value === (int) $sppAkunId) {
+                                $fail('Penerimaan SPP harus dicatat melalui modul Pembayaran (otomatis terjurnal), bukan Kas Masuk manual, untuk menghindari pendapatan ganda.');
                             }
                         },
                     ]),

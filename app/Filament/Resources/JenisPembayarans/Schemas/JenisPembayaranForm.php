@@ -79,6 +79,15 @@ class JenisPembayaranForm
                                 ->default('bulanan'),
                         ]),
 
+                        Select::make('akun_pendapatan_id')
+                            ->label('Akun Pendapatan (Jurnal)')
+                            ->relationship('akunPendapatan', 'nama')
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->kode} - {$record->nama}")
+                            ->helperText('Akun pendapatan (COA) yang dikredit saat pembayaran berhasil dijurnal. Bila kosong, memakai akun Pendapatan SPP default (4-1001).'),
+
                         Grid::make(2)->schema([
                             DatePicker::make('tanggal_jatuh_tempo')
                                 ->label('Tanggal Jatuh Tempo')

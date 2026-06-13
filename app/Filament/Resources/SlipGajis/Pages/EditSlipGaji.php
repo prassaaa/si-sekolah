@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SlipGajis\Pages;
 
 use App\Filament\Resources\SlipGajis\SlipGajiResource;
+use App\Filament\Resources\SlipGajis\Tables\SlipGajisTable;
 use App\Models\SettingGaji;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -17,6 +18,8 @@ class EditSlipGaji extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            SlipGajisTable::approveAction(),
+            SlipGajisTable::bayarAction(),
             DeleteAction::make(),
             ForceDeleteAction::make(),
             RestoreAction::make(),
