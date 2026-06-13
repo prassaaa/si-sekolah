@@ -66,6 +66,16 @@ class KasKeluarForm
                 TextInput::make('penerima')
                     ->label('Penerima')
                     ->maxLength(255),
+                Select::make('sumber_dana')
+                    ->label('Sumber Dana')
+                    ->options([
+                        'bos' => 'BOS',
+                        'komite' => 'Komite',
+                        'yayasan' => 'Yayasan',
+                        'lainnya' => 'Lainnya',
+                    ])
+                    ->default('lainnya')
+                    ->required(),
                 Textarea::make('keterangan')
                     ->label('Keterangan')
                     ->rows(3)

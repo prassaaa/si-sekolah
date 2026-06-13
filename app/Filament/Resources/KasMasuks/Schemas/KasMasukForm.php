@@ -72,8 +72,18 @@ class KasMasukForm
                     ->numeric()
                     ->prefix('Rp')
                     ->minValue(1),
-                TextInput::make('sumber')
+                Select::make('sumber_dana')
                     ->label('Sumber Dana')
+                    ->options([
+                        'bos' => 'BOS',
+                        'komite' => 'Komite',
+                        'yayasan' => 'Yayasan',
+                        'lainnya' => 'Lainnya',
+                    ])
+                    ->default('lainnya')
+                    ->required(),
+                TextInput::make('sumber')
+                    ->label('Keterangan Sumber')
                     ->maxLength(255),
                 Textarea::make('keterangan')
                     ->label('Keterangan')

@@ -25,6 +25,7 @@ class KasKeluar extends Model
         'tanggal',
         'nominal',
         'penerima',
+        'sumber_dana',
         'keterangan',
         'user_id',
     ];
@@ -35,6 +36,7 @@ class KasKeluar extends Model
             'nominal' => 'decimal:2',
             'tanggal' => 'date',
             'kas_akun_id' => 'integer',
+            'sumber_dana' => 'string',
         ];
     }
 
@@ -48,6 +50,7 @@ class KasKeluar extends Model
                 'tanggal',
                 'nominal',
                 'penerima',
+                'sumber_dana',
                 'keterangan',
             ])
             ->logOnlyDirty()

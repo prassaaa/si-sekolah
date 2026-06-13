@@ -21,6 +21,8 @@ class TagihanSiswa extends Model
         'siswa_id',
         'jenis_pembayaran_id',
         'semester_id',
+        'periode_bulan',
+        'periode_tahun',
         'nomor_tagihan',
         'nominal',
         'diskon',
@@ -36,6 +38,8 @@ class TagihanSiswa extends Model
     protected function casts(): array
     {
         return [
+            'periode_bulan' => 'integer',
+            'periode_tahun' => 'integer',
             'nominal' => 'decimal:2',
             'diskon' => 'decimal:2',
             'total_tagihan' => 'decimal:2',

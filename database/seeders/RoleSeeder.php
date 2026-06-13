@@ -27,6 +27,7 @@ class RoleSeeder extends Seeder
         'PresensiHarianPegawai',
         'SarprasKategori', 'Ruangan', 'SarprasBarang', 'SarprasPeminjaman',
         'SarprasPemeliharaan', 'SarprasPengadaan', 'SarprasPenghapusan',
+        'Anggaran', 'PeriodeAkuntansi',
     ];
 
     /**
@@ -60,7 +61,7 @@ class RoleSeeder extends Seeder
         'LaporanInventaris', 'LaporanKondisiSarpras', 'LaporanPemeliharaanSarpras',
         'LaporanPeminjamanSarpras',
         'LaporanSiswa', 'LaporanTahfidz', 'KirimNotifPresensi', 'MonitorGerbang',
-        'LaporanTunggakan',
+        'LaporanTunggakan', 'BukuKasUmum', 'LaporanRapbs',
     ];
 
     /**
@@ -210,6 +211,8 @@ class RoleSeeder extends Seeder
             $this->fullCrud('Akun'),
             $this->fullCrud('JurnalUmum'),
             $this->fullCrud('SaldoAwal'),
+            $this->fullCrud('Anggaran'),
+            $this->fullCrud('PeriodeAkuntansi'),
 
             // KAS & BANK - Full CRUD
             $this->fullCrud('KasMasuk'),
@@ -251,6 +254,8 @@ class RoleSeeder extends Seeder
             $this->pagePermission('KirimNotifGaji'),
             $this->pagePermission('KirimTagihan'),
             $this->pagePermission('LaporanPenyusutan'),
+            $this->pagePermission('BukuKasUmum'),
+            $this->pagePermission('LaporanRapbs'),
         );
     }
 
