@@ -12,6 +12,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class TabunganSiswaResource extends Resource
@@ -27,6 +29,32 @@ class TabunganSiswaResource extends Resource
     protected static ?string $modelLabel = 'Tabungan Siswa';
 
     protected static ?string $pluralModelLabel = 'Tabungan Siswa';
+
+    protected static ?string $recordTitleAttribute = 'keterangan';
+
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['siswa.nama', 'siswa.nis', 'keterangan'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Siswa' => $record->siswa?->nama ?? '-',
+            'Kelas' => $record->siswa?->kelas?->nama ?? '-',
+        ];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['siswa.kelas']);
+    }
 
     public static function form(Schema $schema): Schema
     {

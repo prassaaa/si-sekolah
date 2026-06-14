@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class AduanResource extends Resource
@@ -34,6 +36,30 @@ class AduanResource extends Resource
     protected static ?int $navigationSort = 90;
 
     protected static ?string $recordTitleAttribute = 'judul';
+
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['judul', 'pelapor', 'siswa.nama'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Pelapor' => $record->pelapor ?? '-',
+            'Siswa' => $record->siswa?->nama ?? '-',
+        ];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['siswa.kelas']);
+    }
 
     public static function getNavigationBadge(): ?string
     {

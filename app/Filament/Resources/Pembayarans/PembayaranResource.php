@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class PembayaranResource extends Resource
@@ -34,6 +36,36 @@ class PembayaranResource extends Resource
     protected static ?int $navigationSort = 40;
 
     protected static ?string $recordTitleAttribute = 'nomor_transaksi';
+
+    /**
+     * Kolom/relasi untuk pencarian global (dot bersarang 2 level didukung Filament via whereHas).
+     *
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nomor_transaksi', 'tagihanSiswa.siswa.nama', 'tagihanSiswa.siswa.nis'];
+    }
+
+    /**
+     * Detail yang ditampilkan di hasil pencarian global.
+     *
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Siswa' => $record->tagihanSiswa?->siswa?->nama ?? '-',
+        ];
+    }
+
+    /**
+     * Query dasar dengan eager-load relasi bersarang agar tidak terjadi N+1.
+     */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('tagihanSiswa.siswa');
+    }
 
     public static function getNavigationBadge(): ?string
     {

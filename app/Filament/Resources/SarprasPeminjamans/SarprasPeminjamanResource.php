@@ -35,6 +35,14 @@ class SarprasPeminjamanResource extends Resource
 
     protected static ?int $navigationSort = 40;
 
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nomor', 'barang.nama'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return SarprasPeminjamanForm::configure($schema);

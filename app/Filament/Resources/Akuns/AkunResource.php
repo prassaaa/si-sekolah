@@ -35,6 +35,14 @@ class AkunResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nama';
 
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nama', 'kode'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return AkunForm::configure($schema);

@@ -42,7 +42,9 @@ it('kelas belongs to ruangan via ruanganModel relation', function () {
 it('ruangan has many kelas', function () {
     $ruangan = Ruangan::factory()->create(['jenis' => 'kelas']);
     $tahunAjaran = TahunAjaran::factory()->create();
-    Kelas::factory()->count(3)->forTahunAjaran($tahunAjaran)->create(['ruangan_id' => $ruangan->id]);
+    Kelas::factory()->count(3)->forTahunAjaran($tahunAjaran)
+        ->sequence(['nama' => '7A'], ['nama' => '7B'], ['nama' => '7C'])
+        ->create(['ruangan_id' => $ruangan->id]);
 
     $ruangan->load('kelas');
 

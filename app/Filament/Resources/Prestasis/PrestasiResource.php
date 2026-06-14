@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class PrestasiResource extends Resource
@@ -34,6 +36,25 @@ class PrestasiResource extends Resource
     protected static ?int $navigationSort = 60;
 
     protected static ?string $recordTitleAttribute = 'nama_prestasi';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nama_prestasi', 'siswa.nama', 'siswa.nis'];
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Siswa' => $record->siswa?->nama ?? '-',
+            'Kelas' => $record->siswa?->kelas?->nama ?? '-',
+        ];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('siswa.kelas');
+    }
 
     public static function form(Schema $schema): Schema
     {

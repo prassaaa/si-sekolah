@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class TagihanSiswaResource extends Resource
@@ -34,6 +36,37 @@ class TagihanSiswaResource extends Resource
     protected static ?int $navigationSort = 30;
 
     protected static ?string $recordTitleAttribute = 'nomor_tagihan';
+
+    /**
+     * Kolom/relasi untuk pencarian global.
+     *
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nomor_tagihan', 'siswa.nama', 'siswa.nis'];
+    }
+
+    /**
+     * Detail yang ditampilkan di hasil pencarian global.
+     *
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Siswa' => $record->siswa?->nama ?? '-',
+            'Kelas' => $record->siswa?->kelas?->nama ?? '-',
+        ];
+    }
+
+    /**
+     * Query dasar dengan eager-load relasi agar tidak terjadi N+1.
+     */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('siswa.kelas');
+    }
 
     public static function getNavigationBadge(): ?string
     {

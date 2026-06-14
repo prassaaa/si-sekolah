@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class IzinKeluarResource extends Resource
@@ -34,6 +36,30 @@ class IzinKeluarResource extends Resource
     protected static ?int $navigationSort = 40;
 
     protected static ?string $recordTitleAttribute = 'keperluan';
+
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['keperluan', 'siswa.nama', 'siswa.nis'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Siswa' => $record->siswa?->nama ?? '-',
+            'Kelas' => $record->siswa?->kelas?->nama ?? '-',
+        ];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['siswa.kelas']);
+    }
 
     public static function form(Schema $schema): Schema
     {

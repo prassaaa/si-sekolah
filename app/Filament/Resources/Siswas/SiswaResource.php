@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class SiswaResource extends Resource
@@ -34,6 +36,36 @@ class SiswaResource extends Resource
     protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'nama';
+
+    /**
+     * Kolom/relasi untuk pencarian global.
+     *
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nama', 'nis', 'nisn'];
+    }
+
+    /**
+     * Detail yang ditampilkan di hasil pencarian global.
+     *
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Kelas' => $record->kelas?->nama ?? '-',
+        ];
+    }
+
+    /**
+     * Query dasar dengan eager-load relasi agar tidak terjadi N+1.
+     */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('kelas');
+    }
 
     public static function form(Schema $schema): Schema
     {

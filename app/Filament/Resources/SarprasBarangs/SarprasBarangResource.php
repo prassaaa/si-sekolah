@@ -35,6 +35,14 @@ class SarprasBarangResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nama';
 
+    /**
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nama', 'kode_inventaris'];
+    }
+
     public static function form(Schema $schema): Schema
     {
         return SarprasBarangForm::configure($schema);
