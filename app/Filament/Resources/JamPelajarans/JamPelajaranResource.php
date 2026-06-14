@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class JamPelajaranResource extends Resource
@@ -34,6 +35,22 @@ class JamPelajaranResource extends Resource
     protected static ?int $navigationSort = 40;
 
     protected static ?string $recordTitleAttribute = 'label';
+
+    /**
+     * 'label' adalah accessor (bukan kolom DB) — pakai kolom nyata untuk
+     * pencarian global agar tidak menabrak WHERE ke kolom tak ada.
+     *
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['jam_ke', 'jenis', 'keterangan'];
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        return $record->label;
+    }
 
     public static function form(Schema $schema): Schema
     {

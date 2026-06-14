@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 class JadwalPelajaranResource extends Resource
@@ -34,6 +35,22 @@ class JadwalPelajaranResource extends Resource
     protected static ?int $navigationSort = 50;
 
     protected static ?string $recordTitleAttribute = 'jadwal_lengkap';
+
+    /**
+     * Kolom/relasi nyata untuk pencarian global. 'jadwal_lengkap' adalah
+     * accessor (bukan kolom DB) sehingga tidak bisa dipakai di WHERE SQL.
+     *
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['hari', 'keterangan', 'mataPelajaran.nama', 'kelas.nama', 'guru.nama'];
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        return $record->jadwal_lengkap;
+    }
 
     public static function form(Schema $schema): Schema
     {

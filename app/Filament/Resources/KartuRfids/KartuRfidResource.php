@@ -39,7 +39,7 @@ class KartuRfidResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['uid', 'siswa.nama', 'siswa.nis'];
+        return ['uid'];
     }
 
     public static function form(Schema $schema): Schema
