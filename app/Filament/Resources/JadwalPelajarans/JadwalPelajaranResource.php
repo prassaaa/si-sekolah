@@ -31,7 +31,7 @@ class JadwalPelajaranResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Akademik';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 50;
 
     protected static ?string $recordTitleAttribute = 'jadwal_lengkap';
 

@@ -25,7 +25,7 @@ class SettingGajiResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Penggajian';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $navigationLabel = 'Setting Gaji';
 

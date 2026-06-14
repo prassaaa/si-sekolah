@@ -33,7 +33,7 @@ class PresensiHarianResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $recordTitleAttribute = 'siswa.nama';
 

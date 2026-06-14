@@ -31,7 +31,7 @@ class TahfidzResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 100;
 
     protected static ?string $recordTitleAttribute = 'surah';
 

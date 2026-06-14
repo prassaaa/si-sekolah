@@ -34,7 +34,7 @@ class LaporanRapbs extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 120;
 
     protected static ?string $title = 'Laporan RAPBS';
 

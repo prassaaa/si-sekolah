@@ -33,7 +33,7 @@ class AbsensiResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Akademik';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 60;
 
     protected static ?string $recordTitleAttribute = 'id';
 

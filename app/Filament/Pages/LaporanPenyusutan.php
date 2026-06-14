@@ -36,7 +36,7 @@ class LaporanPenyusutan extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Sarana & Prasarana';
 
-    protected static ?int $navigationSort = 12;
+    protected static ?int $navigationSort = 120;
 
     protected static ?string $slug = 'sarpras/laporan/penyusutan';
 

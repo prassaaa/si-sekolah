@@ -34,7 +34,7 @@ class Neraca extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 60;
 
     protected static ?string $title = 'Neraca';
 

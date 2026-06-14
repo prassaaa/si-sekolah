@@ -37,7 +37,7 @@ class BukuKasUmum extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Kas & Bank';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 70;
 
     protected static ?string $title = 'Buku Kas Umum';
 

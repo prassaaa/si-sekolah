@@ -34,7 +34,7 @@ class PerubahanModal extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 70;
 
     protected static ?string $title = 'Perubahan Modal';
 

@@ -34,7 +34,7 @@ class LaporanTabungan extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Laporan';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 60;
 
     protected static ?string $title = 'Laporan Tabungan';
 

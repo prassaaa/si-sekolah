@@ -31,7 +31,7 @@ class JenisPembayaranResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Keuangan';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $recordTitleAttribute = 'nama';
 

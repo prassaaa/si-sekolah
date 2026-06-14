@@ -36,7 +36,7 @@ class BukuBesar extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $title = 'Buku Besar';
 

@@ -33,7 +33,7 @@ class LaporanTagihanSiswa extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Laporan';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 40;
 
     protected static ?string $title = 'Laporan Tagihan Siswa';
 

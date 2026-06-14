@@ -32,7 +32,7 @@ class MutasiBankResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Mutasi Bank';
 
-    protected static ?int $navigationSort = 11;
+    protected static ?int $navigationSort = 50;
 
     protected static ?string $recordTitleAttribute = 'keterangan';
 

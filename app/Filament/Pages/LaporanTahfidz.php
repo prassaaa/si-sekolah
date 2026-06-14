@@ -29,7 +29,7 @@ class LaporanTahfidz extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Laporan';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 110;
 
     protected static ?string $title = 'Laporan Tahfidz';
 

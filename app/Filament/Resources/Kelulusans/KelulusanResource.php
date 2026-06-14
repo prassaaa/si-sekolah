@@ -31,7 +31,7 @@ class KelulusanResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Akademik';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 80;
 
     public static function form(Schema $schema): Schema
     {

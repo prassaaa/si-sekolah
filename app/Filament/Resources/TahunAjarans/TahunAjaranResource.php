@@ -31,7 +31,7 @@ class TahunAjaranResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Akademik';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'nama';
 

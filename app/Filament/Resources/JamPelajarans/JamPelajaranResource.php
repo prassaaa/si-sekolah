@@ -31,7 +31,7 @@ class JamPelajaranResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Akademik';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 40;
 
     protected static ?string $recordTitleAttribute = 'label';
 

@@ -25,7 +25,7 @@ class KasMasukResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kas & Bank';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $modelLabel = 'Kas Masuk';
 

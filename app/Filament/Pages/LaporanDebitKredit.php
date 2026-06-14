@@ -35,9 +35,9 @@ class LaporanDebitKredit extends Page implements HasSchemas, HasTable
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrows-right-left';
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Laporan';
+    protected static \UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 100;
 
     protected static ?string $title = 'Laporan Debit Kredit';
 

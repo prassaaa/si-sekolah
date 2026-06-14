@@ -30,7 +30,7 @@ class LaporanInventaris extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Sarana & Prasarana';
 
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 80;
 
     protected static ?string $slug = 'sarpras/laporan/inventaris';
 

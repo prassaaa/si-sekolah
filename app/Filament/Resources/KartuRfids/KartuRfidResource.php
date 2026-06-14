@@ -33,7 +33,7 @@ class KartuRfidResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 110;
 
     protected static ?string $recordTitleAttribute = 'uid';
 

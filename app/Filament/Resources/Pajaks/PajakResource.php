@@ -25,7 +25,7 @@ class PajakResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Setting Pembayaran';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 40;
 
     protected static ?string $modelLabel = 'Pajak';
 

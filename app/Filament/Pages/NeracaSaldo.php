@@ -33,7 +33,7 @@ class NeracaSaldo extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 40;
 
     protected static ?string $title = 'Neraca Saldo';
 

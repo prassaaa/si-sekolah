@@ -33,7 +33,7 @@ class SarprasPengadaanResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Sarana & Prasarana';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 60;
 
     protected static ?string $recordTitleAttribute = 'nomor';
 

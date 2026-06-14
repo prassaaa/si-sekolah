@@ -33,9 +33,9 @@ class LaporanJurnal extends Page implements HasSchemas, HasTable
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Laporan';
+    protected static \UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 90;
 
     protected static ?string $title = 'Laporan Jurnal';
 

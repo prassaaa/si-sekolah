@@ -25,7 +25,7 @@ class BuktiTransferResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Keuangan';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 50;
 
     protected static ?string $modelLabel = 'Bukti Transfer';
 

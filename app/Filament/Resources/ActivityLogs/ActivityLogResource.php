@@ -30,7 +30,7 @@ class ActivityLogResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Sistem';
 
-    protected static ?int $navigationSort = 99;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $recordTitleAttribute = 'description';
 

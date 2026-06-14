@@ -35,7 +35,7 @@ class LaporanUnitPos extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Laporan';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 70;
 
     protected static ?string $title = 'Laporan Unit POS';
 

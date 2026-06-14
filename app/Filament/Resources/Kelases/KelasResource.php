@@ -31,7 +31,7 @@ class KelasResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $recordTitleAttribute = 'nama';
 

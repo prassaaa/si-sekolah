@@ -15,7 +15,7 @@ class KirimNotifPresensi extends Page
 
     protected static \UnitEnum|string|null $navigationGroup = 'Notifikasi';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $title = 'Kirim Notif Presensi';
 

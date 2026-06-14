@@ -8,6 +8,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -45,6 +46,23 @@ class AuthPanelProvider extends PanelProvider
             ->globalSearch(true)
             // Navigation Groups (akan diatur di Resources)
             ->collapsibleNavigationGroups(true) // Groups bisa di-collapse
+            // Urutan & ikon grup navigasi: operasional di atas, administrasi/sistem di bawah
+            ->navigationGroups([
+                NavigationGroup::make('Akademik')->icon('heroicon-o-academic-cap'),
+                NavigationGroup::make('Kesiswaan')->icon('heroicon-o-user-group'),
+                NavigationGroup::make('Keuangan')->icon('heroicon-o-banknotes'),
+                NavigationGroup::make('Kas & Bank')->icon('heroicon-o-building-library'),
+                NavigationGroup::make('Akuntansi')->icon('heroicon-o-calculator'),
+                NavigationGroup::make('Penggajian')->icon('heroicon-o-wallet'),
+                NavigationGroup::make('Setting Pembayaran')->icon('heroicon-o-cog-6-tooth'),
+                NavigationGroup::make('Kepegawaian')->icon('heroicon-o-briefcase'),
+                NavigationGroup::make('Sarana & Prasarana')->icon('heroicon-o-building-office-2'),
+                NavigationGroup::make('Laporan')->icon('heroicon-o-document-chart-bar'),
+                NavigationGroup::make('Notifikasi')->icon('heroicon-o-bell-alert'),
+                NavigationGroup::make('Pengaturan')->icon('heroicon-o-cog-8-tooth'),
+                NavigationGroup::make('Manajemen Pengguna')->icon('heroicon-o-shield-check'),
+                NavigationGroup::make('Sistem')->icon('heroicon-o-command-line'),
+            ])
             ->discoverResources(
                 in: app_path('Filament/Resources'),
                 for: "App\Filament\Resources",
@@ -70,7 +88,7 @@ class AuthPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->plugins([FilamentShieldPlugin::make()])
+            ->plugins([FilamentShieldPlugin::make()->navigationGroup('Manajemen Pengguna')])
             ->authMiddleware([Authenticate::class]);
     }
 }

@@ -43,7 +43,7 @@ class RekonsiliasiBank extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Kas & Bank';
 
-    protected static ?int $navigationSort = 12;
+    protected static ?int $navigationSort = 60;
 
     protected static ?string $title = 'Rekonsiliasi Bank';
 

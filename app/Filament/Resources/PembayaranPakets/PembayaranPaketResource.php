@@ -25,7 +25,7 @@ class PembayaranPaketResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Setting Pembayaran';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $modelLabel = 'Pembayaran Paket';
 

@@ -31,7 +31,7 @@ class PrestasiResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 60;
 
     protected static ?string $recordTitleAttribute = 'nama_prestasi';
 

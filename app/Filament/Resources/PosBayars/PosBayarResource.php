@@ -25,7 +25,7 @@ class PosBayarResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Setting Pembayaran';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $modelLabel = 'Pos Bayar';
 

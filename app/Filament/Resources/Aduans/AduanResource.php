@@ -31,7 +31,7 @@ class AduanResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 90;
 
     protected static ?string $recordTitleAttribute = 'judul';
 

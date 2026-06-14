@@ -31,7 +31,7 @@ class SiswaResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'nama';
 

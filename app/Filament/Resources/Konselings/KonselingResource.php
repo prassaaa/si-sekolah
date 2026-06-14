@@ -31,7 +31,7 @@ class KonselingResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 80;
 
     protected static ?string $recordTitleAttribute = 'permasalahan';
 

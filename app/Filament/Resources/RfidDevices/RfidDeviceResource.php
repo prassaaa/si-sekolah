@@ -31,7 +31,7 @@ class RfidDeviceResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Pengaturan';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $recordTitleAttribute = 'nama';
 

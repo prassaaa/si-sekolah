@@ -30,7 +30,7 @@ class LaporanSiswa extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Laporan';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 100;
 
     protected static ?string $slug = 'laporan/siswa';
 

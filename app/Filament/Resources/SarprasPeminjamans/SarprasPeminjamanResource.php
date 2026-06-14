@@ -33,7 +33,7 @@ class SarprasPeminjamanResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Sarana & Prasarana';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 40;
 
     public static function form(Schema $schema): Schema
     {

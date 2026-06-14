@@ -22,7 +22,7 @@ class TabunganSiswaResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Keuangan';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 60;
 
     protected static ?string $modelLabel = 'Tabungan Siswa';
 

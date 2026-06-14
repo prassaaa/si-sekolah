@@ -39,7 +39,7 @@ class KirimTagihan extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Notifikasi';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $title = 'Kirim Tagihan';
 

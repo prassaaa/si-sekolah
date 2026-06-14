@@ -31,7 +31,7 @@ class TagihanSiswaResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Keuangan';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $recordTitleAttribute = 'nomor_tagihan';
 

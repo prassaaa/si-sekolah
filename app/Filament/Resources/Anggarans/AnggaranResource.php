@@ -31,7 +31,7 @@ class AnggaranResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 110;
 
     protected static ?string $recordTitleAttribute = 'keterangan';
 

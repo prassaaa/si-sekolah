@@ -29,7 +29,7 @@ class RfidScanLogResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Sistem';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 10;
 
     public static function canCreate(): bool
     {

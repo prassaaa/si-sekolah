@@ -31,7 +31,7 @@ class LaporanPeminjamanSarpras extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Sarana & Prasarana';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 100;
 
     protected static ?string $slug = 'sarpras/laporan/peminjaman';
 

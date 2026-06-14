@@ -31,7 +31,7 @@ class SekolahResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Pengaturan';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'nama';
 

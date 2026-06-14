@@ -31,7 +31,7 @@ class IzinPulangResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 50;
 
     protected static ?string $recordTitleAttribute = 'alasan';
 

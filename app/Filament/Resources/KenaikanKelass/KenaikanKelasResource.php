@@ -31,7 +31,7 @@ class KenaikanKelasResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Akademik';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 70;
 
     public static function form(Schema $schema): Schema
     {

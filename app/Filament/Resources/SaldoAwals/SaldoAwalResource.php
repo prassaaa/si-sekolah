@@ -25,7 +25,7 @@ class SaldoAwalResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Kas & Bank';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $modelLabel = 'Saldo Awal';
 

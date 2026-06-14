@@ -16,7 +16,7 @@ class MonitorGerbang extends Page
 
     protected static \UnitEnum|string|null $navigationGroup = 'Kesiswaan';
 
-    protected static ?int $navigationSort = 11;
+    protected static ?int $navigationSort = 120;
 
     protected static ?string $title = 'Monitor Gerbang';
 

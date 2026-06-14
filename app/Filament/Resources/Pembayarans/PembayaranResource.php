@@ -31,7 +31,7 @@ class PembayaranResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Keuangan';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 40;
 
     protected static ?string $recordTitleAttribute = 'nomor_transaksi';
 

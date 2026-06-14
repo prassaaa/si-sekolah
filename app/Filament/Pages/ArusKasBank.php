@@ -36,7 +36,7 @@ class ArusKasBank extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Akuntansi';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 80;
 
     protected static ?string $title = 'Arus Kas/Bank';
 

@@ -29,7 +29,7 @@ class LaporanKondisiSarpras extends Page implements HasSchemas, HasTable
 
     protected static \UnitEnum|string|null $navigationGroup = 'Sarana & Prasarana';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 90;
 
     protected static ?string $slug = 'sarpras/laporan/kondisi';
 
